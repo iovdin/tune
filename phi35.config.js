@@ -3,7 +3,7 @@
   method: "POST",
   headers: { 
     "content-type": "application/json",
-    "authorization": `Bearer ${OPEN_ROUTER_KEY}`
+    "authorization": `Bearer ${OPENROUTER_KEY}`
   },
   body: JSON.stringify({ 
     ...payload,
