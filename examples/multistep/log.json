@@ -1,0 +1,338 @@
+[
+  {
+    "role": "system",
+    "content": "You're playing 20 questions game.\nStart the answer with \"(<your role>)\""
+  },
+  {
+    "role": "system",
+    "content": "You are 'player'.\nYou ask yes/no question to 'thinker'\nYour goal is to guess the word 'thinker' has in mind\n"
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a living thing?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it an object?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something commonly found in households?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it used for a specific function or purpose?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it an appliance?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a piece of furniture?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a tool?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something decorative?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a type of container?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something you use for personal care?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it related to technology?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something that can be used outdoors?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it stationery or office-related?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something you use in the kitchen?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a utensil?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it an appliance used for cooking?"
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something you use for food storage?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something you serve food with?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a bowl or dish?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it something you drink from?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a cooking ingredient?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes.\n⠯"
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a spice?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a type of vegetable?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a type of fruit?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it a tropical fruit?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) No."
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Player) Is it an apple?"
+  },
+  {
+    "role": "user",
+    "content": ""
+  },
+  {
+    "role": "assistant",
+    "content": "(Thinker) Yes!"
+  },
+  {
+    "role": "user",
+    "content": ""
+  }
+]

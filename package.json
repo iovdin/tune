@@ -1,10 +1,49 @@
 {
+  "name": "just-the-docs",
+  "version": "0.3.3",
+  "description": "A modern Jekyll theme for documentation",
+  "repository": "just-the-docs/just-the-docs",
+  "license": "MIT",
+  "bugs": "https://github.com/just-the-docs/just-the-docs/issues",
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.5.0",
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard-scss": "^14.0.0"
+  },
+  "scripts": {
+    "lint": "npm-run-all --parallel --continue-on-error lint:*",
+    "lint:css": "stylelint '**/*.scss'",
+    "lint:formatting": "prettier --check '**/*.{scss,js,json}'",
+    "format": "prettier --write '**/*.{scss,js,json}'",
+    "test": "npm run lint"
+  },
+  "stylelint": {
+    "ignoreFiles": [
+      "assets/css/just-the-docs-default.scss",
+      "assets/css/just-the-docs-light.scss",
+      "assets/css/just-the-docs-dark.scss"
+    ],
+    "extends": [
+      "stylelint-config-standard-scss"
+    ],
+    "rules": {
+      "alpha-value-notation": null,
+      "at-rule-empty-line-before": null,
+      "color-function-notation": null,
+      "media-feature-range-notation": "prefix",
+      "no-descending-specificity": null,
+      "scss/no-global-function-names": null
+    }
+  },
+  "prettier": {
+    "endOfLine": "lf",
+    "semi": false,
+    "singleQuote": false,
+    "tabWidth": 2,
+    "trailingComma": "es5"
+  },
   "dependencies": {
-    "escodegen": "^2.1.0",
-    "esprima": "^4.0.1",
-    "estraverse": "^5.3.0",
-    "file-type": "^19.5.0",
-    "ignore": "^7.0.3",
-    "youtube-transcript": "^1.2.1"
+    "sharp": "^0.33.5"
   }
 }

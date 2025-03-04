@@ -1,0 +1,56 @@
+s: @{ default | turn-proc player thinker }
+You're playing 20 questions game.
+Start the answer with "(<your role>)"
+a: (Player) Is it a living thing?
+a: (Thinker) No.
+a: (Player) Is it an object?
+a: (Thinker) Yes.
+a: (Player) Is it something commonly found in households?
+a: (Thinker) Yes.
+a: (Player) Is it used for a specific function or purpose?
+a: (Thinker) Yes.
+a: (Player) Is it an appliance?
+a: (Thinker) No.
+a: (Player) Is it a piece of furniture?
+a: (Thinker) No.
+a: (Player) Is it a tool?
+a: (Thinker) No.
+a: (Player) Is it something decorative?
+a: (Thinker) No.
+a: (Player) Is it a type of container?
+a: (Thinker) No.
+a: (Player) Is it something you use for personal care?
+a: (Thinker) No.
+a: (Player) Is it related to technology?
+a: (Thinker) No.
+a: (Player) Is it something that can be used outdoors?
+a: (Thinker) No.
+a: (Player) Is it stationery or office-related?
+a: (Thinker) No.
+a: (Player) Is it something you use in the kitchen?
+a: (Thinker) Yes.
+a: (Player) Is it a utensil?
+a: (Thinker) No.
+a: (Player) Is it an appliance used for cooking?
+a: (Thinker) No.
+a: (Player) Is it something you use for food storage?
+a: (Thinker) No.
+a: (Player) Is it something you serve food with?
+a: (Thinker) No.
+a: (Player) Is it a bowl or dish?
+a: (Thinker) No.
+a: (Player) Is it something you drink from?
+a: (Thinker) No.
+a: (Player) Is it a cooking ingredient?
+a: (Thinker) Yes.
+a: (Player) Is it a spice?
+a: (Thinker) No.
+a: (Player) Is it a type of vegetable?
+a: (Thinker) No.
+a: (Player) Is it a type of fruit?
+a: (Thinker) Yes.
+a: (Player) Is it a tropical fruit?
+a: (Thinker) No.
+a: (Player) Is it an apple?
+a: (Thinker) Yes!
+a: (Player) Great! The word was "apple." Thank you for playing! Would you like to go again?

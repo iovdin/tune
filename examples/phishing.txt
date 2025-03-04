@@ -1,0 +1,5 @@
+@4o
+You're given few  chat messages. 
+Your goal is to detect if it is phishing, spam or scam or normal
+
+Your output is 1 word from the array ["phishing", "spam", "scam", "normal"]

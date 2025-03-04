@@ -1,0 +1,30 @@
+[
+  {
+    "role": "system",
+    "content": "You goal is to act on behalf of the user.\nand replay user behaviour from the chat:\n```chat\n@chat-to-relay\n```\n"
+  },
+  {
+    "role": "user",
+    "content": "1"
+  },
+  {
+    "role": "assistant",
+    "content": "2"
+  },
+  {
+    "role": "user",
+    "content": "3"
+  },
+  {
+    "role": "assistant",
+    "content": "4"
+  },
+  {
+    "role": "user",
+    "content": "5"
+  },
+  {
+    "role": "assistant",
+    "content": "6"
+  }
+]

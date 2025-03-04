@@ -1,0 +1,24 @@
+s: @turn
+You're playing 20 questions game.
+You switch turns between 'thinker' and 'player' agent. 
+Current agent stored in agent.txt file
+'player' always plays first
+
+@@agent|init
+tc: turn {"role":"player","filename":"agent.txt"}
+tr: player turn
+a: Is the word you're thinking of a living creature?
+u:  
+tc: turn {"role":"thinker","filename":"agent.txt"}
+tr: thinker turn
+a: No.
+u:  
+tc: turn {"role":"player","filename":"agent.txt"}
+tr: player turn
+a: Is it an object?
+u:  
+tc: turn {"role":"thinker","filename":"agent.txt"}
+tr: thinker turn
+a: Yes.
+u:  
+tc: turn {"role":"player","filename":"agent.txt"}

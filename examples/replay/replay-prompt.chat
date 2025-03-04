@@ -1,0 +1,5 @@
+You goal is to act on behalf of the user.
+and replay user behaviour from the chat:
+```chat
+@chat-to-relay
+```

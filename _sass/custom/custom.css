@@ -1,0 +1,48 @@
+
+
+.language-chat {
+  .kc {
+    color: white; 
+    background-color: gray; 
+  }
+  .kd {
+    color: white; 
+    background-color: blue;
+  }
+  .kn {
+    color: white; 
+    background-color: green;
+  }
+  .kp {
+    color: white; 
+    background-color: red;
+  }
+
+  .kp {
+    color: white; 
+    background-color: gray; 
+  }
+  .kr {
+    color: white; 
+    background-color: gray; 
+  }
+  .n { /* Variables */
+    color: grey ;
+    font-weight: bold;
+  }
+}
+#tool-highlight {
+  .kp {
+    color: white; 
+    background-color: purple; 
+  }
+  .kr {
+    color: white; 
+    background-color: green; 
+  }
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

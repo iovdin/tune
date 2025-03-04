@@ -591,117 +591,101 @@ function pparse(filename) {
   return parsed;
 }
 pparse;
-async function makeTool(filename, ctx, fs) {
-  var parsed, tool, text, spawnSync, _ref;
-  var parsed;
-  var tool;
-  parsed = pparse(filename);
-  tool = undefined;
-  ctx = makeContext(ctx)
-    .clone();
+async function runFile(filename, ctx) {
+  var parsed, node, text, lctx, res, module, spawnSync, result, sres, _i, _ref, _ref0, _ref1, _ref2, _ref3;
+  var args = 3 <= arguments.length ? [].slice.call(arguments, 2, _i = arguments.length - 0) : (_i = 2, []);
   try {
+    var parsed;
+    parsed = pparse(filename);
     if ((parsed.ext === ".chat")) {
+      var node;
+      node = await ctx.resolve(filename);
       var text;
-      text = fs.readFileSync(filename, "utf8");
-      _ref = tool = (async function(args, ictx) {
-        var lctx, res;
-        var lctx;
-        lctx = ctx.clone();
-        lctx.use(envmd(args));
-        var res;
-        res = await text2run(text, lctx);
-        return res["slice"](-1)[0].content;
-      });
+      text = await node.read();
+      var lctx;
+      lctx = ctx.clone();
+      lctx.use(envmd(args[0]));
+      var res;
+      res = await text2run(text, lctx);
+      _ref = res["slice"](-1)[0].content;
     } else if (parsed.ext === ".mjs") {
-      _ref = tool = (async function(args, ictx) {
-        var module;
-        var module;
-        module = await import(filename + "?t=" + Date.now());
-        return module.default.apply(ctx, [args, ctx]);
-      });
+      var module;
+      module = await import(filename + "?t=" + Date.now());
+      _ref = module.default.call.apply(module.default, [].concat([ctx]).concat(args).concat([ctx]));
     } else if (parsed.ext === ".js" || parsed.ext === ".cjs") {
-      _ref = tool = (function(args, ictx) {
-        var module;
-        var module;
-        module = require(filename);
-        return module.apply(ctx, [args, ctx]);
-      });
+      var module;
+      module = require(filename);
+      _ref = module.call.apply(module, [].concat([ctx]).concat(args).concat([ctx]));
     } else if (parsed.ext === ".py" || parsed.ext === ".php") {
       var spawnSync;
       spawnSync = require("child_process").spawnSync;
-      _ref = tool = (async function(args, ictx) {
-        var res, result, sres, _ref0, _ref1, _ref2;
-        var res;
-        switch (parsed.ext) {
-          case ".py":
-            _ref0 = "python";
-            break;
-          case ".php":
-            _ref0 = "php";
-            break;
-          default:
-            _ref0 = undefined;
-        }
-        switch (parsed.ext) {
-          case ".py":
-            _ref1 = "run.py";
-            break;
-          case ".php":
-            _ref1 = "run.php";
-            break;
-          default:
-            _ref1 = undefined;
-        }
-        res = spawnSync(_ref0, Array(path.resolve(__dirname, _ref1)), {
-          input: JSON.stringify({
-            filename: filename,
-            arguments: args,
-            ctx: ""
-          }),
-          env: extend(process.env, ctx.env)
-        });
-        if (res.error) throw res.error;
-        var result;
-        result = Array();
-        if (res.stderr.length) result.push(res.stderr.toString("utf8"));
-        if (res.stdout.length) {
-          var sres;
-          try {
-            _ref2 = msgpack.deserialize(Buffer.from(res.stdout.toString("utf8"), "hex"));
-          } catch (e) {
-            console.log("cant decode messageback", e);
-            _ref2 = res.stdout.toString("utf8");
-          }
-          sres = _ref2;
-          Array.isArray(sres) ? result = result.concat(sres) : result.push(sres);
-        }
-        if ((result.length === 1)) result = result[0];
-        return result;
+      var res;
+      switch (parsed.ext) {
+        case ".py":
+          _ref0 = "python";
+          break;
+        case ".php":
+          _ref0 = "php";
+          break;
+        default:
+          _ref0 = undefined;
+      }
+      switch (parsed.ext) {
+        case ".py":
+          _ref1 = "run.py";
+          break;
+        case ".php":
+          _ref1 = "run.php";
+          break;
+        default:
+          _ref1 = undefined;
+      }
+      res = spawnSync(_ref0, Array(path.resolve(__dirname, _ref1)), {
+        input: JSON.stringify({
+          filename: filename,
+          arguments: args[0],
+          ctx: ""
+        }),
+        env: extend(process.env, ctx.env)
       });
+      if (res.error) throw res.error;
+      var result;
+      result = Array();
+      if (res.stderr.length) result.push(res.stderr.toString("utf8"));
+      if (res.stdout.length) {
+        var sres;
+        try {
+          _ref2 = msgpack.deserialize(Buffer.from(res.stdout.toString("utf8"), "hex"));
+        } catch (e) {
+          console.log("cant decode messageback", e);
+          _ref2 = res.stdout.toString("utf8");
+        }
+        sres = _ref2;
+        Array.isArray(sres) ? result = result.concat(sres) : result.push(sres);
+      }
+      if ((result.length === 1)) result = result[0];
+      _ref = result;
     } else {
       _ref = undefined;
+      throw Error(tpl("{ext} extension is not supported, for {filename} ", {
+        ext: parsed.ext,
+        filename: filename
+      }));
     }
-    _ref;
+    _ref3 = _ref;
   } catch (e) {
-    throw TuneError.wrap(e, filename);
+    throw e;
   }
-  if (!tool) throw new TuneError(("cant make tool out of " + parsed.ext + " only .mjs .js .cjs .py .chat .php extensios are supported" + filename));
-  return tool;
+  return _ref3;
 }
-makeTool;
+runFile;
 
 function fsmd(paths, opts, fs) {
-  var textExt, imageExt, audioExt;
+  var imageExt, audioExt;
   fs = fs || require("fs");
   if (!Array.isArray(paths)) paths = Array(paths);
-  var textExt;
   var imageExt;
   var audioExt;
-  textExt = "c cpp h hpp py java js cjs ts html css php rb swift go cs vb asm rs kt scala lua sh bat pl ps1 r m sql erl hs clj groovy dart v vhd s f f90 f77 pas ada pro tcl ml scm lisp el nim jl pyx xml json yaml yml ini cfg toml env md rst txt log csv tsv vcard properties tex latex bib rss atom xhtml xsl svg wsdl asp jsp ejs haml erb jade pug scss less sass coffee hbs twig jst nunj dot gml gpx kml plist config psd1 psm1 makefile cmake gradle dockerfile gitignore gitattributes editorconfig eslint prettierrc babelrc tsconfig webpack travis.yml circleci appveyor.yml jenkinsfile vagrantfile cloudformation azure terraform tfstate ansible chef puppet powershell bashrc bash_profile zshrc profile inputrc nanorc vimrc tmux.conf screenrc npmrc yarnrc bower yml.j2 log sh fish csh tcsh awk sed zsh profile ex exs sql dbschema docbook adoc mediawiki wiki odt org wikitext scriv rtf po mo pot xlf xliff key pem crt csr pub asc sig lock jsonl ndjson lst conf cfg ini inf prefs rc sublime-project sublime-settings sublime-keymap spec test mocha karma junit coverage nycrc lint debug scenario cucumber arff dat data dl lp mps chat tsx"
-    .split(" ")
-    .map((function(item) {
-      return ("." + item);
-    }));
   imageExt = "png jpeg jpg webp"
     .split(" ")
     .map((function(item) {
@@ -723,7 +707,14 @@ function fsmd(paths, opts, fs) {
       if (!fs.existsSync(parsed.dir)) return;
       _ref = fs.readdirSync(parsed.dir)
         .sort((function(a, b) {
-          return (b.length - a.length);
+          var exts, idx1, idx2;
+          var exts;
+          var idx1;
+          var idx2;
+          exts = [".js", ".mjs", ".cjs", ".py", ".php"];
+          idx1 = exts.indexOf(path.extname(a));
+          idx2 = exts.indexOf(path.extname(b));
+          return (idx2 - idx1);
         }));
       for (_i = 0, _len = _ref.length; _i < _len; ++_i) {
         item = _ref[_i];
@@ -733,18 +724,16 @@ function fsmd(paths, opts, fs) {
         var fileType;
         if ((parsed1.ext2 === ".tool")) {
           _ref0 = "tool";
-        } else if (parsed1.ext2 === ".config") {
-          _ref0 = "config";
+        } else if (parsed1.ext2 === ".llm") {
+          _ref0 = "llm";
         } else if (parsed1.ext2 === ".proc") {
           _ref0 = "processor";
         } else if (parsed1.ext === ".jpg" || parsed1.ext === ".jpeg" || parsed1.ext === ".png" || parsed1.ext === ".webp") {
           _ref0 = "image";
         } else if (parsed1.ext === ".mp3" || parsed1.ext === ".wav") {
           _ref0 = "audio";
-        } else if (-1 !== textExt.indexOf(parsed1.ext)) {
-          _ref0 = "text";
         } else {
-          _ref0 = "bin";
+          _ref0 = "text";
         }
         fileType = _ref0;
         var fullname;
@@ -757,7 +746,7 @@ function fsmd(paths, opts, fs) {
                 root: parsed.root,
                 dir: parsed.dir,
                 name: parsed1.name,
-                ext: ".tool"
+                ext: ".schema.json"
               });
               var schema;
               schema;
@@ -776,22 +765,27 @@ function fsmd(paths, opts, fs) {
                 type: "tool",
                 schema: schema,
                 name: parsed1.name,
-                exec: await makeTool(fullname, ctx, fs),
+                exec: (async function(params, ctx) {
+                  return runFile(fullname, ctx, params);
+                }),
+                read: (async function() {
+                  return fs.readFileSync(fullname, "utf8");
+                }),
                 dirname: parsed.dir,
                 fullname: fullname
               }
               break;
-            case "config":
+            case "llm":
               _ref1 = {
-                type: "config",
+                type: "llm",
                 dirname: parsed.dir,
                 fullname: fullname,
                 name: parsed1.name,
                 exec: (async function(payload, ctx) {
-                  var module;
-                  var module;
-                  module = require(fullname);
-                  return module.call(ctx, payload, ctx);
+                  return runFile(fullname, ctx, payload);
+                }),
+                read: (async function() {
+                  return fs.readFileSync(fullname, "utf8");
                 })
               }
               break;
@@ -799,11 +793,11 @@ function fsmd(paths, opts, fs) {
               _ref1 = {
                 type: "processor",
                 name: parsed1.name,
-                exec: (function(node, args, ictx) {
-                  var module;
-                  var module;
-                  module = require(fullname);
-                  return module.call(ctx, node, args, ictx);
+                exec: (function(node, args, ctx) {
+                  return runFile(fullname, ctx, node, args);
+                }),
+                read: (async function() {
+                  return fs.readFileSync(fullname, "utf8");
                 }),
                 dirname: parsed.dir,
                 fullname: fullname
@@ -853,19 +847,20 @@ function fsmd(paths, opts, fs) {
                 dirname: parsed.dir,
                 fullname: fullname,
                 name: parsed1.name,
-                read: (async function() {
-                  return fs.readFileSync(fullname, "utf8");
-                })
-              }
-              break;
-            case "bin":
-              _ref1 = {
-                type: "bin",
-                name: parsed1.name,
-                fullname: fullname,
-                dirname: parsed.dir,
-                read: (async function() {
-                  return fs.readFileSync(fullname);
+                read: (async function(binary) {
+                  var buf, i, c;
+                  if (binary) return fs.readFileSync(fullname);
+                  var buf;
+                  buf = fs.readFileSync(fullname, "utf8");
+                  var i;
+                  i = 0;
+                  while (i < Math.min(1024, buf.length)) {
+                    var c;
+                    c = buf.charCodeAt(i);
+                    if (((c === 65533) || (c <= 8))) throw Error(tpl("{} is a binary file, can not include it", fullname));
+                    i++;
+                  }
+                  return buf;
                 })
               }
               break;
@@ -968,6 +963,6 @@ function pick(obj) {
   })({});
 }
 pick;
-exports.makeTool = makeTool;
+exports.runFile = runFile;
 exports.fsmd = fsmd;
 exports.pparse = pparse;

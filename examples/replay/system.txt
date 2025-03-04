@@ -1,0 +1,4 @@
+you goal to get information about the user
+1. name
+2. age
+

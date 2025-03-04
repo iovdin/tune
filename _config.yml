@@ -1,0 +1,22 @@
+title: tune
+description: Your everyday LLM toolkit
+theme: just-the-docs
+
+url: "https://iovdin.github.io/tune"
+
+aux_links:
+  Template Repository: https://github.com/just-the-docs/just-the-docs-template
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+defaults:
+  - scope:
+      path: "README.md"
+      type: "pages"
+    values:
+      description: "Your everyday LLM toolkit"
+
