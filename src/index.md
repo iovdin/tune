@@ -8,6 +8,10 @@ nav_order: 1
 
 Tune is a toolkit that helps developers and users work with Large Language Models (LLMs). Whether you want to chat with AI, build applications, or create AI agents, Tune provides a simple yet powerful way to work with LLMs.
 
+
+- TOC
+{:toc}
+
 ## .chat file format 
 
 The core of Tune is to have chat as a human-readable text file.
@@ -69,10 +73,10 @@ Using <Shift+Enter> the extension make LLM to give a response to current chat or
 ## Hello World App
 Let make a simple app with tune.
 
-Install `npm install tune-js`
+Install `npm install tune-sdk`
 
 ```javascript
-import { text2run, makeContext, msg2text } from 'tune-js';
+import { text2run, makeContext, msg2text } from 'tune-sdk';
 
 async function main() {
     // Tune resolves template variables via context 
@@ -83,8 +87,10 @@ async function main() {
             exec: defaultLLM 
         }
     })
-    const messages = await text2run("s: @system\nu: Hi, how are you?", ctx)
-    console.log(msg2text(messages)) // a: I am Groot
+    const text = "s: @system\nu: Hi, how are you?";
+    const messages = await text2run(text, ctx)
+    console.log(msg2text(messages)) 
+    // a: I am Groot
 }
 
 const defaultLLM = async (payload, ctx) => ({

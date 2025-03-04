@@ -11,11 +11,11 @@ Install [VSCode extension](https://marketplace.visualstudio.com/items?itemName=i
 
 ### Set OPENAI_KEY
 
-<img src="/assets/gifs/set_openai_key.gif" width=800 height=450>
+<img src="{{ site.baseurl }}/assets/gifs/set_openai_key.gif" width=800 height=450>
 
 ### Start Chatting
 
-<img src="/assets/gifs/basic.gif" width=800 height=450>
+<img src="{{ site.baseurl }}/assets/gifs/basic.gif" width=800 height=450>
 
 Using <Shift+Enter> the extension make LLM to give a response to current chat or to call a tool and print result.  
 

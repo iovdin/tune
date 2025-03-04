@@ -1,0 +1,167 @@
+<!DOCTYPE html> <html lang="en-US"> <head> <meta charset="UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=Edge"> <link rel="stylesheet" href="/tune/assets/css/just-the-docs-default.css"> <link rel="stylesheet" href="/tune/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet"> <style id="jtd-nav-activation"> .site-nav > ul.nav-list:first-child > li > a, .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(4)) > a, .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a { background-image: none; } .site-nav > ul.nav-list:not(:first-child) a, .site-nav li.external a { background-image: none; } .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(4) > a { font-weight: 600; text-decoration: none; }.site-nav > ul.nav-list:first-child > li:nth-child(5) > button svg, .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(4) > button svg { transform: rotate(-90deg); }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list, .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list > li.nav-list-item:nth-child(4) > ul.nav-list { display: block; } </style> <script src="/tune/assets/js/vendor/lunr.min.js"></script> <script src="/tune/assets/js/just-the-docs.js"></script> <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Begin Jekyll SEO tag v2.8.0 --> <title>Developer copilot | tune</title> <meta name="generator" content="Jekyll v4.4.1" /> <meta property="og:title" content="Developer copilot" /> <meta property="og:locale" content="en_US" /> <meta name="description" content="Your everyday LLM toolkit" /> <meta property="og:description" content="Your everyday LLM toolkit" /> <link rel="canonical" href="https://iovdin.github.io/tune/examples/copilot" /> <meta property="og:url" content="https://iovdin.github.io/tune/examples/copilot" /> <meta property="og:site_name" content="tune" /> <meta property="og:type" content="website" /> <meta name="twitter:card" content="summary" /> <meta property="twitter:title" content="Developer copilot" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebPage","description":"Your everyday LLM toolkit","headline":"Developer copilot","url":"https://iovdin.github.io/tune/examples/copilot"}</script> <!-- End Jekyll SEO tag --> </head> <body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewBox="0 0 24 24"> <title>Link</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"> <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewBox="0 0 24 24"> <title>Menu</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"> <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewBox="0 0 24 24"> <title>Expand</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"> <polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE --> <symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"> <title id="svg-external-link-title">(external link)</title> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewBox="0 0 24 24"> <title>Document</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"> <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewBox="0 0 24 24"> <title>Search</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md --> <symbol id="svg-copy" viewBox="0 0 16 16"> <title>Copy</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/> <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/> </svg> </symbol> <symbol id="svg-copied" viewBox="0 0 16 16"> <title>Copied</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16"> <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/> </svg> </symbol> </svg> <div class="side-bar"> <div class="site-header" role="banner"> <a href="/tune/" class="site-title lh-tight"> tune </a> <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false"> <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg> </button> </div> <nav aria-label="Main" id="site-nav" class="site-nav"> <ul class="nav-list"><li class="nav-list-item"><a href="/tune/" class="nav-list-link">Home</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Text Editor category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/tune/text-editor" class="nav-list-link">Text Editor</a><ul class="nav-list"><li class="nav-list-item"><a href="/tune/text-editor/vscode" class="nav-list-link">VSCode extension</a></li><li class="nav-list-item"><a href="/tune/text-editor/neovim" class="nav-list-link">Neovim extension</a></li><li class="nav-list-item"><a href="/tune/text-editor/tune-path-and-dot-env" class="nav-list-link">TUNE_PATH and .env</a></li><li class="nav-list-item"><a href="/tune/text-editor/extend" class="nav-list-link">LLMs, Tools and Processors</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Template Language category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/tune/template-language" class="nav-list-link">Template Language</a><ul class="nav-list"><li class="nav-list-item"><a href="/tune/template-language/at-symbol" class="nav-list-link">Use of @ and @@</a></li><li class="nav-list-item"><a href="/tune/template-language/connect-llm" class="nav-list-link">Connecting LLMs</a></li><li class="nav-list-item"><a href="/tune/template-language/tools" class="nav-list-link">Using Tools</a></li><li class="nav-list-item"><a href="/tune/template-language/special-chars" class="nav-list-link">Escape and Special chars</a></li><li class="nav-list-item"><a href="/tune/template-language/roles" class="nav-list-link">Chat Roles</a></li><li class="nav-list-item"><a href="/tune/template-language/processors" class="nav-list-link">Processors</a></li><li class="nav-list-item"><a href="/tune/template-langauge/context" class="nav-list-link">Context</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in API category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/tune/api" class="nav-list-link">API</a><ul class="nav-list"><li class="nav-list-item"><a href="/tune/api/context" class="nav-list-link">makeContext</a></li><li class="nav-list-item"><a href="/tune/api/text2run" class="nav-list-link">text2run</a></li><li class="nav-list-item"><a href="/tune/api/msg2text" class="nav-list-link">msg2text</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Examples category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/tune/examples" class="nav-list-link">Examples</a><ul class="nav-list"><li class="nav-list-item"><a href="/tune/examples/memory" class="nav-list-link">Memory</a></li><li class="nav-list-item"><a href="/tune/examples/translate" class="nav-list-link">Iterate on prompt</a></li><li class="nav-list-item"><a href="/tune/examples/multi-agent" class="nav-list-link">Multi agent conversation</a></li><li class="nav-list-item"><a href="/tune/examples/copilot" class="nav-list-link">Developer copilot</a></li><li class="nav-list-item"><a href="/tune/examples/weather" class="nav-list-link">Weather Tool</a></li></ul></li></ul> </nav> <footer class="site-footer"> tune - your everyday LLM toolkit. <a href="https://github.com/iovdin/tune">GitHub</a> and <a href="https://discord.gg/X9sze3xd">Discord</a>. </footer> </div> <div class="main" id="top"> <div id="main-header" class="main-header"> <div class="search" role="search"> <div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search tune" aria-label="Search tune" autocomplete="off"> <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label> </div> <div id="search-results" class="search-results"></div> </div> </div> <div class="main-content-wrap"> <nav aria-label="Breadcrumb" class="breadcrumb-nav"> <ol class="breadcrumb-nav-list"> <li class="breadcrumb-nav-list-item"><a href="/tune/examples">Examples</a></li> <li class="breadcrumb-nav-list-item"><span>Developer copilot</span></li> </ol> </nav> <div id="main-content" class="main-content"> <main> <h2 id="copilot"> <a href="#copilot" class="anchor-heading" aria-labelledby="copilot"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Copilot </h2> <p>Lets make a tetris game. The system prompt is pretty simple.</p> <div class="language-chat highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kc">system:</span> <span class="w">
+</span><span class="n">@sonnet</span> <span class="n">@writefile</span> <span class="n">@readfile</span> <span class="n">@shell</span> <span class="n">@patch</span><span class="w">
+</span><span class="kd">user:</span> <span class="w">
+</span>can you make a tetris game?<span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>I'd be happy to help you create a Tetris game! I can write a simple Tetris implementation in Python using the Pygame library, which is great for 2D games like this.<span class="w">
+
+</span>Let's start by creating a Tetris game with the basic features:<span class="w">
+</span>- Falling tetromino pieces<span class="w">
+</span>- Piece rotation<span class="w">
+</span>- Line clearing<span class="w">
+</span>- Game over detection<span class="w">
+</span>- Score tracking<span class="w">
+
+</span>First, let's make sure Pygame is installed and then create the game:<span class="w">
+</span><span class="kr">tool_call:</span> shell<span class="w">
+</span>pip install pygame<span class="w">
+</span><span class="kp">tool_result:</span> Collecting pygame<span class="w">
+  </span>Downloading pygame-2.6.1-cp313-cp313-macosx_10_13_x86_64.whl.metadata (12 kB)<span class="w">
+</span>Downloading pygame-2.6.1-cp313-cp313-macosx_10_13_x86_64.whl (13.1 MB)<span class="w">
+   </span>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.1/13.1 MB 20.9 MB/s eta 0:00:00<span class="w">
+</span>Installing collected packages: pygame<span class="w">
+</span>Successfully installed pygame-2.6.1<span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>Now, let's write the Tetris game code. I'll create a complete implementation:<span class="w">
+</span><span class="kr">tool_call:</span> writefile {"filename":"tetris.py"}<span class="w">
+</span>import pygame<span class="w">
+</span>import random<span class="w">
+</span>import time<span class="w">
+
+</span># Initialize pygame<span class="w">
+</span>pygame.init()<span class="w">
+
+</span>### CUT THE CODE FOR BREVITY<span class="w">
+</span>### CUT THE CODE FOR BREVITY<span class="w">
+
+</span>if __name__ == "__main__":<span class="w">
+    </span>main()<span class="w">
+</span><span class="kp">tool_result:</span> written<span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>Now let's run the Tetris game:<span class="w">
+</span><span class="kr">tool_call:</span> shell<span class="w">
+</span>python tetris.py<span class="w">
+</span><span class="kp">tool_result:</span> pygame 2.6.1 (SDL 2.28.4, Python 3.13.1)<span class="w">
+</span>Hello from the pygame community. https://www.pygame.org/contribute.html<span class="w">
+</span><span class="kd">user:</span> <span class="w">
+</span>can you make background white?<span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>I'll modify the Tetris game to have a white background instead of black. Let's update the code:<span class="w">
+</span><span class="kr">tool_call:</span> readfile {"filename":"tetris.py"}<span class="w">
+</span><span class="kp">tool_result:</span> <span class="n">@tetris.py</span><span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>Now I'll update the code to make the background white. I'll need to modify the screen.fill() call and adjust the side panel and text colors to maintain proper visibility:<span class="w">
+</span><span class="kr">tool_call:</span> patch {"filename":"tetris.py"}<span class="w">
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+</span>BLACK = (0, 0, 0)<span class="w">
+</span>WHITE = (255, 255, 255)<span class="w">
+</span>=======<span class="w">
+</span>BLACK = (0, 0, 0)<span class="w">
+</span>WHITE = (255, 255, 255)<span class="w">
+</span>LIGHT_GRAY = (220, 220, 220)<span class="w">
+</span>DARK_GRAY = (80, 80, 80)<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+            </span># Draw side panel background<span class="w">
+            </span>pygame.draw.rect(<span class="w">
+                </span>screen,<span class="w">
+                </span>BLACK,<span class="w">
+                </span>(GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT)<span class="w">
+            </span>)<span class="w">
+            
+            </span># Draw next piece preview<span class="w">
+            </span>font = pygame.font.SysFont(None, 36)<span class="w">
+            </span>next_text = font.render("Next:", True, WHITE)<span class="w">
+            </span>screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20))<span class="w">
+</span>=======<span class="w">
+            </span># Draw side panel background<span class="w">
+            </span>pygame.draw.rect(<span class="w">
+                </span>screen,<span class="w">
+                </span>DARK_GRAY,<span class="w">
+                </span>(GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT)<span class="w">
+            </span>)<span class="w">
+            
+            </span># Draw next piece preview<span class="w">
+            </span>font = pygame.font.SysFont(None, 36)<span class="w">
+            </span>next_text = font.render("Next:", True, WHITE)<span class="w">
+            </span>screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20))<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+        </span># Update display<span class="w">
+        </span>screen.fill(BLACK)<span class="w">
+        </span>game.draw()<span class="w">
+        </span>pygame.display.flip()<span class="w">
+</span>=======<span class="w">
+        </span># Update display<span class="w">
+        </span>screen.fill(WHITE)<span class="w">
+        </span>game.draw()<span class="w">
+        </span>pygame.display.flip()<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+                    </span>WHITE if self.grid[row][col] == 0 else self.grid[row][col],<span class="w">
+                    </span>(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE),<span class="w">
+                    </span>0 if self.grid[row][col] != 0 else 1<span class="w">
+</span>=======<span class="w">
+                    </span>WHITE if self.grid[row][col] == 0 else self.grid[row][col],<span class="w">
+                    </span>(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE),<span class="w">
+                    </span>0 if self.grid[row][col] != 0 else 1  # Draw cell border for empty cells<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+</span><span class="kp">tool_result:</span> patched<span class="w">
+</span><span class="kn">assistant:</span> <span class="w">
+</span>Let's fix a few more things to ensure the code is clean and working properly:<span class="w">
+</span><span class="kr">tool_call:</span> patch {"filename":"tetris.py"}<span class="w">
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+        </span># Draw the grid background<span class="w">
+        </span>for row in range(GRID_HEIGHT):<span class="w">
+            </span>for col in range(GRID_WIDTH):<span class="w">
+                </span>pygame.draw.rect(<span class="w">
+                    </span>screen, <span class="w">
+                                        </span>WHITE if self.grid[row][col] == 0 else self.grid[row][col],<span class="w">
+                    </span>(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE),<span class="w">
+                    </span>0 if self.grid[row][col] != 0 else 1  # Draw cell border for empty cells<span class="w">
+
+                </span>)<span class="w">
+</span>=======<span class="w">
+        </span># Draw the grid background<span class="w">
+        </span>for row in range(GRID_HEIGHT):<span class="w">
+            </span>for col in range(GRID_WIDTH):<span class="w">
+                </span>pygame.draw.rect(<span class="w">
+                    </span>screen, <span class="w">
+                    </span>WHITE if self.grid[row][col] == 0 else self.grid[row][col],<span class="w">
+                    </span>(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE),<span class="w">
+                    </span>0 if self.grid[row][col] != 0 else 1  # Draw cell border for empty cells<span class="w">
+                </span>)<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+
+</span>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL<span class="w">
+        
+                    </span># Draw side panel background<span class="w">
+            </span>pygame.draw.rect(<span class="w">
+                </span>screen,<span class="w">
+                </span>DARK_GRAY,<span class="w">
+                </span>(GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT)<span class="w">
+            </span>)<span class="w">
+            
+            </span># Draw next piece preview<span class="w">
+            </span>font = pygame.font.SysFont(None, 36)<span class="w">
+            </span>next_text = font.render("Next:", True, WHITE)<span class="w">
+            </span>screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20))<span class="w">
+
+</span>=======<span class="w">
+        </span># Draw side panel background<span class="w">
+        </span>pygame.draw.rect(<span class="w">
+            </span>screen,<span class="w">
+            </span>DARK_GRAY,<span class="w">
+            </span>(GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT)<span class="w">
+        </span>)<span class="w">
+        
+        </span># Draw next piece preview<span class="w">
+        </span>font = pygame.font.SysFont(None, 36)<span class="w">
+        </span>next_text = font.render("Next:", True, WHITE)<span class="w">
+        </span>screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20))<span class="w">
+</span>&gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED<span class="w">
+</span><span class="kp">tool_result:</span> patched<span class="w">
+</span></code></pre></div></div> <p>Not that <code class="language-plaintext highlighter-rouge">readfile</code> does not output whole file, but uses <code class="language-plaintext highlighter-rouge">@</code> to include the file contents. To be less verbose and more readable</p> </main> </div> </div> <div class="search-overlay"></div> </div> </body> </html>

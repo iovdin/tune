@@ -1,0 +1,282 @@
+{"0": {
+    "doc": "Use of @ and @@",
+    "title": "Use of @ and @@",
+    "content": "memory.txt: . you're 33yo. prompt.txt: . Here is what i know about you: @memory . @ - injects content of a file. s: You're echo, you print everything back u: @prompt a: Here is what i know about you: @memory . @@ - injects recursively. s: You're echo, you print everything back u: @@prompt a: Here is what i know about you: you're 33 o . ",
+    "url": "/tune/template-language/at-symbol",
+    
+    "relUrl": "/template-language/at-symbol"
+  },"1": {
+    "doc": "makeContext",
+    "title": "makeContext",
+    "content": "Read about Context . const context = makeContext( { key: \"value\" }, async function middlware(name, context, type, next){ }, anotherContext ); context.use(async function (name, context, type, next) { if (name.indexOf(\"https://\") === -1) { return next() } return { type: 'text', // fetch the url read: async () =&gt; {/*..*/} } }) const node = await context.resolve(\"key\"); const result = await node.read(); console.log(result) // \"value\" . ",
+    "url": "/tune/api/context",
+    
+    "relUrl": "/api/context"
+  },"2": {
+    "doc": "Context",
+    "title": "Context",
+    "content": "Context is responsible to resolve and find those names referenced by @. In TextEditor context resolves names by looking into files and directories. For a web app context might check local dictionary or database to resolve the names. This allows you to iterate and test the a complex prompt locally in you text editor. And then use it in the web app, The only thing that changes - context, but not the prompt. Context is built by adding middlewares . const dict = { key: \"value\" } context.use(async (name, context, type, next) =&gt; { if (dict[name]) { return { type: \"text\", read: async () =&gt; dict[name] } } next() }) . Tune then uses the context to find those names: . const node = await context.resolve(\"key\"); const result = await node.read(); console.log(result) // \"value\" . Processor that modifies context . To change context in TextEditor you have to use a processor. Say we want to @ syntax to fetch files from the web like: . user: @{| expand-http } Summarize the content: @https://domain.com/file.txt . There is no node here to modify. Because we modify the context. We add a middleware to the context that intercepts all the variables that starts with https:// and return a text node that fetches the url on read . async function expandWeb(node, args, context) { context.use(async (name, context, args, next) =&gt; { if (name.indexOf(\"https://\") == -1) { return next(); } const url = name.trim() return { type: \"text\", name, read: async () =&gt; { const res = await fetch(url); return res.text() } } }) return node } . ",
+    "url": "/tune/template-langauge/context",
+    
+    "relUrl": "/template-langauge/context"
+  },"3": {
+    "doc": "Developer copilot",
+    "title": "Copilot",
+    "content": "Lets make a tetris game. The system prompt is pretty simple. system: @sonnet @writefile @readfile @shell @patch user: can you make a tetris game? assistant: I'd be happy to help you create a Tetris game! I can write a simple Tetris implementation in Python using the Pygame library, which is great for 2D games like this. Let's start by creating a Tetris game with the basic features: - Falling tetromino pieces - Piece rotation - Line clearing - Game over detection - Score tracking First, let's make sure Pygame is installed and then create the game: tool_call: shell pip install pygame tool_result: Collecting pygame Downloading pygame-2.6.1-cp313-cp313-macosx_10_13_x86_64.whl.metadata (12 kB) Downloading pygame-2.6.1-cp313-cp313-macosx_10_13_x86_64.whl (13.1 MB) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.1/13.1 MB 20.9 MB/s eta 0:00:00 Installing collected packages: pygame Successfully installed pygame-2.6.1 assistant: Now, let's write the Tetris game code. I'll create a complete implementation: tool_call: writefile {\"filename\":\"tetris.py\"} import pygame import random import time # Initialize pygame pygame.init() ### CUT THE CODE FOR BREVITY ### CUT THE CODE FOR BREVITY if __name__ == \"__main__\": main() tool_result: written assistant: Now let's run the Tetris game: tool_call: shell python tetris.py tool_result: pygame 2.6.1 (SDL 2.28.4, Python 3.13.1) Hello from the pygame community. https://www.pygame.org/contribute.html user: can you make background white? assistant: I'll modify the Tetris game to have a white background instead of black. Let's update the code: tool_call: readfile {\"filename\":\"tetris.py\"} tool_result: @tetris.py assistant: Now I'll update the code to make the background white. I'll need to modify the screen.fill() call and adjust the side panel and text colors to maintain proper visibility: tool_call: patch {\"filename\":\"tetris.py\"} &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL BLACK = (0, 0, 0) WHITE = (255, 255, 255) ======= BLACK = (0, 0, 0) WHITE = (255, 255, 255) LIGHT_GRAY = (220, 220, 220) DARK_GRAY = (80, 80, 80) &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL # Draw side panel background pygame.draw.rect( screen, BLACK, (GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT) ) # Draw next piece preview font = pygame.font.SysFont(None, 36) next_text = font.render(\"Next:\", True, WHITE) screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20)) ======= # Draw side panel background pygame.draw.rect( screen, DARK_GRAY, (GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT) ) # Draw next piece preview font = pygame.font.SysFont(None, 36) next_text = font.render(\"Next:\", True, WHITE) screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20)) &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL # Update display screen.fill(BLACK) game.draw() pygame.display.flip() ======= # Update display screen.fill(WHITE) game.draw() pygame.display.flip() &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL WHITE if self.grid[row][col] == 0 else self.grid[row][col], (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE), 0 if self.grid[row][col] != 0 else 1 ======= WHITE if self.grid[row][col] == 0 else self.grid[row][col], (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE), 0 if self.grid[row][col] != 0 else 1 # Draw cell border for empty cells &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED tool_result: patched assistant: Let's fix a few more things to ensure the code is clean and working properly: tool_call: patch {\"filename\":\"tetris.py\"} &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL # Draw the grid background for row in range(GRID_HEIGHT): for col in range(GRID_WIDTH): pygame.draw.rect( screen, WHITE if self.grid[row][col] == 0 else self.grid[row][col], (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE), 0 if self.grid[row][col] != 0 else 1 # Draw cell border for empty cells ) ======= # Draw the grid background for row in range(GRID_HEIGHT): for col in range(GRID_WIDTH): pygame.draw.rect( screen, WHITE if self.grid[row][col] == 0 else self.grid[row][col], (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE), 0 if self.grid[row][col] != 0 else 1 # Draw cell border for empty cells ) &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED &lt;&lt;&lt;&lt;&lt;&lt;&lt; ORIGINAL # Draw side panel background pygame.draw.rect( screen, DARK_GRAY, (GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT) ) # Draw next piece preview font = pygame.font.SysFont(None, 36) next_text = font.render(\"Next:\", True, WHITE) screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20)) ======= # Draw side panel background pygame.draw.rect( screen, DARK_GRAY, (GRID_WIDTH * CELL_SIZE, 0, 8 * CELL_SIZE, SCREEN_HEIGHT) ) # Draw next piece preview font = pygame.font.SysFont(None, 36) next_text = font.render(\"Next:\", True, WHITE) screen.blit(next_text, (GRID_WIDTH * CELL_SIZE + 20, 20)) &gt;&gt;&gt;&gt;&gt;&gt;&gt; UPDATED tool_result: patched . Not that readfile does not output whole file, but uses @ to include the file contents. To be less verbose and more readable . ",
+    "url": "/tune/examples/copilot#copilot",
+    
+    "relUrl": "/examples/copilot#copilot"
+  },"4": {
+    "doc": "Developer copilot",
+    "title": "Developer copilot",
+    "content": " ",
+    "url": "/tune/examples/copilot",
+    
+    "relUrl": "/examples/copilot"
+  },"5": {
+    "doc": "TUNE_PATH and .env",
+    "title": "TUNE_PATH",
+    "content": "If you have a set of tools, llms, prompts, api keys that you use a lot across your projects. Put them into a separate folder and include it into TUNE_PATH in your .bashrc . export TUNE_PATH=/path/to/my/tools . TUNE_PATH is a list of directories where the names/variables are looked in, it includes current directory, directory of the current file, tune installation directory and other paths you might add . ",
+    "url": "/tune/text-editor/tune-path-and-dot-env#tune_path",
+    
+    "relUrl": "/text-editor/tune-path-and-dot-env#tune_path"
+  },"6": {
+    "doc": "TUNE_PATH and .env",
+    "title": ".env files",
+    "content": "IDE extension will try to load .env in every directory in TUNE_PATH. You can access these varaibles using context: . module.exports = async function(payload, ctx) { const api_key = await ctx.read(\"OPENAI_KEY\"); return { // create fetch payload } } . ",
+    "url": "/tune/text-editor/tune-path-and-dot-env#env-files",
+    
+    "relUrl": "/text-editor/tune-path-and-dot-env#env-files"
+  },"7": {
+    "doc": "TUNE_PATH and .env",
+    "title": "TUNE_PATH and .env",
+    "content": " ",
+    "url": "/tune/text-editor/tune-path-and-dot-env",
+    
+    "relUrl": "/text-editor/tune-path-and-dot-env"
+  },"8": {
+    "doc": "Escape and Special chars",
+    "title": "Escape and special chars",
+    "content": "To include a file that contains whitespaces use {} . user: @file name @{file name} . Escape \\@ to stop inclusion . user: email\\@gmail.com . ",
+    "url": "/tune/template-language/special-chars#escape-and-special-chars",
+    
+    "relUrl": "/template-language/special-chars#escape-and-special-chars"
+  },"9": {
+    "doc": "Escape and Special chars",
+    "title": "Escape and Special chars",
+    "content": " ",
+    "url": "/tune/template-language/special-chars",
+    
+    "relUrl": "/template-language/special-chars"
+  },"10": {
+    "doc": "LLMs, Tools and Processors",
+    "title": "LLMs, Tools and Processors",
+    "content": "Put LLM configuration into a .llm.js. Tools reside in a .tool.js, .schema.json files. Processors should be put into .proc.js. Javascript/Python/PHP . It is possible to create llm, tool, proc using javascript python and php. Lets make a tool weather. weather.tool.mjs . export default async weather({location}, context) { // ... code } . weather.tool.js/cjs . module.exports = async function weather({location}, context) { // ... code } . weather.tool.py . def main(params): params['location'] # ... code . weather.tool.php . &lt;?php function main($params) { // ... code } ?&gt; . Python and PHP does not have acess to context. ",
+    "url": "/tune/text-editor/extend",
+    
+    "relUrl": "/text-editor/extend"
+  },"11": {
+    "doc": "API",
+    "title": "API",
+    "content": " ",
+    "url": "/tune/api",
+    
+    "relUrl": "/api"
+  },"12": {
+    "doc": "Text Editor",
+    "title": "Text Editor",
+    "content": " ",
+    "url": "/tune/text-editor",
+    
+    "relUrl": "/text-editor"
+  },"13": {
+    "doc": "Examples",
+    "title": "Examples",
+    "content": " ",
+    "url": "/tune/examples",
+    
+    "relUrl": "/examples"
+  },"14": {
+    "doc": "Home",
+    "title": "Tune - your everyday LLM toolkit",
+    "content": "Tune is a toolkit that helps developers and users work with Large Language Models (LLMs). Whether you want to chat with AI, build applications, or create AI agents, Tune provides a simple yet powerful way to work with LLMs. | Tune - your everyday LLM toolkit . | .chat file format | Getting started | Hello World App | . | . ",
+    "url": "/tune/#tune---your-everyday-llm-toolkit",
+    
+    "relUrl": "/#tune---your-everyday-llm-toolkit"
+  },"15": {
+    "doc": "Home",
+    "title": ".chat file format",
+    "content": "The core of Tune is to have chat as a human-readable text file. | read, modify and chat right in your text editor. | store chat and prompts in version control. | manage chats like regular files - copy, move, organize in folders, share, or download them | . Example: . system: You are a helpful writing assistant who specializes in clear, concise explanations. user: Can you help me understand what photosynthesis is? assistant: Photosynthesis is how plants make their own food. They take sunlight, water, and carbon dioxide from the air, and turn it into sugar and oxygen. Think of it like a tiny solar-powered factory inside each leaf. Shorthand chat version: . s: You are Groot u: Hi, how are you? a: I am Groot . Example with tools . system: @get_weather You are a weather assistant who helps people plan their activities. user: What's the weather like in Rome today? tool_call: get_weather {\"location\": \"Rome\", \"country\": \"IT\"} tool_result: { \"temperature\": 24, \"conditions\": \"sunny\" } assistant: Perfect weather in Rome today! It's sunny and 24°C (75°F) - great for sightseeing or outdoor cafés. Don't forget sunscreen! . Using @ you can . | insert content of another text file | pick language model like gpt-4o or sonnet or deepseek | connect a tool to be called | add an image for models that supports vision | . Read more about Template Language. Learn about Tools or check Weather Tool implementation . ",
+    "url": "/tune/#chat-file-format",
+    
+    "relUrl": "/#chat-file-format"
+  },"16": {
+    "doc": "Home",
+    "title": "Getting started",
+    "content": "The easiest way to get started is to install VSCode or Neovim extension. put OPENAI_KEY to an .env file and chat: . Using &lt;Shift+Enter&gt; the extension make LLM to give a response to current chat or to call a tool and print result. ",
+    "url": "/tune/#getting-started",
+    
+    "relUrl": "/#getting-started"
+  },"17": {
+    "doc": "Home",
+    "title": "Hello World App",
+    "content": "Let make a simple app with tune. Install npm install tune-sdk . import { text2run, makeContext, msg2text } from 'tune-sdk'; async function main() { // Tune resolves template variables via context const ctx = makeContext({ system: \"You're Groot\", \"default\": { type: \"llm\", exec: defaultLLM } }) const text = \"s: @system\\nu: Hi, how are you?\"; const messages = await text2run(text, ctx) console.log(msg2text(messages)) // a: I am Groot } const defaultLLM = async (payload, ctx) =&gt; ({ url: \"https://api.openai.com/v1/chat/completions\", method: \"POST\", headers: { \"content-type\": \"application/json\", authorization: `Bearer ${process.env.OPENAI_KEY}` }, body: JSON.stringify({ ...payload, model: \"gpt-4o-mini\" }) }) main() . ",
+    "url": "/tune/#hello-world-app",
+    
+    "relUrl": "/#hello-world-app"
+  },"18": {
+    "doc": "Home",
+    "title": "Home",
+    "content": " ",
+    "url": "/tune/",
+    
+    "relUrl": "/"
+  },"19": {
+    "doc": "Template Language",
+    "title": "Template Language",
+    "content": "Tune has the same syntax @ to: . | insert content of another text file (text type) | add an image for models that supports vision (image type) | specify language model (llm type) | add a tool to be called (tool type) | . Here’s an example combining these features: . system: @gpt4o @systemPrompt.txt user: @image what os on the image? assistant: this is Rome user: @getWeather what is the weather here? tool_call: getWeather {\"location\": \"Rome\"} tool_result: { weather: [ { id: 801, main: 'Clouds', description: 'few clouds', icon: '02d' } ], ... } . You can use @ anywhere at any point of the chat (assistant and tool_call is and exception). You might want to switch to a smarter model or use a tool later in the conversation . ",
+    "url": "/tune/template-language",
+    
+    "relUrl": "/template-language"
+  },"20": {
+    "doc": "Memory",
+    "title": "Memory",
+    "content": "Put smth into memory while chatting is a common need. Examples of memory is artifacts in Claude or canvas in ChatGPT. Memory is a file we can read the file using @ and write to the file using a writefile tool. s: @writefile @sonnet You help to make markdown static website for a user. Ask about missing information first. Save the page to `website.md` file. Actual content of `website.md` file: @website|init u: i want to make a page about me. a: I'd be happy to help you create a personal webpage about yourself. To create an effective \"about me\" page, I'll need some information from you: 1. What's your name or what you'd like to be called on the page? 2. Would you like to include any professional information (job, education, skills)? 3. Any personal interests or hobbies you want to mention? 4. Do you have a photo you want to include? 5. Any specific color scheme or style preferences? 6. Would you like to include contact information or social media links? Once you provide these details, I can create a custom HTML page for your website. u: John, I work as software engineer a: Thank you for that information, John! Based on what you've shared, I'll create a basic \"About Me\" page for you as a software engineer. Let me create a markdown file for your website: tc: writefile {\"filename\":\"website.md\"} # John - Software Engineer ## About Me Hello! I'm John, a software engineer passionate about creating efficient and innovative solutions through code. ## Professional Background I work as a software engineer where I leverage my technical skills to develop high-quality software applications. ## Skills As a software engineer, I specialize in: - Software development - Problem-solving - Technical implementation --- © 2023 John | Software Engineer tr: written u: I also love cooking a: I'll update your website to include your interest in cooking. Let me add that information to your page: tc: writefile {\"filename\":\"website.md\"} # John - Software Engineer ## About Me Hello! I'm John, a software engineer passionate about creating efficient and innovative solutions through code. ## Professional Background I work as a software engineer where I leverage my technical skills to develop high-quality software applications. ## Skills As a software engineer, I specialize in: - Software development - Problem-solving - Technical implementation ## Interests &amp; Hobbies When I'm not coding, I enjoy: - Cooking - experimenting with new recipes and cuisines - [You can add more hobbies/interests here] --- © 2023 John | Software Engineer . here is the writefile.tool.mjs: . import { promises as fs } from 'fs'; export default async function writeFile({ filename, text }, ctx) { await fs.writeFile(filename, text, 'utf8'); return `written`; } . schema file writefile.schema.json: . { \"description\": \"write text content to a file\", \"parameters\": { \"type\": \"object\", \"properties\": { \"filename\": { \"type\": \"string\", \"description\": \"The name of the file to write\" }, \"text\": { \"type\": \"string\", \"description\": \"The content to write to the file\" } }, \"required\": [\"filename\", \"text\"] } } . ",
+    "url": "/tune/examples/memory",
+    
+    "relUrl": "/examples/memory"
+  },"21": {
+    "doc": "Connecting LLMs",
+    "title": "Connect LLM",
+    "content": "To use an LLM like gpt-4o or claude-sonnet you have to specify a function that takes messages and tools, and returns full parameters. Tune uses javascript fetch with returned parameters (as-is) to call LLM api. The endpoint should support Open AI format response . async ({messages, tools} , context) =&gt; ({ url: \"https://api.openai.com/v1/chat/completions\", method: \"POST\", headers: { \"content-type\": \"application/json\", authorization: `Bearer ${process.env.OPENAI_KEY}` }, body: JSON.stringify({ messages: payload.messages, tools: payload.tools, model: \"gpt-4o-mini\", }) }) . Model is a good place to choose model parameters, get tail of messages etc. Default LLM . Tune looks for default.llm.js if no llm was connected. Using multiple LLMs . You might want to start chatting using cheap model and then switch to a smart one if smth goes wrong. The latest model connected is used for the chat. u: @4o-mini c: conversation which 4o-mini struggle to give the right answer u: @o3-mini Can you think a bit more about the problem? . Connect to TextEditor . create a file called 4o-mini.llm.js: . // export the function module.exports = async ({messages, tools} , context) =&gt; (/* ... */) . Now you can use the model in you chat by 4o-mini name . user: @4o-mini Who are you? assistant: I'm ChatGPT, an AI assistant here to help with any questions or tasks you have! . Connect to app . Add the following structure to the context . const context = makeContext({ \"4o-mini\": { type: \"llm\", exec: async ({messages, tools} , context) =&gt; (/* ... */) } }) . [read more about context] . ",
+    "url": "/tune/template-language/connect-llm#connect-llm",
+    
+    "relUrl": "/template-language/connect-llm#connect-llm"
+  },"22": {
+    "doc": "Connecting LLMs",
+    "title": "Connecting LLMs",
+    "content": " ",
+    "url": "/tune/template-language/connect-llm",
+    
+    "relUrl": "/template-language/connect-llm"
+  },"23": {
+    "doc": "msg2text",
+    "title": "msg2text",
+    "content": "msg2text it converts messages array return from openai api to chat file format. const messages = [ { role: \"assistant\", content: \"hello\" }, { role: \"assistant\", tool_calls: [ { id: \"call-1\", type: \"function\", \"function\" : { name: \"name\", arguments: \"{\\\"args\\\": 1, \\\"text\\\": \\\"special parameter\\\"}\" } } ], }, { role: \"tool\", id: \"call-1\", content: \"tool result\" } ] msg2text(messages) // a: hello // tc: name { \"arg\": 1 } // special parameter // tr: tool result . ",
+    "url": "/tune/api/msg2text",
+    
+    "relUrl": "/api/msg2text"
+  },"24": {
+    "doc": "Multi agent conversation",
+    "title": "Mutli Agent Conversation",
+    "content": "Lets make a 2 agents playing “20 Questions” game conversation. Agent thinker answer yes/no questions. Agent player asks those questions to guess the word. Thinker prompt . thinker.txt . You are 'thinker'. You can answer only yes/no to questions made by 'player'. The player is trying to guess word: \"apple\" . Player prompt . player.txt . You are 'player'. You ask yes/no question to 'thinker' Your goal is to guess the word 'thinker' has in mind . Conversation . The chat will go on by making turns with a turn tool. turn tool writes @@thinker or @@player into agent.txt. s: @turn @4o You're playing 20 questions game. You switch turns between 'thinker' and 'player' agent. Current agent stored in agent.txt file 'player' always plays first @@agent|init a: Is it a living thing? tc: turn {\"role\":\"thinker\",\"filename\":\"agent.txt\"} tr: now it is turn of thinker to reply a: No. tc: turn {\"role\":\"player\",\"filename\":\"agent.txt\"} tr: now it is turn of player to reply a: Is it something that can be used indoors? tc: turn {\"role\":\"thinker\",\"filename\":\"agent.txt\"} tr: now it is turn of thinker to reply a: Yes. tc: turn {\"role\":\"player\",\"filename\":\"agent.txt\"} tr: now it is turn of player to reply a: Is it an electronic device? . @@agent includes content of agent.txt which is e.g. @@thinker and then includes thinker.txt. So the system prompt is now of a thinker prompt. read more about using @@ and @ for inclusion. turn.tool.mjs . import fs from \"fs\"; export default async function turn({ role, filename }) { if (filename) { fs.writeFileSync(filename, `@@${role}`); } return `now it is turn of ${role} to reply` . ",
+    "url": "/tune/examples/multi-agent#mutli-agent-conversation",
+    
+    "relUrl": "/examples/multi-agent#mutli-agent-conversation"
+  },"25": {
+    "doc": "Multi agent conversation",
+    "title": "Another Implementation",
+    "content": "Lets make it less verbose version, get rid of turn tool call to swtich roles. We’ll do it with llm processor. s: @{ 4o-mini | turn-proc player thinker } You're playing 20 questions game. Start the answer with \"(&lt;your role&gt;)\" a: (Player) Is it a living thing? a: (Thinker) No. a: (Player) Is it an object? a: (Thinker) Yes. a: (Player) Is it something commonly found in households? a: (Thinker) Yes. a: (Player) Is it used for a specific function or purpose? a: (Thinker) Yes. a: (Player) Is it an appliance? a: (Thinker) No. a: (Player) Is it a piece of furniture? a: (Thinker) No. a: (Player) Is it a tool? a: (Thinker) No. turn-proc.proc.mjs . export default async function turn(node, args, context) { // node is a llm which exec function we're going to change // roles contains prompts of every role const roles = await Promise.all(args.trim().split(/\\s+/).map(role =&gt; context.read(role))) const newNode = Object.assign({}, node); newNode.exec = async ({ messages, tools }, context) =&gt; { const index = messages.filter(msg =&gt; msg.role === \"assistant\").length % roles.length // inject the role as a system prompt messages.splice(1, 0, { role: \"system\", content: roles[index]}) return node.exec({ messages, tools }, context) } return newNode; } . ",
+    "url": "/tune/examples/multi-agent#another-implementation",
+    
+    "relUrl": "/examples/multi-agent#another-implementation"
+  },"26": {
+    "doc": "Multi agent conversation",
+    "title": "Multi agent conversation",
+    "content": " ",
+    "url": "/tune/examples/multi-agent",
+    
+    "relUrl": "/examples/multi-agent"
+  },"27": {
+    "doc": "Neovim extension",
+    "title": "Insall Neovim extension",
+    "content": "Prerequisites . Before installing, ensure you have: . | Neovim &gt;= 0.8.0 | nvim-treesitter installed | . Using lazy.nvim (recommended) . Add this to your Neovim configuration: . { \"iovdin/tune.nvim\", dependencies = { 'iovdin/tree-sitter-chat', 'nvim-treesitter/nvim-treesitter' }, config = function() require(\"tune\").setup({}) end, ft = { \"chat\" } }, . Using packer.nvim . use { 'iovdin/tune.nvim', ft = { 'chat' }, config = function() require(\"tune\").setup({}) end, requires = { 'nvim-treesitter/nvim-treesitter', 'iovdin/tree-sitter-chat' }, } . Using vim-plug . Add this to your init.vim: . call plug#begin('~/.config/nvim/plugged') \" Install nvim-treesitter and run :TSUpdate after installation Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'} \" Install tree-sitter-chat parser Plug 'iovdin/tree-sitter-chat' \" Install tune.nvim and lazy-load it for 'chat' filetype Plug 'iovdin/tune.nvim', { 'for': 'chat' } call plug#end() \" Initialize tune.nvim for 'chat' filetype augroup TuneSetup autocmd! autocmd FileType chat lua require(\"tune\").setup({}) augroup END . Post-installation Setup . After installation, make sure to: . | Add “chat” to your nvim-treesitter configuration: | . { \"nvim-treesitter/nvim-treesitter\", build = \":TSUpdate\", config = function () local configs = require(\"nvim-treesitter.configs\") configs.setup({ ensure_installed = { \"c\", \"lua\", \"vim\", \"vimdoc\", \"javascript\", \"html\", \"css\", \"python\", \"typescript\", \"chat\"}, sync_install = false, highlight = { enable = true }, indent = { enable = true }, }) end }, . Alternatively, you can install the chat parser manually after installation: . :TSInstall chat . Default Keymaps . | &lt;CR&gt; in normal mode: Execute TuneChat | &lt;S-CR&gt; in insert mode: Execute TuneChat | &lt;Esc&gt; or &lt;C-c&gt; in any mode: Cancel generation | . You can customize the keymaps in your configuration: . require(\"tune\").setup({ keymaps = { n = { [\"&lt;CR&gt;\"] = { \":TuneChat&lt;CR&gt;\", \"Execute TuneChat\" }, [\"&lt;Esc&gt;\"] = { \":TuneKill&lt;CR&gt;\", \"Execute TuneKill\" }, [\"&lt;C-c&gt;\"] = { \":TuneKill&lt;CR&gt;\", \"Execute TuneKill\" }, }, i = { [\"&lt;S-CR&gt;\"] = { \"&lt;Esc&gt;:TuneChat&lt;CR&gt;\", \"Execute TuneChat in Insert Mode\" }, [\"&lt;C-c&gt;\"] = { \"&lt;Esc&gt;:TuneKill&lt;CR&gt;\", \"Execute TuneKill in Insert Mode\" }, }, } }) . ",
+    "url": "/tune/text-editor/neovim#insall-neovim-extension",
+    
+    "relUrl": "/text-editor/neovim#insall-neovim-extension"
+  },"28": {
+    "doc": "Neovim extension",
+    "title": "Neovim extension",
+    "content": " ",
+    "url": "/tune/text-editor/neovim",
+    
+    "relUrl": "/text-editor/neovim"
+  },"29": {
+    "doc": "Processors",
+    "title": "Extend with Processors",
+    "content": "Processor is a way to modify variable using pipe | syntax: For example: . c: resize or convert an image before it is being sent to llm. u: what is on the picture @{ image | resize 512 } c: set initial value of a file if it does not exists yet u: knowledge about you @{ memory | init empty } c: set a model parameterer u: @{ openrouter | model deepseek/r1 } c: set model output to json_schema u: @{ 4o | json_schema path_to/schema.json } c: show file with line numbers u: @{ src/server.js | linenum } . These all can be implemented with processors . Implement init processor . Here is a way to implement init processor that is called on @{ memory | init empty } . async function init(node, args, context) { // file \"memory\" has been found, return as-is if (node) { return node; } // file not found, lets return a node that contains 'empty' return { type: \"text\", read: async() =&gt;(args || \"\") } } . node is an structure that Tune parses @ expansions. [read] more about nodes in js api . TextEditor . Put the code into init.proc.js. module.exports = async function init(node, args, context) { // code here... } . Use in an app . const context = makeContext({ init: { type: \"processor\", exec: async (node, args, context) =&gt; {/* ... */} } }) . Implement model processor . Lets implement another processor. @{ openrouter | model deepseek/r1 } example: . async model(node, args, context) =&gt; { // model not found if (!node) { return } // clone the node, to keep all additional properties of the original node const newNode = Object.assign({}, node); // overwrite just the exec function newNode.exec = async (payload, ctx) =&gt; { payload.model = args.trim(); return node.exec(payload, ctx); } return newNode; } . ",
+    "url": "/tune/template-language/processors#extend-with-processors",
+    
+    "relUrl": "/template-language/processors#extend-with-processors"
+  },"30": {
+    "doc": "Processors",
+    "title": "Processors",
+    "content": " ",
+    "url": "/tune/template-language/processors",
+    
+    "relUrl": "/template-language/processors"
+  },"31": {
+    "doc": "Chat Roles",
+    "title": "expanding and roles",
+    "content": "@ will expand for system user tool_result and comment roles. Tune will ignore @ in assistant and tool_call roles. Everything that comes from llm (assistant and tool_call) - ignores @ . s: @system - expands u: @user - expands a: @assistant - does not expand tc: @tool_call - does not expand tr: @tool_result - expands c: @comment - expands . ",
+    "url": "/tune/template-language/roles#expanding-and-roles",
+    
+    "relUrl": "/template-language/roles#expanding-and-roles"
+  },"32": {
+    "doc": "Chat Roles",
+    "title": "Chat Roles",
+    "content": " ",
+    "url": "/tune/template-language/roles",
+    
+    "relUrl": "/template-language/roles"
+  },"33": {
+    "doc": "text2run",
+    "title": "text2run",
+    "content": "let chatContent = 's: @system\\nu: hi how are you?'; const context = makeContext({ system: \"You are Groot\"}); const messages = await text2run(chatContent, context, { stop: \"assistant\" }); const result = msg2text(messages); // a: I am Groot chatContent += `\\n${result}`; . Streaming . const iterator = text2run(chatContent, context, { stop: \"assistant\", stream: true }); for await (const messages of iterator){ msg2text(messages) // Note that messages contain concatenated version // a: I // a: I am // a: I am Groot }; . Stop . text2run after getting response from LLM might run again to e.g. call a tool on clien side and then again get LLM response with having tool call result. You might build multi step agent then should stop running when some conditions met e.g. “FINISH” word. stop option is used to tell text2run when to stop . step - text2run will run 1 time and stop assistant - text2run will execute until all tool calls are run and there is an assistant text answer (messages) =&gt; {} - text2run will execute until the function return true . ",
+    "url": "/tune/api/text2run",
+    
+    "relUrl": "/api/text2run"
+  },"34": {
+    "doc": "Using Tools",
+    "title": "Using Tool",
+    "content": "Tools is a very powerfull concept. It makes LLM agentic. Without tools LLM is just a chat. It might be hard to grasp at start. But it is definetly worth investing your time understanding it. Lets look at a chat with a calendar tool . user: @calendar What's my schedule for today? assistant: Let me check your calendar for today. tool_call: calendar {\"date\": \"2024-02-25\"} tool_result: { \"events\": [ {\"time\": \"09:00\", \"title\": \"Team Meeting\"}, {\"time\": \"13:00\", \"title\": \"Lunch with John\"}, {\"time\": \"15:30\", \"title\": \"Project Review\"} ] } assistant: Here's your schedule for today: - 9:00 AM: Team Meeting - 1:00 PM: Lunch with John - 3:30 PM: Project Review . tool_call and tool_result is gray because in a normal chat app users won’t see it, they’ll see the final assistant reply. But lets make them visible to understand who is doing what. user: @calendar What's my schedule for today? assistant: Let me check your calendar for today. tool_call: calendar {\"date\": \"2024-02-25\"} tool_result: { \"events\": [ {\"time\": \"09:00\", \"title\": \"Team Meeting\"}, {\"time\": \"13:00\", \"title\": \"Lunch with John\"}, {\"time\": \"15:30\", \"title\": \"Project Review\"} ] } assistant: Here's your schedule for today: - 9:00 AM: Team Meeting - 1:00 PM: Lunch with John - 3:30 PM: Project Review . Now we see that tool_call is made by LLM/assistant. But who is writing content for tool_result? This is Tune running some calendar code/program and inserting the result of it back as a tool_result. In Text editor, Tune will run the code on your computer/laptop, in an app tune will run the tool on the server. Schema . Schema is a way to tell LLM what tools are available, and how to call it, so it can emit tool_call. { \"description\": \"get calendar events for date\", \"parameters\": { \"type\": \"object\", \"properties\": { \"date\": { \"type\": \"string\", \"description\": \"date for events\" }, }, \"required\": [ \"date\" ] } } . read more about tool calling at openai . Code . There must a code that Tune will execute when LLM issues tool_call. Result of the code will be inserted into tool_result . async function calendar({ date }, context) { // query the calendar code // should be here } . Create a tool in TextEditor . Put schema into calendar.schema.json file and code into calendar.tool.mjs like: . export default async function calendar({ date }, context) { // code here return result } . You can first create the code and then Tune on the first run of the tool will try to generate calendar.schema.json file for you . Create tool for an app . const context = makeContext({ calendar: { type: \"tool\", schema: schemaObject, exec: async calendar({ data }, context) =&gt; {/* ... */} } }) . [read more] about context. Check out tool examples . ",
+    "url": "/tune/template-language/tools#using-tool",
+    
+    "relUrl": "/template-language/tools#using-tool"
+  },"35": {
+    "doc": "Using Tools",
+    "title": "Using Tools",
+    "content": " ",
+    "url": "/tune/template-language/tools",
+    
+    "relUrl": "/template-language/tools"
+  },"36": {
+    "doc": "Iterate on prompt",
+    "title": "Iterate on Prompt",
+    "content": "Idea . Prompt starts with an idea or problem. Im learning Dutch. I want explanation of some words or constructs while reading text. Lets start with a simple prompt and chat: . s: You help to learn Dutch. By translating given word in a context. u: Ze hebben veel *aandacht* besteed aan de 'Vibes' van GPT 4.5 a: In this context, the word *aandacht* translates to *attention* in English. The sentence means \"They have devoted a lot of attention to the 'Vibes' of GPT 4.5.\" u: Dutch words often consists of other words/prefixes and suffixes can you split it? a: Sure! The Dutch word *aandacht* can be split into two parts: 1. **aan** - a prefix that can mean \"to\" or \"on\" 2. **dacht** - derived from the verb *dachten*, which is related to \"thought\" or \"thinking.\" So, *aandacht* literally combines to suggest something like \"to think on\" or \"to give thought to,\" which aligns with its meaning of *attention*. u: what is the position/role of the word in the sentence? a: In the sentence \"Ze hebben veel aandacht besteed aan de 'Vibes' van GPT 4.5,\" the word *aandacht* functions as a **noun**. More specifically, it serves as the **object** of the verb *besteed* (to devote or spend). The phrase *veel aandacht* means \"a lot of attention,\" indicating the amount of focus they have given to the subject, which is \"the 'Vibes' of GPT 4.5.\" . Make a better prompt . From the chat, it becomes clear what kind of information i want for a word. Lets combine it into a single prompt: . s: You help to learn Dutch. By translating given word in a context. 1. give a word translation 2. if the word consists of many words - give explanation for each of them including suffixes and prefixes 3. what is the position/role of the word in the sentence, what kind of sentence this is. u: Ze hebben veel *aandacht* besteed aan de 'Vibes' van GPT 4.5 a: 1. **Word Translation:** *aandacht* translates to \"attention\" in English. 2. **Breakdown and Explanation:** - The word *aandacht* is composed of: - *aan* - a preposition meaning \"to\" or \"at\". - *dacht* - from the verb *denken*, which means \"to think\". The suffix *-acht* refers to a state or quality associated with the base word, indicating the act or state of thinking in this context. - Together, *aandacht* conveys the meaning of being focused or attentive to something. 3. **Position/Role in the Sentence:** - In the sentence \"Ze hebben veel aandacht besteed aan de 'Vibes' van GPT 4.5,\" the word *aandacht* functions as the direct object of the phrase \"veel aandacht besteed,\" meaning it describes what they have spent (besteden) a lot of (veel) attention on. This is a declarative sentence that states an action (they have spent)= (ze hebben besteed) and what that action is directed towards (aandacht). In summary, it communicates that they have given considerable attention to the 'Vibes' of GPT 4.5. Test . Now lets put the prompt into a dutch.txt file. and test in on few more examples . s: @dutch u: **Redenering** helpt het model om na te denken voordat het reageert a: 1. **Redenering** translates to **reasoning** in English. 2. The word **redenering** is comprised of: - **reden**: This means **reason**. - **-ering**: This is a suffix that turns a verb or noun into a noun indicating the act of doing something, or the result of an action. In this case, it refers to the act of reasoning. 3. In the sentence \"Redenering helpt het model om na te denken voordat het reageert,\" the word **redenering** is the subject of the sentence. The structure is a declarative sentence, which is used to convey information. The overall meaning of the sentence is that reasoning aids the model in thinking before it responds. c: --------------------------------------------------- c: use comment like above to have start new chat in the same file Lets try another example s: @dutch u: Wat *betekent* dat precies? a: 1. The word \"betekent\" translates to \"means\" in English. 2. The word \"betekent\" is derived from the verb \"betekenen.\" Here's the breakdown: - \"be-\": This is a prefix that can indicate a transitive action or a completeness of action. - \"tekenen\": This root means \"to signify\" or \"to mark.\" - The \"t\" at the end is a suffix that indicates the third person singular present tense form of the verb (\"he/she/it means\"). 3. In the sentence \"Wat betekent dat precies?\", the word \"betekent\" serves as the main verb. The sentence translates to \"What does that mean exactly?\" - It is an interrogative sentence as it is asking a question. - The overall structure includes the interrogative word \"Wat\" (What), followed by the verb \"betekent\" (means), and then the subject \"dat\" (that), with \"precies\" (exactly) functioning as an adverb providing additional detail about how the meaning is sought. Iterate . Now change the prompt or try another llm and re-run the examples. s: @dutch @gpt-4o u: **Redenering** helpt het model om na te denken voordat het reageert c: Hit &lt;Shift&gt; + &lt;Enter&gt; and Tune will replace the assistant response with a new one a: 1. **Redenering** translates to **reasoning** in English. 2. The word **redenering** is comprised of: - **reden**: This means **reason**. - **-ering**: This is a suffix that turns a verb or noun into a noun indicating the act of doing something, or the result of an action. In this case, it refers to the act of reasoning. 3. In the sentence \"Redenering helpt het model om na te denken voordat het reageert,\" the word **redenering** is the subject of the sentence. The structure is a declarative sentence, which is used to convey information. The overall meaning of the sentence is that reasoning aids the model in thinking before it responds. c: --------------------------------------------------- ... ",
+    "url": "/tune/examples/translate#iterate-on-prompt",
+    
+    "relUrl": "/examples/translate#iterate-on-prompt"
+  },"37": {
+    "doc": "Iterate on prompt",
+    "title": "Iterate on prompt",
+    "content": " ",
+    "url": "/tune/examples/translate",
+    
+    "relUrl": "/examples/translate"
+  },"38": {
+    "doc": "VSCode extension",
+    "title": "VSCode extension",
+    "content": "Install VSCode extension from visual studio marketplace. Set OPENAI_KEY . Start Chatting . Using &lt;Shift+Enter&gt; the extension make LLM to give a response to current chat or to call a tool and print result. ",
+    "url": "/tune/text-editor/vscode",
+    
+    "relUrl": "/text-editor/vscode"
+  },"39": {
+    "doc": "Weather Tool",
+    "title": "Weather Tool",
+    "content": "Weather tool . Lets define a tool by creating weather.tool.js the .tool extension tells Tune that it is a tool. module.exports = async function({ location }, ctx) { // lets use openweathermap.org api const api_key = process.env.OPENWEATHER_KEY let result = await fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${location}&amp;limit=1&amp;appid=${api_key}`); result = await result.json(); const {lat, lon} = result[0]; result = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&amp;lon=${lon}&amp;appid=${api_key}&amp;units=metric`) return await result.json() } . A tool requires a json schema, for weather tool the schema should be kept in weather.schema.json file . { \"description\": \"get weather using openweathermap\", \"parameters\": { \"type\": \"object\", \"properties\": { \"location\": { \"type\": \"string\", \"description\": \"Location for the weather forecast\" } }, \"required\": [\"location\"] } } . If there is no schema Tune will try to genereate the schema based on code . s: @weather u: whats the weather in amsterdam? tc: weather {\"location\":\"Amsterdam\"} tr: { coord: { lon: 4.8897, lat: 52.374 }, weather: [ { id: 801, main: 'Clouds', description: 'few clouds', icon: '02d' } ], base: 'stations', main: { temp: 1.15, feels_like: -2.59, temp_min: 0.48, temp_max: 2.16, pressure: 1025, humidity: 74, sea_level: 1025, grnd_level: 1025 }, visibility: 10000, wind: { speed: 3.6, deg: 60 }, clouds: { all: 20 }, dt: 1739794181, sys: { type: 2, id: 2012552, country: 'NL', sunrise: 1739775145, sunset: 1739811405 }, timezone: 3600, id: 2759794, name: 'Amsterdam', cod: 200 } . ",
+    "url": "/tune/examples/weather",
+    
+    "relUrl": "/examples/weather"
+  }
+}
