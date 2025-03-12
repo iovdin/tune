@@ -11,27 +11,27 @@ To use an LLM like `gpt-4o` or `claude-sonnet` you have to specify a function th
 The endpoint should support Open AI format response 
 
 
+`4o-mini.llm.js`
 ```javascript
-async ({messages, tools} , context) => 
-    ({
+module.exports = async (payload , context) => {
+    const key = await context.read("OPENAI_KEY");
+    // const key = process.env.OPENAI_KEY;
+    return ({
         url: "https://api.openai.com/v1/chat/completions",
         method: "POST",
         headers: { 
             "content-type": "application/json",
-            authorization: `Bearer ${process.env.OPENAI_KEY}` 
+            authorization: `Bearer ${key}` 
         },
         body: JSON.stringify({ 
-            messages: payload.messages,
-            tools: payload.tools,
+            ...payload,
             model: "gpt-4o-mini",
         })
     })
+}
 ```
 
 Model is a good place to choose model parameters, get tail of messages etc.
-
-### Default LLM
-Tune looks for `default.llm.js` if no llm was connected.  
 
 ### Using multiple LLMs 
 You might want to start chatting using cheap model and then switch to a smart one if smth goes wrong. The latest model connected is used for the chat.
@@ -42,15 +42,6 @@ c: conversation which 4o-mini struggle to give the right answer
 u: @o3-mini 
 Can you think a bit more about the problem?
 
-```
-
-### Connect to TextEditor
-
-create a file called `4o-mini.llm.js`:
-
-```javascript
-// export the function
-module.exports = async ({messages, tools} , context) => (/* ... */) 
 ```
 
 Now you can use the model in you chat by `4o-mini` name
@@ -64,10 +55,11 @@ I'm ChatGPT, an AI assistant here to help with any questions or tasks you have!
 ### Connect to app
 Add the following structure to the context
 ```javascript
+const llm = require("./4o-mini.llm.js")
 const context = makeContext({
     "4o-mini": { 
         type: "llm",
-        exec: async ({messages, tools} , context) => (/* ... */) 
+        exec: llm
     }
 })
     
