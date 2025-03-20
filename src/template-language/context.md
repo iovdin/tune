@@ -2,7 +2,7 @@
 title: Context
 parent: Template Language
 layout: home
-permalink: /template-langauge/context
+permalink: /template-language/context
 nav_order: 7
 ---
 ## Context

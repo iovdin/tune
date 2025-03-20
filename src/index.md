@@ -60,7 +60,7 @@ Using `@` you can
 * connect a tool to be called
 * add an image for models that supports vision
 
-Read more about [Template Language](/template-language). Learn about [Tools](/template-language/tools) or check [Weather Tool](/examples/weather) implementation
+Read more about [Template Language]({{ site.baseurl }}/template-language). Learn about [Tools]({{ site.baseurl }}/template-language/tools) or check [Weather Tool]({{ site.baseurl }}/examples/weather) implementation
 
 
 ## Getting started

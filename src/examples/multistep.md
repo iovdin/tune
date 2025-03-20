@@ -51,7 +51,7 @@ tr: now it is turn of player to reply
 a: Is it an electronic device?
 ```
 `@@agent` includes content of `agent.txt` which is e.g. `@@thinker` and then includes `thinker.txt`. So the system prompt is now of a thinker prompt.
-[read more](/template-language/at-symbol) about using `@@` and `@` for inclusion.
+[read more]({{ site.baseurl }}/template-language/at-symbol) about using `@@` and `@` for inclusion.
 
 
 ### turn.tool.mjs
@@ -67,7 +67,7 @@ export default async function turn({ role, filename }) {
 
 
 ## Another Implementation
-Lets make it less verbose version, get rid of `turn` tool call to swtich roles. We'll do it with [llm](/template-language/connect-llm) [processor](/template-language/processors).
+Lets make it less verbose version, get rid of `turn` tool call to swtich roles. We'll do it with [llm]({{ site.baseurl }}/template-language/connect-llm) [processor]({{ site.baseurl }}/template-language/processors).
 
 ```chat
 s: @{ 4o-mini | turn-proc player thinker }

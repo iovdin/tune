@@ -111,5 +111,6 @@ const context = makeContext({
     }
 })
 ```
-[read more] about context.
+
+[read more]({{ site.baseurl }}/template-language/context) about context.
 Check out tool examples

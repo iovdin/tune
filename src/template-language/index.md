@@ -9,8 +9,8 @@ nav_order: 2
 Tune has the same syntax `@` to:
 * insert content of another text file (`text` type)
 * add an image for models that supports vision (`image` type)
-* specify language model ([`llm`](/connect-llm) type)
-* add a tool to be called ([`tool`](/tools) type)
+* specify language model ([`llm`]({{ site.baseurl }}/template-langugage/connect-llm) type)
+* add a tool to be called ([`tool`]({{ site.baseurl }}/template-langage/tools) type)
 
 Here's an example combining these features:
 ```chat

@@ -6,7 +6,7 @@ permalink: /api/context
 nav_order: 1
 ---
 ## makeContext 
-[Read](/template-langauge/context) about Context
+[Read]({{ site.baseurl }}/template-language/context) about Context
 
 ```javascript
 const context = makeContext(

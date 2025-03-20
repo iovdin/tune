@@ -45,7 +45,6 @@ async function init(node, args, context) {
 }
 ```
 `node` is an structure that Tune parses `@` expansions.  
-[read] more about nodes in js api
 
 
 ### TextEditor

@@ -65,4 +65,4 @@ const context = makeContext({
     
 ```
 
-[read more about context]
+[read more about context]({{ site.baseurl }}/template-language/context)

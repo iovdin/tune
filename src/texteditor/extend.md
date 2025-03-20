@@ -7,11 +7,11 @@ nav_order: 4
 ---
 ## LLMs, Tools and Processors
 
-Put [LLM configuration](/template-language/connect-llm) into a `.llm.js`.
+Put [LLM configuration]({{ site.baseurl }}/template-language/connect-llm) into a `.llm.js`.
 
-[Tools](/template-language/tools) reside in a `.tool.js`, `.schema.json` files.
+[Tools]({{ site.baseurl }}/template-language/tools) reside in a `.tool.js`, `.schema.json` files.
 
-[Processors](/template-language/processors) should be put into `.proc.js`.
+[Processors]({{ site.baseurl }}/template-language/processors) should be put into `.proc.js`.
 
 ### Javascript/Python/PHP
 
