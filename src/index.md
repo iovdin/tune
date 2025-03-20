@@ -7,7 +7,9 @@ nav_order: 1
 # Tune - your everyday LLM toolkit
 
 Tune is a toolkit that helps developers and users work with Large Language Models (LLMs). Whether you want to chat with AI, build applications, or create AI agents, Tune provides a simple yet powerful way to work with LLMs.
-
+<video autoplay loop muted playsinline width="100%">
+<source src="https://github.com/user-attachments/assets/80c5e511-a681-44bb-839f-8fbdc2ac65ef"/>
+</video>
 
 - TOC
 {:toc}
