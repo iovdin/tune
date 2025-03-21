@@ -24,6 +24,7 @@ defaults:
       description: "Your everyday LLM toolkit"
 
 
-
-
-
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-github-metadata

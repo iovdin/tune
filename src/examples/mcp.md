@@ -18,8 +18,7 @@ system:
 @{| mcp npx -y @modelcontextprotocol/server-filesystem ./ }
 user: 
 what is in my current directory?
-tool_call: 
-list_allowed_directories
+tool_call: list_allowed_directories
 tool_result: 
 Allowed directories:
 /Users/iovdin/projects/tune
