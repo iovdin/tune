@@ -4,10 +4,10 @@
 <loc>https://iovdin.github.io/tune/template-language/at-symbol</loc>
 </url>
 <url>
-<loc>https://iovdin.github.io/tune/api/context</loc>
+<loc>https://iovdin.github.io/tune/template-language/context</loc>
 </url>
 <url>
-<loc>https://iovdin.github.io/tune/template-language/context</loc>
+<loc>https://iovdin.github.io/tune/api/context</loc>
 </url>
 <url>
 <loc>https://iovdin.github.io/tune/examples/copilot</loc>
@@ -22,7 +22,10 @@
 <loc>https://iovdin.github.io/tune/text-editor/extend</loc>
 </url>
 <url>
-<loc>https://iovdin.github.io/tune/api</loc>
+<loc>https://iovdin.github.io/tune/</loc>
+</url>
+<url>
+<loc>https://iovdin.github.io/tune/template-language</loc>
 </url>
 <url>
 <loc>https://iovdin.github.io/tune/text-editor</loc>
@@ -31,10 +34,7 @@
 <loc>https://iovdin.github.io/tune/examples</loc>
 </url>
 <url>
-<loc>https://iovdin.github.io/tune/</loc>
-</url>
-<url>
-<loc>https://iovdin.github.io/tune/template-language</loc>
+<loc>https://iovdin.github.io/tune/api</loc>
 </url>
 <url>
 <loc>https://iovdin.github.io/tune/examples/mcp</loc>
@@ -62,6 +62,9 @@
 </url>
 <url>
 <loc>https://iovdin.github.io/tune/api/text2run</loc>
+</url>
+<url>
+<loc>https://iovdin.github.io/tune/examples/think-tool</loc>
 </url>
 <url>
 <loc>https://iovdin.github.io/tune/template-language/tools</loc>

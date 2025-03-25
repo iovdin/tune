@@ -6,19 +6,19 @@
     
     "relUrl": "/template-language/at-symbol"
   },"1": {
-    "doc": "makeContext",
-    "title": "makeContext",
-    "content": "Read about Context . const context = makeContext( { key: \"value\" }, async function middlware(name, context, type, next){ }, anotherContext ); context.use(async function (name, context, type, next) { if (name.indexOf(\"https://\") === -1) { return next() } return { type: 'text', // fetch the url read: async () =&gt; {/*..*/} } }) const node = await context.resolve(\"key\"); const result = await node.read(); console.log(result) // \"value\" . ",
-    "url": "/tune/api/context",
-    
-    "relUrl": "/api/context"
-  },"2": {
     "doc": "Context",
     "title": "Context",
     "content": "Context is responsible to resolve and find those names referenced by @. In TextEditor context resolves names by looking into files and directories. For a web app context might check local dictionary or database to resolve the names. This allows you to iterate and test the a complex prompt locally in you text editor. And then use it in the web app, The only thing that changes - context, but not the prompt. Context is built by adding middlewares. web.ctx.js . // We add a middleware to the context that intercepts all the variables // that starts with `https://` and return a text node that fetches the url on read module.exports = async function web(node, args, context, next) { if (name.indexOf(\"https://\") == -1) { return next(); } const url = name.trim() return { type: \"text\", name, read: async () =&gt; { const res = await fetch(url); return res.text() } } } . Then connect it . user: @web Summarize the content: @https://domain.com/file.txt . If you rename web.ctx.js to default.ctx.js it will be loaded automatically. No need to connect it . Tune then uses the context to find the varaibles: . const tune = require('tune-sdk'); const context = tune.makeContext(require('./web.ctx.js')) const node = await context.resolve(\"https://domain.com/file.txt\"); const result = await node.read(); console.log(result) // \"contents of the website\" . ",
     "url": "/tune/template-language/context",
     
     "relUrl": "/template-language/context"
+  },"2": {
+    "doc": "makeContext",
+    "title": "makeContext",
+    "content": "Read about Context . const context = makeContext( { key: \"value\" }, async function middlware(name, context, type, next){ }, anotherContext ); context.use(async function (name, context, type, next) { if (name.indexOf(\"https://\") === -1) { return next() } return { type: 'text', // fetch the url read: async () =&gt; {/*..*/} } }) const node = await context.resolve(\"key\"); const result = await node.read(); console.log(result) // \"value\" . ",
+    "url": "/tune/api/context",
+    
+    "relUrl": "/api/context"
   },"3": {
     "doc": "Developer copilot",
     "title": "Copilot",
@@ -76,68 +76,68 @@
     
     "relUrl": "/text-editor/extend"
   },"11": {
-    "doc": "API",
-    "title": "API",
-    "content": " ",
-    "url": "/tune/api",
-    
-    "relUrl": "/api"
-  },"12": {
-    "doc": "Text Editor",
-    "title": "Text Editor",
-    "content": " ",
-    "url": "/tune/text-editor",
-    
-    "relUrl": "/text-editor"
-  },"13": {
-    "doc": "Examples",
-    "title": "Examples",
-    "content": " ",
-    "url": "/tune/examples",
-    
-    "relUrl": "/examples"
-  },"14": {
     "doc": "Home",
     "title": "Tune - your everyday LLM toolkit",
     "content": "Tune is a toolkit that helps developers and users work with Large Language Models (LLMs). Whether you want to chat with AI, build applications, or create AI agents, Tune provides a simple yet powerful way to work with LLMs. | Tune - your everyday LLM toolkit . | .chat file format | Getting started | Hello World App | . | . ",
     "url": "/tune/#tune---your-everyday-llm-toolkit",
     
     "relUrl": "/#tune---your-everyday-llm-toolkit"
-  },"15": {
+  },"12": {
     "doc": "Home",
     "title": ".chat file format",
     "content": "The core of Tune is to have chat as a human-readable text file. | read, modify and chat right in your text editor. | store chat and prompts in version control. | manage chats like regular files - copy, move, organize in folders, share, or download them | . Example: . system: You are a helpful writing assistant who specializes in clear, concise explanations. user: Can you help me understand what photosynthesis is? assistant: Photosynthesis is how plants make their own food. They take sunlight, water, and carbon dioxide from the air, and turn it into sugar and oxygen. Think of it like a tiny solar-powered factory inside each leaf. Shorthand chat version: . s: You are Groot u: Hi, how are you? a: I am Groot . Example with tools . system: @get_weather You are a weather assistant who helps people plan their activities. user: What's the weather like in Rome today? tool_call: get_weather {\"location\": \"Rome\", \"country\": \"IT\"} tool_result: { \"temperature\": 24, \"conditions\": \"sunny\" } assistant: Perfect weather in Rome today! It's sunny and 24°C (75°F) - great for sightseeing or outdoor cafés. Don't forget sunscreen! . Using @ you can . | insert content of another text file | pick language model like gpt-4o or sonnet or deepseek | connect a tool to be called | add an image for models that supports vision | . Read more about Template Language. Learn about Tools or check Weather Tool implementation . ",
     "url": "/tune/#chat-file-format",
     
     "relUrl": "/#chat-file-format"
-  },"16": {
+  },"13": {
     "doc": "Home",
     "title": "Getting started",
     "content": "The easiest way to get started is to install VSCode or Neovim extension. put OPENAI_KEY to an .env file and chat: . Using &lt;Shift+Enter&gt; the extension make LLM to give a response to current chat or to call a tool and print result. ",
     "url": "/tune/#getting-started",
     
     "relUrl": "/#getting-started"
-  },"17": {
+  },"14": {
     "doc": "Home",
     "title": "Hello World App",
     "content": "Let make a simple app with tune. Install npm install tune-sdk . import { text2run, makeContext, msg2text } from 'tune-sdk'; async function main() { // Tune resolves template variables via context const ctx = makeContext({ system: \"You're Groot\", \"default\": { type: \"llm\", exec: defaultLLM } }) const text = \"s: @system\\nu: Hi, how are you?\"; const messages = await text2run(text, ctx) console.log(msg2text(messages)) // a: I am Groot } const defaultLLM = async (payload, ctx) =&gt; ({ url: \"https://api.openai.com/v1/chat/completions\", method: \"POST\", headers: { \"content-type\": \"application/json\", authorization: `Bearer ${process.env.OPENAI_KEY}` }, body: JSON.stringify({ ...payload, model: \"gpt-4o-mini\" }) }) main() . ",
     "url": "/tune/#hello-world-app",
     
     "relUrl": "/#hello-world-app"
-  },"18": {
+  },"15": {
     "doc": "Home",
     "title": "Home",
     "content": " ",
     "url": "/tune/",
     
     "relUrl": "/"
-  },"19": {
+  },"16": {
     "doc": "Template Language",
     "title": "Template Language",
     "content": "Tune has the same syntax @ to: . | insert content of another text file (text type) | add an image for models that supports vision (image type) | specify language model (llm type) | add a tool to be called (tool type) | . Here’s an example combining these features: . system: @gpt4o @systemPrompt.txt user: @image what os on the image? assistant: this is Rome user: @getWeather what is the weather here? tool_call: getWeather {\"location\": \"Rome\"} tool_result: { weather: [ { id: 801, main: 'Clouds', description: 'few clouds', icon: '02d' } ], ... } . You can use @ anywhere at any point of the chat (assistant and tool_call is and exception). You might want to switch to a smarter model or use a tool later in the conversation . ",
     "url": "/tune/template-language",
     
     "relUrl": "/template-language"
+  },"17": {
+    "doc": "Text Editor",
+    "title": "Text Editor",
+    "content": " ",
+    "url": "/tune/text-editor",
+    
+    "relUrl": "/text-editor"
+  },"18": {
+    "doc": "Examples",
+    "title": "Examples",
+    "content": " ",
+    "url": "/tune/examples",
+    
+    "relUrl": "/examples"
+  },"19": {
+    "doc": "API",
+    "title": "API",
+    "content": " ",
+    "url": "/tune/api",
+    
+    "relUrl": "/api"
   },"20": {
     "doc": "Connect MCP",
     "title": "Connect MCP",
@@ -244,41 +244,55 @@
     
     "relUrl": "/api/text2run"
   },"35": {
+    "doc": "\"think\" tool",
+    "title": "Another chat as a tool",
+    "content": "Lets make a “think” tool from anthropic blog. It preforms on par or better than “reasoning” models. And it gives cheap models ability to think. think.tool.chat . system: @o3-mini user: @text . schema for think tool think.schema.json: . { \"description\": \"Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed.\", \"parameters\": { \"type\": \"object\", \"properties\": { \"text\": { \"type\": \"string\", \"description\": \"A thought to think about.\" } }, \"required\": [\"text\"] } } . Lets now use the tool . system: @gpt-4o-mini @think user: how much is 234 * 324? tool_call: think To calculate 234 * 324, I will perform the multiplication. tool_result: Let's work through the multiplication step by step: 1. Write the numbers in column form:    234  × 324 ________ 2. Multiply 234 by 4 (the ones digit of 324):   234 × 4 = 936  Write 936 below. 3. Multiply 234 by 2 (the tens digit, representing 20):   234 × 2 = 468  Since this 2 is actually in the tens place, append a zero: 468 becomes 4680.  Write 4680, aligned one place to the left. 4. Multiply 234 by 3 (the hundreds digit, representing 300):   234 × 3 = 702  Since this 3 is in the hundreds place, append two zeros: 702 becomes 70200.  Write 70200 in the next row, aligned two places to the left. 5. Add the partial products:     936    + 4680   +70200   ——————    75816 So, 234 * 324 = 75,816. ",
+    "url": "/tune/examples/think-tool#another-chat-as-a-tool",
+    
+    "relUrl": "/examples/think-tool#another-chat-as-a-tool"
+  },"36": {
+    "doc": "\"think\" tool",
+    "title": "\"think\" tool",
+    "content": " ",
+    "url": "/tune/examples/think-tool",
+    
+    "relUrl": "/examples/think-tool"
+  },"37": {
     "doc": "Using Tools",
     "title": "Using Tool",
     "content": "Tools is a very powerfull concept. It makes LLM agentic. Without tools LLM is just a chat. It might be hard to grasp at start. But it is definetly worth investing your time understanding it. Lets look at a chat with a calendar tool . user: @calendar What's my schedule for today? assistant: Let me check your calendar for today. tool_call: calendar {\"date\": \"2024-02-25\"} tool_result: { \"events\": [ {\"time\": \"09:00\", \"title\": \"Team Meeting\"}, {\"time\": \"13:00\", \"title\": \"Lunch with John\"}, {\"time\": \"15:30\", \"title\": \"Project Review\"} ] } assistant: Here's your schedule for today: - 9:00 AM: Team Meeting - 1:00 PM: Lunch with John - 3:30 PM: Project Review . tool_call and tool_result is gray because in a normal chat app users won’t see it, they’ll see the final assistant reply. But lets make them visible to understand who is doing what. user: @calendar What's my schedule for today? assistant: Let me check your calendar for today. tool_call: calendar {\"date\": \"2024-02-25\"} tool_result: { \"events\": [ {\"time\": \"09:00\", \"title\": \"Team Meeting\"}, {\"time\": \"13:00\", \"title\": \"Lunch with John\"}, {\"time\": \"15:30\", \"title\": \"Project Review\"} ] } assistant: Here's your schedule for today: - 9:00 AM: Team Meeting - 1:00 PM: Lunch with John - 3:30 PM: Project Review . Now we see that tool_call is made by LLM/assistant. But who is writing content for tool_result? This is Tune running some calendar code/program and inserting the result of it back as a tool_result. In Text editor, Tune will run the code on your computer/laptop, in an app tune will run the tool on the server. Schema . Schema is a way to tell LLM what tools are available, and how to call it, so it can emit tool_call. { \"description\": \"get calendar events for date\", \"parameters\": { \"type\": \"object\", \"properties\": { \"date\": { \"type\": \"string\", \"description\": \"date for events\" }, }, \"required\": [ \"date\" ] } } . read more about tool calling at openai . Code . There must a code that Tune will execute when LLM issues tool_call. Result of the code will be inserted into tool_result . async function calendar({ date }, context) { // query the calendar code // should be here } . Create a tool in TextEditor . Put schema into calendar.schema.json file and code into calendar.tool.mjs like: . export default async function calendar({ date }, context) { // code here return result } . You can first create the code and then Tune on the first run of the tool will try to generate calendar.schema.json file for you . Create tool for an app . const context = makeContext({ calendar: { type: \"tool\", schema: schemaObject, exec: async calendar({ data }, context) =&gt; {/* ... */} } }) . read more about context. Check out tool examples . ",
     "url": "/tune/template-language/tools#using-tool",
     
     "relUrl": "/template-language/tools#using-tool"
-  },"36": {
+  },"38": {
     "doc": "Using Tools",
     "title": "Using Tools",
     "content": " ",
     "url": "/tune/template-language/tools",
     
     "relUrl": "/template-language/tools"
-  },"37": {
+  },"39": {
     "doc": "Iterate on prompt",
     "title": "Iterate on Prompt",
     "content": "Idea . Prompt starts with an idea or problem. Im learning Dutch. I want explanation of some words or constructs while reading text. Lets start with a simple prompt and chat: . s: You help to learn Dutch. By translating given word in a context. u: Ze hebben veel *aandacht* besteed aan de 'Vibes' van GPT 4.5 a: In this context, the word *aandacht* translates to *attention* in English. The sentence means \"They have devoted a lot of attention to the 'Vibes' of GPT 4.5.\" u: Dutch words often consists of other words/prefixes and suffixes can you split it? a: Sure! The Dutch word *aandacht* can be split into two parts: 1. **aan** - a prefix that can mean \"to\" or \"on\" 2. **dacht** - derived from the verb *dachten*, which is related to \"thought\" or \"thinking.\" So, *aandacht* literally combines to suggest something like \"to think on\" or \"to give thought to,\" which aligns with its meaning of *attention*. u: what is the position/role of the word in the sentence? a: In the sentence \"Ze hebben veel aandacht besteed aan de 'Vibes' van GPT 4.5,\" the word *aandacht* functions as a **noun**. More specifically, it serves as the **object** of the verb *besteed* (to devote or spend). The phrase *veel aandacht* means \"a lot of attention,\" indicating the amount of focus they have given to the subject, which is \"the 'Vibes' of GPT 4.5.\" . Make a better prompt . From the chat, it becomes clear what kind of information i want for a word. Lets combine it into a single prompt: . s: You help to learn Dutch. By translating given word in a context. 1. give a word translation 2. if the word consists of many words - give explanation for each of them including suffixes and prefixes 3. what is the position/role of the word in the sentence, what kind of sentence this is. u: Ze hebben veel *aandacht* besteed aan de 'Vibes' van GPT 4.5 a: 1. **Word Translation:** *aandacht* translates to \"attention\" in English. 2. **Breakdown and Explanation:** - The word *aandacht* is composed of: - *aan* - a preposition meaning \"to\" or \"at\". - *dacht* - from the verb *denken*, which means \"to think\". The suffix *-acht* refers to a state or quality associated with the base word, indicating the act or state of thinking in this context. - Together, *aandacht* conveys the meaning of being focused or attentive to something. 3. **Position/Role in the Sentence:** - In the sentence \"Ze hebben veel aandacht besteed aan de 'Vibes' van GPT 4.5,\" the word *aandacht* functions as the direct object of the phrase \"veel aandacht besteed,\" meaning it describes what they have spent (besteden) a lot of (veel) attention on. This is a declarative sentence that states an action (they have spent)= (ze hebben besteed) and what that action is directed towards (aandacht). In summary, it communicates that they have given considerable attention to the 'Vibes' of GPT 4.5. Test . Now lets put the prompt into a dutch.txt file. and test in on few more examples . s: @dutch u: **Redenering** helpt het model om na te denken voordat het reageert a: 1. **Redenering** translates to **reasoning** in English. 2. The word **redenering** is comprised of: - **reden**: This means **reason**. - **-ering**: This is a suffix that turns a verb or noun into a noun indicating the act of doing something, or the result of an action. In this case, it refers to the act of reasoning. 3. In the sentence \"Redenering helpt het model om na te denken voordat het reageert,\" the word **redenering** is the subject of the sentence. The structure is a declarative sentence, which is used to convey information. The overall meaning of the sentence is that reasoning aids the model in thinking before it responds. c: --------------------------------------------------- c: use comment like above to have start new chat in the same file Lets try another example s: @dutch u: Wat *betekent* dat precies? a: 1. The word \"betekent\" translates to \"means\" in English. 2. The word \"betekent\" is derived from the verb \"betekenen.\" Here's the breakdown: - \"be-\": This is a prefix that can indicate a transitive action or a completeness of action. - \"tekenen\": This root means \"to signify\" or \"to mark.\" - The \"t\" at the end is a suffix that indicates the third person singular present tense form of the verb (\"he/she/it means\"). 3. In the sentence \"Wat betekent dat precies?\", the word \"betekent\" serves as the main verb. The sentence translates to \"What does that mean exactly?\" - It is an interrogative sentence as it is asking a question. - The overall structure includes the interrogative word \"Wat\" (What), followed by the verb \"betekent\" (means), and then the subject \"dat\" (that), with \"precies\" (exactly) functioning as an adverb providing additional detail about how the meaning is sought. Iterate . Now change the prompt or try another llm and re-run the examples. s: @dutch @gpt-4o u: **Redenering** helpt het model om na te denken voordat het reageert c: Hit &lt;Shift&gt; + &lt;Enter&gt; and Tune will replace the assistant response with a new one a: 1. **Redenering** translates to **reasoning** in English. 2. The word **redenering** is comprised of: - **reden**: This means **reason**. - **-ering**: This is a suffix that turns a verb or noun into a noun indicating the act of doing something, or the result of an action. In this case, it refers to the act of reasoning. 3. In the sentence \"Redenering helpt het model om na te denken voordat het reageert,\" the word **redenering** is the subject of the sentence. The structure is a declarative sentence, which is used to convey information. The overall meaning of the sentence is that reasoning aids the model in thinking before it responds. c: --------------------------------------------------- ... ",
     "url": "/tune/examples/translate#iterate-on-prompt",
     
     "relUrl": "/examples/translate#iterate-on-prompt"
-  },"38": {
+  },"40": {
     "doc": "Iterate on prompt",
     "title": "Iterate on prompt",
     "content": " ",
     "url": "/tune/examples/translate",
     
     "relUrl": "/examples/translate"
-  },"39": {
+  },"41": {
     "doc": "VSCode extension",
     "title": "VSCode extension",
     "content": "Install VSCode extension from visual studio marketplace. Set OPENAI_KEY . Start Chatting . Using &lt;Shift+Enter&gt; the extension make LLM to give a response to current chat or to call a tool and print result. ",
     "url": "/tune/text-editor/vscode",
     
     "relUrl": "/text-editor/vscode"
-  },"40": {
+  },"42": {
     "doc": "Weather Tool",
     "title": "Weather Tool",
     "content": "Weather tool . Lets define a tool by creating weather.tool.js the .tool extension tells Tune that it is a tool. module.exports = async function({ location }, ctx) { // lets use openweathermap.org api const api_key = process.env.OPENWEATHER_KEY let result = await fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${location}&amp;limit=1&amp;appid=${api_key}`); result = await result.json(); const {lat, lon} = result[0]; result = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&amp;lon=${lon}&amp;appid=${api_key}&amp;units=metric`) return await result.json() } . A tool requires a json schema, for weather tool the schema should be kept in weather.schema.json file . { \"description\": \"get weather using openweathermap\", \"parameters\": { \"type\": \"object\", \"properties\": { \"location\": { \"type\": \"string\", \"description\": \"Location for the weather forecast\" } }, \"required\": [\"location\"] } } . If there is no schema Tune will try to genereate the schema based on code . s: @weather u: whats the weather in amsterdam? tc: weather {\"location\":\"Amsterdam\"} tr: { coord: { lon: 4.8897, lat: 52.374 }, weather: [ { id: 801, main: 'Clouds', description: 'few clouds', icon: '02d' } ], base: 'stations', main: { temp: 1.15, feels_like: -2.59, temp_min: 0.48, temp_max: 2.16, pressure: 1025, humidity: 74, sea_level: 1025, grnd_level: 1025 }, visibility: 10000, wind: { speed: 3.6, deg: 60 }, clouds: { all: 20 }, dt: 1739794181, sys: { type: 2, id: 2012552, country: 'NL', sunrise: 1739775145, sunset: 1739811405 }, timezone: 3600, id: 2759794, name: 'Amsterdam', cod: 200 } . ",

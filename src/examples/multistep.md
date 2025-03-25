@@ -3,7 +3,7 @@ title: Multi agent conversation
 parent: Examples
 layout: home
 permalink: /examples/multi-agent
-nav_order: 3
+nav_order: 2.2
 ---
 ## Mutli Agent Conversation
 Lets make a 2 agents playing "20 Questions" game conversation. Agent *thinker* answer yes/no questions. Agent *player* asks those questions to guess the word.

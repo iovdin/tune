@@ -3,7 +3,7 @@ title: Connect MCP
 parent: Examples
 layout: home
 permalink: /examples/mcp
-nav_order: 6
+nav_order: 2.3
 ---
 ## Connect MCP 
 [Model Context Protocol](https://docs.anthropic.com/en/docs/agents-and-tools/mcp) (MCP) is a protocol from Anthropic 

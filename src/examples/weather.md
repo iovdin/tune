@@ -3,7 +3,7 @@ title: Weather Tool
 parent: Examples
 layout: home
 permalink: /examples/weather
-nav_order: 10
+nav_order: 1.1 
 ---
 ### Weather tool
 Lets define a tool by creating `weather.tool.js`

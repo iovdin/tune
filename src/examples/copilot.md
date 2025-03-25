@@ -178,8 +178,3 @@ tool_result: patched
 ```
 
 Not that `readfile` does not output whole file, but uses `@` to include the file contents. To be less verbose and more readable
-
-
-
-
-

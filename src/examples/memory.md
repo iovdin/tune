@@ -3,7 +3,7 @@ title: Memory
 parent: Examples
 layout: home
 permalink: /examples/memory
-nav_order: 1
+nav_order: 2.1
 ---
 ## Memory
 Put smth into memory while chatting is a common need.
