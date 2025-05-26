@@ -22,7 +22,7 @@ export default async function geminiFileProcessor({ filename, text, model }, ctx
   } catch (err) {
     throw new Error(`Error reading file ${filename}: ${err.message}`);
   }
-  model = model || "gemini-2.0-pro-exp"
+  model = model || "gemini-2.5-pro-preview-03-25"
 
   // Use mime-types package to determine MIME type from filename extension
   const mimeType = mime.lookup(filename);

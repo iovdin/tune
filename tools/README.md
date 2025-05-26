@@ -55,7 +55,7 @@ system:
 @anthropic/claude-3.7-sonnet - uses openrouter.ctx.js
 @mistral-small-latest - get model using mistral.ctx.js
 @qwen-qwq-32b - uses groq.ctx.js
-@google/gemini-2.0-flash will use gemini.ctx.js
+@gemini-2.0-flash will use gemini.ctx.js
 @claude-3-7-sonnet-20250219 will use antrophic.ctx.js
 ```
 To connect a model there has to be OPENAI_KEY or OPENROUTER_KEY or MISTRAL_KEY or GROQ_KEY or GEMINI_KEY in the environment or in `.env` file

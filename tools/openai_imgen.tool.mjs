@@ -1,13 +1,24 @@
 import fs from 'fs';
 import path from 'path';
 
-export default async function openaiImgen({ text, filename, images }, ctx) {
+export default async function openaiImgen({ text, filename, images, quality, size }, ctx) {
   const key = await ctx.read('OPENAI_KEY');
   let body;
   let headers = {
     'Authorization': `Bearer ${key}`
   };
   let apiUrl;
+  switch(size) {
+    case "square":
+      size = "1024x1024";
+      break;
+    case "landscape":
+      size = "1536x1024";
+      break;
+    case "portrait":
+      size = "1024x1536";
+      break;
+  }
 
   // If images exist and length > 0, use FormData and the edits endpoint
   if (images && images.length > 0) {
@@ -15,6 +26,8 @@ export default async function openaiImgen({ text, filename, images }, ctx) {
     const formData = new FormData();
     formData.append('model', 'gpt-image-1');
     formData.append('prompt', text);
+    formData.append('quality', quality || "auto");
+
 
     // For each image, read its contents and attach it to the form
     for (let i = 0; i < images.length; i++) {
@@ -43,7 +56,9 @@ export default async function openaiImgen({ text, filename, images }, ctx) {
     apiUrl = 'https://api.openai.com/v1/images/generations';
     body = JSON.stringify({
       model: 'gpt-image-1',
-      prompt: text
+      prompt: text,
+      quality: quality || "auto",
+      size: size || "auto"
     });
     headers['Content-Type'] = 'application/json';
   }

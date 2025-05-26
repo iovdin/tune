@@ -16,9 +16,9 @@ module.exports = async function mock(node, args, ctx) {
   if (lastName) {
     vars[lastName] = text.trim()
   }
-  ctx.use((name, ctx, args, next)=> {
+  ctx.use((name, ctx, args)=> {
     if (!vars.hasOwnProperty(name)) {
-      return next()
+      return 
     }
     return {
       ...node,

@@ -1,0 +1,10 @@
+s: @{ gpt-4.1-mini | json_format }
+You are giving name for chat based on the chat contents
+chat file content:
+```
+@{ editor/buffer | head 100}
+```
+example json output:
+{ "filename": "how-to-make-hero-costume.chat"}
+or
+{ "filename": "accounting-database-zig.chat"}

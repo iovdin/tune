@@ -20,9 +20,7 @@ export default async function fetchFromUrl({ url, filename, links }, ctx) {
   }
   const res =  await response.text();
   if (filename) {
-    const directory = path.dirname(filename);
-    fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(filename, res)
+    await ctx.write(filename, res)
     return `@${filename}`
   }
   return res.replace(/@/g, "\\@")

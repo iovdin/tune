@@ -1,35 +1,38 @@
 import fs from "node:fs/promises";
 
-//<<<<<<< ORIGINAL
-//=======
-//>>>>>>> UPDATED
+// Patch tool to apply custom diffs marked with <<<<<<< ORIGINAL and >>>>>>> UPDATED
+// Handles patches with context and applies only the segments between markers.
 
 export default async function patch({ text, filename }, ctx) {
-  const patches = text.split(/<<<<<<< ORIGINAL[^\n]*\n/).filter(Boolean);
-  let fileContent = await fs.readFile(filename, "utf-8");
+  // Regex to match each patch block
+  const patchRegex = /<<<<<<< ORIGINAL[^\n]*\n([\s\S]*?)=======\n([\s\S]*?)>>>>>>> UPDATED[^\n]*(?:\n|$)/g;
+  const patches = [];
+  let match;
 
-  for (const patch of patches) {
-    const [oldPart, newPart] = patch.split(/=======\n/);
-    if (!oldPart) {
-      throw Error(`old part not found:\n${patch}`);
-    }
-    if (!newPart) {
-      throw Error(`replace with part not found:\n${patch}`);
-    }
-
-    const oldText = oldPart.trim();
-    const newText = newPart.replace(/>>>>>>> UPDATED[^\n]*(\n|$)/, "");
-
-    // Create regex that matches the old text with flexible whitespace
-    const oldTextRegex = new RegExp(
-      oldText
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape regex special chars
-        .replace(/\s+/g, "\\s+"), // replace any whitespace with \s+
-    );
-
-    fileContent = fileContent.replace(oldTextRegex, newText);
+  // Extract all old/new segments
+  while ((match = patchRegex.exec(text)) !== null) {
+    const oldPart = match[1].replace(/^\n+|\n+$/g, "");
+    const newPart = match[2].replace(/^\n+|\n+$/g, "");
+    patches.push({ oldPart, newPart });
   }
 
-  await fs.writeFile(filename, fileContent);
+  if (patches.length === 0) {
+    throw new Error("No valid patch segments found");
+  }
+
+  let fileContent = await ctx.read(filename);
+
+  for (const { oldPart, newPart } of patches) {
+    // Escape regex special chars in oldPart, then allow flexible whitespace
+    const escaped = oldPart
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\s+/g, "\\s+");
+    const oldRegex = new RegExp(escaped, "g");
+
+    // Perform replacement using a function to avoid replacement string ambiguities
+    fileContent = fileContent.replace(oldRegex, () => newPart);
+  }
+
+  await ctx.write(filename, fileContent);
   return "patched";
 }

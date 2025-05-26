@@ -767,15 +767,21 @@ function fsctx(paths, opts, fs) {
     }));
 
   function mkfsmd1(p) {
-    return (async function(name, ctx, args) {
-      var fname, parsed, item, parsed1, fileType, fullname, schemaFile, schema, _i, _ref, _len, _ref0, _ref1, _ref2, _ref3;
+    return (async function(name, args) {
+      var self, result, parsed, dir, re, item, parsed1, fileType, fullname, schemaFile, schema, res, _i, _ref, _len, _ref0, _ref1, _ref2, _ref3;
+      var self;
+      var result;
+      self = this;
+      result = ((args.output === "all") ? [] : undefined);
       if (!name) return;
-      var fname;
       var parsed;
-      fname = path.resolve(p, ((name === "*") ? "default" : name));
-      parsed = pparse(fname);
-      if (!fs.existsSync(parsed.dir)) return;
-      _ref = fs.readdirSync(parsed.dir)
+      var dir;
+      var re;
+      parsed = ((args.match === "exact") ? pparse(path.resolve(p, name)) : undefined);
+      dir = (((typeof parsed !== "undefined") && (parsed !== null) && !Number.isNaN(parsed) && (typeof parsed.dir !== "undefined") && (parsed.dir !== null) && !Number.isNaN(parsed.dir)) ? parsed.dir : (((typeof p !== "undefined") && (p !== null) && !Number.isNaN(p)) ? p : undefined));
+      re = ((args.match === "regex") ? new RegExp(name) : undefined);
+      if (!fs.existsSync(dir)) return;
+      _ref = fs.readdirSync(dir)
         .sort((function(a, b) {
           var exts, idx1, idx2;
           var exts;
@@ -789,8 +795,9 @@ function fsctx(paths, opts, fs) {
       for (_i = 0, _len = _ref.length; _i < _len; ++_i) {
         item = _ref[_i];
         var parsed1;
-        parsed1 = pparse(item);
-        if ((parsed1.name !== parsed.name)) continue;
+        parsed1 = pparse(path.join(dir, item));
+        if (((args.match === "exact") && (parsed.base !== item) && (parsed.base !== (parsed1.name + parsed1.ext2)) && (parsed.base !== parsed1.name))) continue;
+        if ((re && !re.test(item))) continue;
         var fileType;
         if ((parsed1.ext2 === ".tool")) {
           _ref0 = "tool";
@@ -809,166 +816,171 @@ function fsctx(paths, opts, fs) {
         }
         fileType = _ref0;
         var fullname;
-        fullname = path.resolve(parsed.dir, item);
-        if ((args && (args !== fileType))) continue;
-        if (((item === parsed.base) || !parsed.ext || (parsed1.ext2 && (parsed.base === (parsed1.name + parsed1.ext2))) || (name === "*"))) {
-          switch (fileType) {
-            case "tool":
-              var schemaFile;
-              schemaFile = path.format({
-                root: parsed.root,
-                dir: parsed.dir,
-                name: parsed1.name,
-                ext: ".schema.json"
-              });
-              var schema;
-              schema;
-              if (fs.existsSync(schemaFile)) {
-                schema = JSON.parse(fs.readFileSync(schemaFile, "utf8"));
-              } else if (opts && opts.makeSchema) {
-                schema = await opts.makeSchema({
-                  text: fs.readFileSync(fullname, "utf8")
-                }, ctx);
-                fs.writeFileSync(schemaFile, schema);
-                schema = JSON.parse(schema);
-              } else {
-                throw new Error(("schema file not found " + schemaFile));
-              }
-              _ref1 = {
-                type: "tool",
-                schema: schema,
-                name: parsed1.name,
-                exec: (async function(params, ctx) {
-                  return runFile(fullname, ctx, params);
-                }),
-                read: (async function() {
-                  return fs.readFileSync(fullname, "utf8");
-                }),
-                dirname: parsed.dir,
-                fullname: fullname
-              }
-              break;
-            case "llm":
-              _ref1 = {
-                type: "llm",
-                dirname: parsed.dir,
-                fullname: fullname,
-                name: parsed1.name,
-                exec: (async function(payload, ctx) {
-                  return runFile(fullname, ctx, payload);
-                }),
-                read: (async function() {
-                  return fs.readFileSync(fullname, "utf8");
-                })
-              }
-              break;
-            case "context":
-              ctx.use((async function(name, ctx, args, next) {
-                return runFile(fullname, ctx, name, ctx, args, next);
-              }));
-              _ref1 = {
-                type: "text",
-                fullname: fullname,
-                name: parsed1.name,
-                dirname: parsed.dir,
-                read: (async function() {
-                  return "";
-                })
-              }
-              break;
-            case "processor":
-              _ref1 = {
-                type: "processor",
-                name: parsed1.name,
-                exec: (function(node, args, ctx) {
-                  return runFile(fullname, ctx, node, args);
-                }),
-                read: (async function() {
-                  return fs.readFileSync(fullname, "utf8");
-                }),
-                dirname: parsed.dir,
-                fullname: fullname
-              }
-              break;
-            case "image":
-              if ((parsed1.ext === ".jpg" || parsed1.ext === ".jpeg")) {
-                _ref2 = "image/jpeg";
-              } else if (parsed1.ext === ".png") {
-                _ref2 = "image/png";
-              } else if (parsed1.ext === ".webp") {
-                _ref2 = "image/webp";
-              } else {
-                _ref2 = undefined;
-              }
-              _ref1 = {
-                type: "image",
-                dirname: parsed.dir,
-                fullname: fullname,
-                mimetype: _ref2,
-                read: (async function() {
-                  return fs.readFileSync(fullname);
-                })
-              }
-              break;
-            case "audio":
-              if ((parsed1.ext === ".mp3")) {
-                _ref3 = "audio/mpeg";
-              } else if (parsed1.ext === ".wav") {
-                _ref3 = "audio/wav";
-              } else {
-                _ref3 = undefined;
-              }
-              _ref1 = {
-                type: "audio",
-                dirname: parsed.dir,
-                fullname: fullname,
-                mimetype: _ref3,
-                read: (async function() {
-                  return fs.readFileSync(fullname);
-                })
-              }
-              break;
-            case "text":
-              _ref1 = {
-                type: "text",
-                dirname: parsed.dir,
-                fullname: fullname,
-                name: parsed1.name,
-                read: (async function(binary) {
-                  var stat, buf, i, c;
-                  var stat;
-                  stat = fs.lstatSync(fullname);
-                  if (stat.isDirectory()) return fs.readdirSync(fullname);
-                  if (binary) return fs.readFileSync(fullname);
-                  var buf;
-                  buf = fs.readFileSync(fullname, "utf8");
-                  var i;
-                  i = 0;
-                  while (i < Math.min(1024, buf.length)) {
-                    var c;
-                    c = buf.charCodeAt(i);
-                    if (((c === 65533) || (c <= 8))) throw Error(tpl("{} is a binary file, can not include it", fullname));
-                    i++;
-                  }
-                  return buf;
-                })
-              }
-              break;
-            default:
-              _ref1 = undefined;
-          }
-          return _ref1;
+        fullname = path.resolve(dir, item);
+        if (((args.type !== "any") && (args.type !== fileType))) continue;
+        var res;
+        switch (fileType) {
+          case "tool":
+            var schemaFile;
+            schemaFile = path.format({
+              root: parsed1.root,
+              dir: parsed1.dir,
+              name: parsed1.name,
+              ext: ".schema.json"
+            });
+            var schema;
+            schema;
+            if (fs.existsSync(schemaFile)) {
+              schema = JSON.parse(fs.readFileSync(schemaFile, "utf8"));
+            } else if (opts && opts.makeSchema && (opts.output !== "all")) {
+              schema = await opts.makeSchema({
+                text: fs.readFileSync(fullname, "utf8")
+              }, self);
+              fs.writeFileSync(schemaFile, schema);
+              schema = JSON.parse(schema);
+            } else {
+              throw new Error(("schema file not found " + schemaFile));
+            }
+            _ref1 = {
+              type: "tool",
+              schema: schema,
+              name: parsed1.name,
+              exec: (async function(params, ctx) {
+                return runFile(fullname, ctx, params);
+              }),
+              read: (async function() {
+                return fs.readFileSync(fullname, "utf8");
+              }),
+              dirname: parsed1.dir,
+              fullname: fullname
+            }
+            break;
+          case "llm":
+            _ref1 = {
+              type: "llm",
+              dirname: parsed1.dir,
+              fullname: fullname,
+              name: parsed1.name,
+              exec: (async function(payload, ctx) {
+                return runFile(fullname, ctx, payload);
+              }),
+              read: (async function() {
+                return fs.readFileSync(fullname, "utf8");
+              })
+            }
+            break;
+          case "context":
+            if ((args.output !== "all")) self.use((async function(name, args) {
+              return runFile(fullname, this, name, args);
+            }));
+            _ref1 = {
+              type: "text",
+              fullname: fullname,
+              name: parsed1.name,
+              dirname: parsed1.dir,
+              read: (async function() {
+                return "";
+              })
+            }
+            break;
+          case "processor":
+            _ref1 = {
+              type: "processor",
+              name: parsed1.name,
+              exec: (function(node, args, ctx) {
+                return runFile(fullname, ctx, node, args);
+              }),
+              read: (async function() {
+                return fs.readFileSync(fullname, "utf8");
+              }),
+              dirname: parsed1.dir,
+              fullname: fullname
+            }
+            break;
+          case "image":
+            if ((parsed1.ext === ".jpg" || parsed1.ext === ".jpeg")) {
+              _ref2 = "image/jpeg";
+            } else if (parsed1.ext === ".png") {
+              _ref2 = "image/png";
+            } else if (parsed1.ext === ".webp") {
+              _ref2 = "image/webp";
+            } else {
+              _ref2 = undefined;
+            }
+            _ref1 = {
+              type: "image",
+              dirname: parsed1.dir,
+              fullname: fullname,
+              mimetype: _ref2,
+              read: (async function() {
+                return fs.readFileSync(fullname);
+              })
+            }
+            break;
+          case "audio":
+            if ((parsed1.ext === ".mp3")) {
+              _ref3 = "audio/mpeg";
+            } else if (parsed1.ext === ".wav") {
+              _ref3 = "audio/wav";
+            } else {
+              _ref3 = undefined;
+            }
+            _ref1 = {
+              type: "audio",
+              dirname: parsed1.dir,
+              fullname: fullname,
+              mimetype: _ref3,
+              read: (async function() {
+                return fs.readFileSync(fullname);
+              })
+            }
+            break;
+          case "text":
+            _ref1 = {
+              type: "text",
+              dirname: parsed1.dir,
+              fullname: fullname,
+              name: parsed1.name,
+              read: (async function(binary) {
+                var stat, buf, i, c;
+                var stat;
+                stat = fs.lstatSync(fullname);
+                if (stat.isDirectory()) return fs.readdirSync(fullname);
+                if (binary) return fs.readFileSync(fullname);
+                var buf;
+                buf = fs.readFileSync(fullname, "utf8");
+                var i;
+                i = 0;
+                while (i < Math.min(1024, buf.length)) {
+                  var c;
+                  c = buf.charCodeAt(i);
+                  if (((c === 65533) || (c <= 8))) throw Error(tpl("{} is a binary file, can not include it", fullname));
+                  i++;
+                }
+                return buf;
+              })
+            }
+            break;
+          default:
+            _ref1 = undefined;
+        }
+        res = _ref1;
+        if ((args.output === "all")) {
+          result.push(res);
+        } else {
+          result = res;
+          break;
         }
       }
-      return undefined;
+      return result;
     });
   }
   mkfsmd1;
   envCache = {};
-  return (async function(name, ctx, args, next) {
-    var lpaths, handles, p, envFile, res, _i, _ref, _len;
+  return (async function(name, args) {
+    var lpaths, handles, result, p, envFile, handle, res, _i, _ref, _len;
     var lpaths;
-    lpaths = ctx.stack
+    lpaths = this.stack
       .filter((function(item) {
         return !!item.dirname;
       }))
@@ -979,6 +991,8 @@ function fsctx(paths, opts, fs) {
       .concat(paths);
     var handles;
     handles = [];
+    var result;
+    result = ((args.output === "all") ? [] : undefined);
     _ref = lpaths;
     for (_i = 0, _len = _ref.length; _i < _len; ++_i) {
       p = _ref[_i];
@@ -994,11 +1008,19 @@ function fsctx(paths, opts, fs) {
       handles.push(mkfsmd1(p));
     }
     while (handles.length) {
+      var handle;
+      handle = handles.shift();
       var res;
-      res = await handles.shift()(name, ctx, args);
-      if (res) return res;
+      res = await handle.call(this, name, args);
+      if (!res) continue;
+      if ((args.output === "all")) {
+        Array.isArray(res) ? result = result.concat(res) : result.push();
+      } else {
+        result = res;
+        break;
+      }
     }
-    return next();
+    return result;
   });
 }
 fsctx;
@@ -1012,7 +1034,7 @@ function tpl(str) {
       _ref = str.replace(/{(\W*)(\w*)(\W*)}/gm, (function(_, pre, name, post) {
         return (function(res) {
           paramIndex += 1;
-          return (res ? ((pre || "") + res + (post || "")) : "");
+          return ((typeof res !== 'undefined') ? ((pre || "") + res + (post || "")) : "");
         })(params[name || paramIndex]);
       }));
     } catch (e) {
