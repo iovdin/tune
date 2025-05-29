@@ -208,7 +208,8 @@ Use Gemini's [text-to-speech API](https://ai.google.dev/gemini-api/docs/speech-g
 user: @gemini_tts
 Say in a cheerful voice: "Welcome to our podcast!"
 
-tool_call: gemini_tts {"text":"Say cheerfully: Welcome to our podcast!","voice":"Puck","filename":"welcome.wav"}
+tool_call: gemini_tts {"voice":"Puck","filename":"welcome.wav"}
+Say cheerfully: Welcome to our podcast!
 tool_result: 
 Speech generated successfully and saved to welcome.wav
 ```
@@ -218,7 +219,8 @@ Speech generated successfully and saved to welcome.wav
 user: @gemini_tts
 Create a conversation between Alice and Bob discussing AI
 
-tool_call: gemini_tts {"text":"TTS the following conversation between Alice and Bob: Alice: What do you think about artificial intelligence? Bob: I think it's fascinating! It's changing how we work and live. Alice: I agree, but we need to be careful about the implications.","speakers":[{"name":"Alice","voice":"Aoede"},{"name":"Bob","voice":"Charon"}],"filename":"ai_discussion.wav"}
+tool_call: gemini_tts {"speakers":[{"name":"Alice","voice":"Aoede"},{"name":"Bob","voice":"Charon"}],"filename":"ai_discussion.wav"}
+TTS the following conversation between Alice and Bob: Alice: What do you think about artificial intelligence? Bob: I think it's fascinating! It's changing how we work and live. Alice: I agree, but we need to be careful about the implications.
 tool_result: 
 Speech generated successfully and saved to ai_discussion.wav
 ```
@@ -228,7 +230,8 @@ Speech generated successfully and saved to ai_discussion.wav
 user: @gemini_tts
 Make it sound spooky and mysterious
 
-tool_call: gemini_tts {"text":"Say in a spooky whisper: Something wicked this way comes...","voice":"Enceladus","filename":"spooky.wav"}
+tool_call: gemini_tts {"voice":"Enceladus","filename":"spooky.wav"}
+Say in a spooky whisper: Something wicked this way comes...
 tool_result: 
 Speech generated successfully and saved to spooky.wav
 ```
