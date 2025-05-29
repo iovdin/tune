@@ -11,10 +11,12 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [rf](#rf) read file
   - [wf](#wf) write file
   - [patch](#patch) patch file
+  - [append](#append) append to file
   - [sh](#sh) execute shell command
   - [jina_r](#jina_r) read webpage content
-  - [brave](#brave) web search
+  - [brave](#brave) web search  
   - [openai_tts](#openai_tts) text to speech from openai
+  - [gemini_tts](#gemini_tts) text to speech from gemini with single/multi-speaker support
   - [openai_imgen](#openai_imgen) generate and edit images with openai gpt-image model
   - [gemini_ocr](#gemini_ocr) ask question about file content (PDF/audio/image)
   - [turn](#turn) turn based agent
@@ -102,6 +104,18 @@ tool_result:
 patched
 ```
 
+
+### `append`
+```chat
+user: @append
+Add a todo that i want to buy a car and go to the moon
+tool_call: append {"filename":"todo.md"}
+- buy a car 
+- fly to the moon
+tool_result:
+appended
+```
+
 ### `sh`
 Execute shell command
 ```chat
@@ -184,6 +198,39 @@ Hasta la vista, baby!
 
 tool_result: 
 speech generated
+```
+
+### `gemini_tts`
+Use Gemini's [text-to-speech API](https://ai.google.dev/gemini-api/docs/speech-generation) with support for both single-speaker and multi-speaker audio generation.
+
+**Single-speaker example:**
+```chat
+user: @gemini_tts
+Say in a cheerful voice: "Welcome to our podcast!"
+
+tool_call: gemini_tts {"text":"Say cheerfully: Welcome to our podcast!","voice":"Puck","filename":"welcome.wav"}
+tool_result: 
+Speech generated successfully and saved to welcome.wav
+```
+
+**Multi-speaker dialogue example:**
+```chat
+user: @gemini_tts
+Create a conversation between Alice and Bob discussing AI
+
+tool_call: gemini_tts {"text":"TTS the following conversation between Alice and Bob: Alice: What do you think about artificial intelligence? Bob: I think it's fascinating! It's changing how we work and live. Alice: I agree, but we need to be careful about the implications.","speakers":[{"name":"Alice","voice":"Aoede"},{"name":"Bob","voice":"Charon"}],"filename":"ai_discussion.wav"}
+tool_result: 
+Speech generated successfully and saved to ai_discussion.wav
+```
+
+**Styled speech example:**
+```chat
+user: @gemini_tts
+Make it sound spooky and mysterious
+
+tool_call: gemini_tts {"text":"Say in a spooky whisper: Something wicked this way comes...","voice":"Enceladus","filename":"spooky.wav"}
+tool_result: 
+Speech generated successfully and saved to spooky.wav
 ```
 
 ### `openai_imgen`

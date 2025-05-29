@@ -1,0 +1,59 @@
+{
+  "description": "Generate speech from text using Gemini's Text-to-Speech API. Supports both single-speaker and multi-speaker audio generation with controllable style, tone, accent, and pace using natural language prompts.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "Text to convert to speech. For single-speaker, you can include style instructions like 'Say cheerfully: Have a wonderful day!' For multi-speaker, format as dialogue with speaker names, e.g., 'TTS the following conversation between Joe and Jane: Joe: How's it going? Jane: Not too bad!'"
+      },
+      "filename": {
+        "type": "string",
+        "description": "Output filename for the audio file. Will automatically add .wav extension if not present."
+      },
+      "model": {
+        "type": "string",
+        "enum": ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"],
+        "description": "Gemini model to use for TTS generation. Default is gemini-2.5-flash-preview-tts"
+      },
+      "voice": {
+        "type": "string",
+        "enum": [
+          "Zephyr", "Puck", "Charon", "Kore", "Fenrir", "Leda",
+          "Orus", "Aoede", "Callirrhoe", "Autonoe", "Enceladus", "Iapetus",
+          "Umbriel", "Algieba", "Despina", "Erinome", "Algenib", "Rasalgethi",
+          "Laomedeia", "Achernar", "Alnilam", "Schedar", "Gacrux", "Pulcherrima",
+          "Achird", "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat"
+        ],
+        "description": "Voice name for single-speaker mode. Each voice has different characteristics: Zephyr (Bright), Puck (Upbeat), Charon (Informative), Kore (Firm), etc. Only used when speakers array is not provided."
+      },
+      "speakers": {
+        "type": "array",
+        "description": "Array of speaker configurations for multi-speaker mode (max 2 speakers). Each speaker should have 'name' and 'voice' properties. Speaker names must match those used in the text dialogue.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the speaker as used in the dialogue text"
+            },
+            "voice": {
+              "type": "string",
+              "enum": [
+                "Zephyr", "Puck", "Charon", "Kore", "Fenrir", "Leda",
+                "Orus", "Aoede", "Callirrhoe", "Autonoe", "Enceladus", "Iapetus",
+                "Umbriel", "Algieba", "Despina", "Erinome", "Algenib", "Rasalgethi",
+                "Laomedeia", "Achernar", "Alnilam", "Schedar", "Gacrux", "Pulcherrima",
+                "Achird", "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat"
+              ],
+              "description": "Voice name for this speaker"
+            }
+          },
+          "required": ["name", "voice"]
+        },
+        "maxItems": 2
+      }
+    },
+    "required": ["text", "filename"]
+  }
+}
