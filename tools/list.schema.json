@@ -1,0 +1,17 @@
+{
+  "description": "Update a lists in file with status changes from given text",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "lines in format 'status - item', they'll be used to update list, to delete item change its status to deleted or cancelled"
+      },
+      "filename": {
+        "type": "string",
+        "description": "Filename of the list file to read and write"
+      }
+    },
+    "required": ["text", "filename"]
+  }
+}

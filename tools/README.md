@@ -20,6 +20,7 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [openai_imgen](#openai_imgen) generate and edit images with openai gpt-image model
   - [gemini_ocr](#gemini_ocr) ask question about file content (PDF/audio/image)
   - [turn](#turn) turn based agent
+  - [list](#list) keep list of tasks todo (loops for llm)
   - [py](#py) run python code
   - [js](#js) run javascript code
   - [message](#message) talk to another chat/agent
@@ -35,7 +36,7 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [resolve](#resolve) resolve a variable
   - [prop](#prop) set additional properties of llm
   - [head](#head) take first N lines of a file
-  - [tail](#tail) take last N lines of a file
+  - [tail](#tail) take last N lines of a file or llm payload
   - [slice](#slice) take lines from <start> to <finish> of a file
 
 
@@ -301,6 +302,39 @@ Yes.
 ...
 ```
 
+### `list`
+Keep list of tasks to do
+
+```chat
+system: @list
+You manage todo list in file todo.txt
+
+user: 
+Today i need to refactor xyz
+and then release abc
+
+assistant:
+
+tool_call: list {"filename":"todo.txt"}
+todo - refactor xyz
+todo - release abc
+
+tool_result:
+list updated
+
+user: 
+ok, i've finished refactoring xyz
+
+assistant:
+
+tool_call: list {"filename":"todo.txt"}
+done - refactor xyz
+
+tool_result:
+list updated
+```
+
+
 ### `py`
 execute python code
 ```chat
@@ -452,9 +486,10 @@ assistant:
 
 with argument it sets 
 ```json
-response_format: { 
+"response_format": { 
     "type": "json_schema", 
     "json_schema": { "schema": <contents of the file argument> }
+} 
 ```
 
 ```chat
@@ -549,6 +584,25 @@ Take last *N* lines of text from a file or variable. Default is 20 lines.
 user: 
 @{ filename.txt | tail 15 }    # last 15 lines
 ```
+
+You can limit llm request context with tail like
+```chat
+system: 
+@{ gpt-4.1 | tail 2 }  # take last 2 messages from the chat + system message
+
+user: 
+1
+
+assistant: 
+2
+
+user: 
+3
+
+assistant: 
+4
+```
+
 
 ### `slice`
 Extract a range of lines from a file or variable.
