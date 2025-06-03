@@ -21,9 +21,10 @@ module.exports = async function tail(node, args, context) {
   return {
     ...node,
     exec: async (payload, ctx) => {
+      let startIndex = Math.max(0, payload.messages.length - count)
+      startIndex = payload.messages.findIndex((msg, index) => (index >= startIndex) && (msg.role === 'user' || msg.role ==='assistant'))
       const messages = payload.messages.filter(
-        (message, index, messages) => 
-          (message.role === "system") || (index >= messages.length - count ))
+        (message, index) => (message.role === "system") || (index >= startIndex))
     
       return node.exec({
         ...payload,

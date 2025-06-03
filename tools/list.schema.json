@@ -5,7 +5,7 @@
     "properties": {
       "text": {
         "type": "string",
-        "description": "lines in format 'status - item', they'll be used to update list, to delete item change its status to deleted or cancelled"
+        "description": "lines in format 'status - item', they'll be used to update list or to insert to the list, to delete item change its status to deleted or cancelled\nThe lines should contain only those items that needs to be changed - inserted/updated/deleted"
       },
       "filename": {
         "type": "string",
