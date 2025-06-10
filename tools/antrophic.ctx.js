@@ -9,12 +9,13 @@ async function fetchAnthropicModels(apiKey) {
   });
 
   if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
+
   const content = await res.json();
   return content.data;
 }
 
 module.exports = createProviderContext("anthropic", {
-  apiKeyEnv: "ANTROPHIC_KEY",
+  apiKeyEnv: "ANTHROPIC_KEY",
   apiModelFetcher: fetchAnthropicModels,
   createExecFunction: (model, payload, key) => {
     return {

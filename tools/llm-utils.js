@@ -92,50 +92,55 @@ function createProviderContext(providerName, options) {
       return;
     }
 
-    const models = await getModels(apiKey);
-    
-    // Filter models based on name and args
-    let matchedModels = [];
-    if (modelFilter) {
-      matchedModels = modelFilter(models, name, args);
-    } else {
-      // Default filter by exact match or regex
-      let re;
-      if (args.match === "regex") {
-        re = new RegExp(name);
+    try {
+      const models = await getModels(apiKey);
+
+      // Filter models based on name and args
+      let matchedModels = [];
+      if (modelFilter) {
+        matchedModels = modelFilter(models, name, args);
+      } else {
+        // Default filter by exact match or regex
+        let re;
+        if (args.match === "regex") {
+          re = new RegExp(name);
+        }
+
+        matchedModels = models.filter((item) => {
+          if (args.match === "exact" && item.id === name) {
+            return true;
+          }
+          if (re) {
+            return re.test(item.id);
+          }
+          return false;
+        });
       }
-      
-      matchedModels = models.filter((item) => {
-        if (args.match === "exact" && item.id === name) {
-          return true;
-        }
-        if (re) {
-          return re.test(item.id);
-        }
-        return false;
-      });
-    }
 
-    if (!matchedModels.length) {
-      return;
-    }
+      if (!matchedModels.length) {
+        return;
+      }
 
-    if (args.output === 'all') {
-      return matchedModels.map(model => ({ 
-        type: "llm", 
-        name: model.id || model.name 
-      }));
+      if (args.output === 'all') {
+        return matchedModels.map(model => ({ 
+          type: "llm", 
+          name: model.id || model.name 
+        }));
+      }
+
+      const model = matchedModels[0];
+      return {
+        type: "llm",
+        exec: async (payload) => {
+          // Get a fresh key in case it's rotated
+          const key = await this.read(apiKeyEnv);
+          return createExecFunction(model, payload, key, this);
+        },
+      };
+    } catch (e ) {
+      console.log(e)
+      return
     }
-    
-    const model = matchedModels[0];
-    return {
-      type: "llm",
-      exec: async (payload) => {
-        // Get a fresh key in case it's rotated
-        const key = await this.read(apiKeyEnv);
-        return createExecFunction(model, payload, key, this);
-      },
-    };
   };
 }
 
