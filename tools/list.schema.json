@@ -1,5 +1,5 @@
 {
-  "description": "Update a lists in file with status changes from given text",
+  "description": "Manages todo lists",
   "parameters": {
     "type": "object",
     "properties": {
@@ -9,7 +9,7 @@
       },
       "filename": {
         "type": "string",
-        "description": "Filename of the list file to read and write"
+        "description": "location of the todo list file"
       }
     },
     "required": ["text", "filename"]

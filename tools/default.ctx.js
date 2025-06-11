@@ -14,7 +14,7 @@ if (process.env.TUNE_PATH) {
 
 module.exports = [
   async function filename(name, params) {
-    if (!this.stack || this.stack.length) {
+    if (!this.stack || !this.stack.length) {
       return
     }
     const { filename } = this.stack[0];
