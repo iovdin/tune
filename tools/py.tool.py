@@ -2,9 +2,11 @@ import ast
 import sys
 
 def main(params):
-    parsed = ast.parse(params['text'])
-    
+    if 'filename' in params:
+        with open(params['filename'], 'w') as file:
+            file.write(params['text'])
 
+    parsed = ast.parse(params['text'])
     last_stmt = parsed.body[-1]
     if isinstance(last_stmt, ast.Expr):
         parsed.body[-1] = ast.Assign(

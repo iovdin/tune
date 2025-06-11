@@ -150,10 +150,11 @@ export default async function mcp(node, args, ctx) {
       parameters: item.inputSchema
     },
     exec: async (args) => { 
-      const res = await client.request({method: "tools/call", params: {
+      let res = await client.request({method: "tools/call", params: {
         name: item.name, 
         arguments: args 
       }}) 
+      res = res.toolResult || res
       const content = res.content
         .map(item => {
           if (item.type == "text") {

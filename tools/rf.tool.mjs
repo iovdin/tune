@@ -1,4 +1,3 @@
-import { promises as fs } from 'fs';
 import { relative, dirname } from 'path' 
 
 export default async function readFile({ filename, linenum }, ctx) {
@@ -7,8 +6,15 @@ export default async function readFile({ filename, linenum }, ctx) {
     return "File not found"
   }
   const relFile = relative(process.cwd(), filename)
+  const path = [ relFile ]
+  if (resolved.type !== 'text') {
+    path.push('text')
+  }
   if (linenum) {
-    return`@\{ ${relFile} | linenum \}`;
+    path.push('linenum')
+  }
+  if (path.length > 1) {
+    return`@\{ ${path.join(" | ")} \}`;
   }
   return `@${relFile}`;
 

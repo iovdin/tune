@@ -19,7 +19,7 @@
       },
       "size": {
         "type": "string",
-        "enum": ["auto", "square", "landscape", "portrain"],
+        "enum": ["auto", "square", "landscape", "portrait"],
         "description": "size of the image, auto is default"
       },
       "images": {
