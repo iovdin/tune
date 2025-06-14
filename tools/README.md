@@ -13,6 +13,7 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [patch](#patch) patch file
   - [append](#append) append to file
   - [sh](#sh) execute shell command
+  - [osa](#osa) manage reminder/notes/calendar etc. with applescript
   - [jina_r](#jina_r) read webpage content
   - [brave](#brave) web search  
   - [openai_tts](#openai_tts) text to speech from openai
@@ -129,6 +130,24 @@ tool_result:
 ./README.md:  const text = "s: \@echo\nu: hello world";
 ./tools/echo.txt:you are echo, you print everything back
 ./tools/README.md:* `echo.txt` - to debug variable expansions and context
+```
+
+### `osa`
+AppleScript tool, manage reminders, notes, calendar etc on osx
+```chat
+system: @osa @gpt-4.1
+you're personal assistant with access to osx apps
+like reminder, calendar etc
+
+user: 
+can you remind me in 2 hours that i have meeting with jack
+
+assistant:
+
+tool_call: osa
+tell application "Reminders" to make new reminder with properties {name:"Meeting with Jack", remind me date:(current date) + 2 * hours}
+tool_result:
+reminder id x-apple-reminder://849EA642-B7E0-4E16-94AA-B50FF1BC282D
 ```
 
 ### `jina_r`

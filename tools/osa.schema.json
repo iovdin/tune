@@ -1,0 +1,13 @@
+{
+  "description": "Execute osascript command and return output",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The osascript command to execute"
+      }
+    },
+    "required": ["text"]
+  }
+}

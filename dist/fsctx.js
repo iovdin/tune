@@ -767,7 +767,7 @@ function fsctx(paths, opts, fs) {
     }));
 
   function mkfsmd1(p) {
-    return (async function(name, args) {
+    async function fsmd(name, args) {
       var self, result, parsed, dir, re, item, parsed1, fileType, fullname, schemaFile, schema, res, _i, _ref, _len, _ref0, _ref1, _ref2, _ref3;
       var self;
       var result;
@@ -973,7 +973,8 @@ function fsctx(paths, opts, fs) {
         }
       }
       return result;
-    });
+    }
+    return fsmd;
   }
   mkfsmd1;
   envCache = {};

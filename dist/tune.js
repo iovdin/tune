@@ -1174,7 +1174,7 @@ function envmd(md) {
       }
       return _ref;
     }));
-  return (async function(name, args) {
+  async function hash(name, args) {
     var llmd, result, re, key, val, _ref, _len;
     var llmd;
     var result;
@@ -1195,7 +1195,8 @@ function envmd(md) {
       result.push(Object.assign({}, val));
     }
     return result;
-  });
+  }
+  return hash;
 }
 envmd;
 
