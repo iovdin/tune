@@ -1,5 +1,6 @@
 {
   "description": "Manages todo lists",
+  "strict": true,
   "parameters": {
     "type": "object",
     "properties": {
@@ -12,6 +13,7 @@
         "description": "location of the todo list file"
       }
     },
-    "required": ["text", "filename"]
+    "required": ["text", "filename"],
+    "additionalProperties": false
   }
 }
