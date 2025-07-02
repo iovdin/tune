@@ -1,5 +1,5 @@
 {
-  "description": "Process a local file (image, audio, PDF, or text-based documents) using the Gemini API. Provide the file path and an instruction or question. Supported image types: PNG, JPEG, WEBP, HEIC, HEIF. Supported audio types: WAV, MP3, AIFF, AAC, OGG, FLAC. Supported document types: PDF, TXT, HTML, HTM, MD, PY, JS, JSON, CSS, JAVA, C, CS, CPP, GO, PHP, RB, TS, XML, YAML, CSV, TSV, RTF.",
+  "description": "Process a local file (image, audio, PDF, or text-based documents) using the Gemini API. Provide the file path and an instruction or question. Supported image types: PNG, JPEG, WEBP, HEIC, HEIF. Supported audio types: WAV, MP3, AIFF, AAC, OGG, FLAC. Supported document types: PDF, TXT, HTML, HTM, MD, PY, JS, JSON, CSS, JAVA, C, CS, CPP, GO, PHP, RB, TS, XML, YAML, CSV, TSV, RTF. or video mp4 etc mov",
   "parameters": {
     "type": "object",
     "properties": {

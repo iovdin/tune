@@ -107,7 +107,8 @@ export default async function geminiFileProcessor({ filename, text, model }, ctx
     if (!uploadResp.ok) {
       const errText = await uploadResp.text();
       throw new Error(`Gemini Files API upload failed (${uploadResp.status}): ${errText}`);
-    }    const uploadJson = await uploadResp.json();
+    }    
+    const uploadJson = await uploadResp.json();
     const fileObj = uploadJson?.file || uploadJson; // sometimes top-level is the File object
     const fileUri = fileObj?.uri || fileObj?.fileUri;
     const fileName = fileObj?.name; // e.g. "files/4su2ifuhe53n"
