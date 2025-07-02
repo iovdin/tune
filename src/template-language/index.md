@@ -31,5 +31,5 @@ tool_result: {
 }
 ```
 
-You can use `@` anywhere at any point of the chat (`assistant` and `tool_call` is and [exception](/special-chars)).
+You can use `@` anywhere at any point of the chat (`assistant` and `tool_call` is and [exception]({{ site.baseurl }}/template-language/special-chars)).
 You might want to switch to a smarter model or use a tool later in the conversation
