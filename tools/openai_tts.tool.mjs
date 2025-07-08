@@ -21,6 +21,6 @@ export default async function openaiTTS({ text, voice, instructions, filename },
     throw new Error(`Error: ${response.status} ${response.statusText}\n${error.message}`);
   }
   const buf = await response.arrayBuffer();
-  fs.writeFileSync(filename, Buffer.from(buf));
+  await ctx.write(filename, Buffer.from(buf));
   return "speech generated"
 }

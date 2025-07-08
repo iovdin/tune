@@ -831,7 +831,14 @@ function fsctx(paths, opts, fs) {
             var schema;
             schema;
             if (fs.existsSync(schemaFile)) {
-              schema = JSON.parse(fs.readFileSync(schemaFile, "utf8"));
+              try {
+                schema = JSON.parse(fs.readFileSync(schemaFile, "utf8"));
+              } catch (e) {
+                throw new Error(tpl("Can not parse schema {schemaFile}\n{message}", {
+                  schemaFile: schemaFile,
+                  message: e.message
+                }));
+              }
             } else if (opts && opts.makeSchema && (opts.output !== "all")) {
               schema = await opts.makeSchema({
                 text: fs.readFileSync(fullname, "utf8")

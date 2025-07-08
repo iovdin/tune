@@ -1,14 +1,14 @@
 module.exports = function(props, transform) {
+  const { auth_key, url } = props;
+  delete props.auth_key;
+  delete props.url;
   return async function(payload, ctx) {
-    const { auth_key, url } = props;
-    delete props.auth_key;
-    delete props.url;
-    const key = await ctx.read('OPENAI_KEY' || auth_key);
+    const key = auth_key || await ctx.read('OPENAI_KEY');
     if (typeof(transform) === 'function') {
       payload = transform(payload)
     }
 
-    return ({
+    const result =  ({
       url: url || "https://api.openai.com/v1/chat/completions",
       method: "POST",
       headers: { 
@@ -21,5 +21,7 @@ module.exports = function(props, transform) {
         messages: payload.messages.filter(msg => msg.role !== 'comment'),
       })
     })
+    // console.log(result)
+    return result
   }
 }
