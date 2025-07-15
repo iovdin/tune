@@ -26,9 +26,22 @@ With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make 
 
 
 ## Batteries Included
-Bunch of models and tools comes with extension & plugin
-[check tools](tools/README.md)
+**Anthropic/OpenAI/Gemini/Openrouter/Mistral/Groq** models providers are supported and **30+ tools** come with text editor.
+```chat
+system: 
+@gemini-2.5-pro @openai_imgen
 
+user: 
+draw a stickman with talking bubble "Hello world"
+
+assistant: 
+tool_call: openai_imgen {"filename":"stickman_hello_world.png"}
+a simple stickman drawing with a talking bubble saying 'Hello world'
+
+tool_result: 
+image generated
+```
+[read more](tools/README.md)
 
 ## CLI
 
