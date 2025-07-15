@@ -1,4 +1,4 @@
-# Tune your everyday LLM toolkit
+# Tune - AI chat in text file
 
 Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=iovdin.tune) for Visual Studio Code and [plugin](https://github.com/iovdin/tune.nvim) for Neovim that lets you chat with large language models (LLMs) in a text file. 
 With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make apps and agents. 
