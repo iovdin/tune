@@ -19,7 +19,7 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [openai_tts](#openai_tts) text to speech from openai
   - [gemini_tts](#gemini_tts) text to speech from gemini with single/multi-speaker support
   - [openai_imgen](#openai_imgen) generate and edit images with openai gpt-image model
-  - [gemini_ocr](#gemini_ocr) ask question about file content (PDF/audio/image)
+  - [gemini_ocr](#gemini_ocr) ask question about file content (PDF/video/audio/image)
   - [turn](#turn) turn based agent
   - [list](#list) keep list of tasks todo (loops for llm)
   - [py](#py) run python code
@@ -33,7 +33,7 @@ Set `TUNE_PATH` to the directory to make them available in tune editor extension
   - [log](#log) save llm payload
   - [mock](#mock) set variables inline
   - [linenum](#linenum) prepend line numbers
-  - [text](#text) convert any node to text node
+  - [text](#text) convert any variable to text variable
   - [resolve](#resolve) resolve a variable
   - [prop](#prop) set additional properties of llm
   - [head](#head) take first N lines of a file

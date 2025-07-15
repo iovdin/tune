@@ -6,10 +6,44 @@ With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make 
 ## Demo
 <img src="https://github.com/iovdin/tune/blob/770f382a03a25e15eeef293f553b6aee0f3531f6/docs/assets/gifs/tune.gif">
 
+## Template Language
 
-## Read more about
-How to [connect LLMs](https://iovdin.github.io/tune/template-language/connect-llm)
-or how to [use tools](https://iovdin.github.io/tune/template-language/tools)
+```chat
+@myprompt     include file
+@image        include image
+@path/to/file include file at path
+@gpt-4.1      connect model
+@shell        connect tool
+@@prompt      include file recursively
+
+@{ name with whitespaces } - include file with whitespaces
+@{ image | resize 512 }    - modify with processors
+@{ largefile | tail 100 }  - modify with processors
+@{| sh tree }              - insert generated content with processors
+
+```
+[read more](https://iovdin.github.io/tune/template-language)
+
+
+## Batteries Included
+Bunch of models and tools comes with extension & plugin
+[check tools](tools/README.md)
+
+
+## CLI
+
+```bash
+# append user message to newchat.chat run and save
+npx tune-sdk --user "hi how are you?" --filename newchat.chat  --save
+
+# start new chat with system prompt and initial user message 
+# print result to console
+npx tune-sdk --system "You are Groot" --user "Hi how are you?"
+
+#set context variable
+npx tune-sdk --set "test=hello" --user "@test" --system "You are echo you print everythting back"  
+```
+
 
 ## Javascript SDK
 `npm install tune-sdk`
