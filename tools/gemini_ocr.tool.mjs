@@ -10,19 +10,14 @@ import path from 'path';
  * @param {Object} ctx - Tune context object
  * @returns {Promise<string>} Result text from the API
  */
-export default async function geminiFileProcessor({ filename, text, model }, ctx) {
+export default async function geminiFileProcessor({ filename, text, model }, ctx) {  
   const key = await ctx.read('GEMINI_KEY');
   if (!key) {
     throw new Error('GEMINI_KEY not found in environment. Please set it in your .env file.');
-  }  // Get file size first so we decide whether to upload or inline.
-  let stats;
-  try {
-    stats = await fs.stat(filename);
-  } catch (err) {
-    throw new Error(`Error stating file ${filename}: ${err.message}`);
   }
-  const fileSize = stats.size; // in bytes
-  model = model || "gemini-2.5-pro-preview-03-25"  // Determine MIME type from file extension using a hard-coded map of Gemini-supported formats.
+
+  model = model || "gemini-2.5-pro-preview-03-25";  
+
   const EXTENSION_TO_MIME = {
     // Documents
     '.pdf': 'application/pdf',
@@ -67,85 +62,77 @@ export default async function geminiFileProcessor({ filename, text, model }, ctx
     '.aac': 'audio/aac',
     '.ogg': 'audio/ogg',
     '.flac': 'audio/flac'
-  };
+  };  
+  // Determine if "filename" is a local path or a Gemini Files reference/URI
+  const isRemote = /^https?:\/\//i.test(filename) || filename.startsWith('files/');
 
-  const ext = path.extname(filename).toLowerCase();
-  const mimeType = EXTENSION_TO_MIME[ext];
-
-  if (!mimeType) {
-    throw new Error(`Unsupported or unknown file extension: ${ext}. Gemini only supports specific MIME types. Please refer to the documentation for supported formats.`);
-  }  // Decide whether to inline the file or upload via Files API (>10MB)
   const FILE_SIZE_THRESHOLD = 10 * 1024 * 1024; // 10 MB
-
   let parts;
+  let mimeType;
 
-  if (fileSize > FILE_SIZE_THRESHOLD) {
-    // --- Upload using Files API ---
-    let fileBuffer;
-    try {
-      fileBuffer = await fs.readFile(filename);
-    } catch (err) {
-      throw new Error(`Error reading file ${filename}: ${err.message}`);
-    }
-
-    const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=media&key=${key}`;
-
-    let uploadResp;
-    try {
-      uploadResp = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': mimeType,
-          'X-Goog-Upload-Protocol': 'raw' // non-resumable simple upload
-        },
-        body: fileBuffer
-      });
-    } catch (err) {
-      throw new Error(`Network error uploading file to Gemini Files API: ${err.message}`);
-    }
-
-    if (!uploadResp.ok) {
-      const errText = await uploadResp.text();
-      throw new Error(`Gemini Files API upload failed (${uploadResp.status}): ${errText}`);
-    }    
-    const uploadJson = await uploadResp.json();
-    const fileObj = uploadJson?.file || uploadJson; // sometimes top-level is the File object
-    const fileUri = fileObj?.uri || fileObj?.fileUri;
-    const fileName = fileObj?.name; // e.g. "files/4su2ifuhe53n"
-
-    if (!fileUri || !fileName) {
-      throw new Error(`Could not parse file URI/name from upload response: ${JSON.stringify(uploadJson)}`);
-    }
-
-    // Wait until the file is ACTIVE (the backend might still be processing)
-    const waitForActive = async (name, timeoutMs = 60000, intervalMs = 1000) => {
-      const deadline = Date.now() + timeoutMs;
-      const fileUrl = `https://generativelanguage.googleapis.com/v1beta/${name}?key=${key}`;
-      while (Date.now() < deadline) {
-        try {
-          const resp = await fetch(fileUrl);
-          if (resp.ok) {
-            const info = await resp.json();
-            if (info?.file?.state === 'ACTIVE' || info?.state === 'ACTIVE') {
-              return; // Ready!
-            }
-          }
-        } catch (e) {
-          // ignore transient errors
-        }
-        await new Promise(r => setTimeout(r, intervalMs));
+  if (isRemote) {
+    // ---------------------- Remote (Gemini Files) ----------------------
+    // Extract the canonical file name ("files/abc123") so we can query metadata
+    let fileName = filename;
+    if (!fileName.startsWith('files/')) {
+      // try to extract between /files/ and the next /
+      const m = filename.match(/\/files\/([^/?]+)/i);
+      if (!m) {
+        throw new Error('Could not extract Gemini file name (files/ID) from URI');
       }
-      console.warn(`Timed out waiting for file ${name} to become ACTIVE`);
-    };
+      fileName = `files/${m[1]}`;
+    }
 
-    await waitForActive(fileName);
+    // Poll until state == ACTIVE (max 60s)
+    const metadataEndpoint = `https://generativelanguage.googleapis.com/v1beta/${fileName}`;
+    const deadline = Date.now() + 60000;
+    let fileMeta;
+    while (Date.now() < deadline) {
+      const resp = await fetch(`${metadataEndpoint}?key=${key}`);
+      if (!resp.ok) {
+        const errTxt = await resp.text();
+        throw new Error(`Failed to fetch file metadata (${resp.status}): ${errTxt}`);
+      }
+      const json = await resp.json();
+      fileMeta = json.file || json;
+      if (fileMeta.state === 'ACTIVE') break;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!fileMeta || fileMeta.state !== 'ACTIVE') {
+      throw new Error(`File ${fileName} is not ACTIVE (state=${fileMeta?.state}). Try again later.`);
+    }
+
+    const fileUri = fileMeta.uri || fileMeta.fileUri;
+    mimeType = fileMeta.mimeType || fileMeta.mime_type;
+    if (!fileUri || !mimeType) {
+      throw new Error(`Could not determine uri/mimeType from metadata: ${JSON.stringify(fileMeta)}`);
+    }
 
     parts = [
       { file_data: { mime_type: mimeType, file_uri: fileUri } },
       { text }
     ];
   } else {
-    // --- Inline small file (<10MB) ---
+    // --------------------------- Local file ---------------------------
+    const ext = path.extname(filename).toLowerCase();
+    mimeType = EXTENSION_TO_MIME[ext];
+    if (!mimeType) {
+      throw new Error(`Unsupported or unknown file extension: ${ext}. Gemini only supports specific MIME types.`);
+    }
+
+    // Get file size
+    let stats;
+    try {
+      stats = await fs.stat(filename);
+    } catch (err) {
+      throw new Error(`Error stating file ${filename}: ${err.message}`);
+    }
+    const fileSize = stats.size;
+
+    if (fileSize > FILE_SIZE_THRESHOLD) {
+      throw new Error(`File ${filename} is larger than 10 MB. Please upload it first using gemini_files tool and then pass its uri/name here.`);
+    }
+
     let fileBuffer;
     try {
       fileBuffer = await fs.readFile(filename);
@@ -153,7 +140,6 @@ export default async function geminiFileProcessor({ filename, text, model }, ctx
       throw new Error(`Error reading file ${filename}: ${err.message}`);
     }
     const encodedData = fileBuffer.toString('base64');
-
     parts = [
       { inline_data: { mime_type: mimeType, data: encodedData } },
       { text }

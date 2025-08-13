@@ -1,0 +1,48 @@
+{
+  "description": "Transcribe audio using Groq Whisper API",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "file": {
+        "type": "string",
+        "description": "Path to the audio file to transcribe"
+      },
+      "url": {
+        "type": "string",
+        "description": "URL of the audio file to transcribe"
+      },
+      "model": {
+        "type": "string",
+        "description": "Model to use for transcription",
+        "default": "whisper-large-v3-turbo"
+      },
+      "language": {
+        "type": "string",
+        "description": "Language spoken in the audio"
+      },
+      "text": {
+        "type": "string",
+        "description": "Optional text prompt to guide transcription"
+      },
+      "response_format": {
+        "type": "string",
+        "description": "Format of the transcription response",
+        "enum": ["json", "verbose_json", "text"],
+        "default": "json"
+      },
+      "temperature": {
+        "type": "number",
+        "description": "Sampling temperature for transcription",
+        "default": 0
+      },
+      "timestamp_granularities": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Timestamp granularities to include if response_format is verbose_json",
+        "default": ["segment"]
+      }
+    }
+  }
+}

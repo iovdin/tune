@@ -1,6 +1,9 @@
 import path from 'path';
 
 export default async function json_format(node, args, ctx) {
+  if (!node) {
+    return 
+  }
   let response_format = { "type": "json_object" }
   if (args.trim()) {
 

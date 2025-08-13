@@ -1,5 +1,5 @@
 {
-  "description": "Process and generate messages based on input parameters and file context",
+  "description": "this tool sends a message to another ai chat as 'user' role, result of the tool is an 'assistant' reply",
   "parameters": {
     "type": "object",
     "properties": {
@@ -9,11 +9,11 @@
       },
       "system": {
         "type": "string",
-        "description": "Filename that contains system prompt, used once when filename is empty"
+        "description": "Filename that contains system prompt, required once at the beginning of simulation"
       },
       "text": {
         "type": "string",
-        "description": "User input message to process"
+        "description": "User message to send"
       }
     },
     "required": ["filename", "text"]

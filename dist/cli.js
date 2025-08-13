@@ -1,0 +1,401 @@
+var assert, tune, rpc, path, fs, os, cp, stream;
+assert = require("assert");
+
+function showHelp() {
+  console.log("TUNE-CLI - Command Line Interface for Tune SDK");
+  console.log("");
+  console.log("USAGE:");
+  console.log("  npx tune-sdk [OPTIONS]");
+  console.log("");
+  console.log("TLDR EXAMPLES:");
+  console.log("  # Quick chat with system prompt");
+  console.log("  npx tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
+  console.log("");
+  console.log("  # Continue existing chat");
+  console.log("  npx tune-sdk --user \"continue the conversation\" --filename chat.chat --save");
+  console.log("");
+  console.log("  # Set context variables");
+  console.log("  npx tune-sdk --set-test=hello --user \"@test\" --system \"Echo assistant\"");
+  console.log("");
+  console.log("  # RPC mode for editor integration");
+  console.log("  npx tune-sdk --rpc");
+  console.log("");
+  console.log("OPTIONS:");
+  console.log("  --user <text>         User message to send");
+  console.log("  --system <text>       System prompt to use");
+  console.log("  --filename <file>     Chat file to load/save");
+  console.log("  --save                Save conversation to file");
+  console.log("  --stop <mode>         Stop condition: assistant|step|<custom>");
+  console.log("  --text <content>      chat content");
+  console.log("  --response <type>     Response format: content|json|messages|chat (default: content)");
+  console.log("  --set-<name>=<value>  Set context parameter");
+  console.log("  --rpc                 Start RPC server mode");
+  console.log("  --path <paths>        Additional search paths (colon-separated)");
+  console.log("  --home <dir>          Tune config directory (default: ~/.tune)");
+  console.log("  --debug               Enable debug output");
+  console.log("  --silent              Suppress output");
+  console.log("  --force-init          Force config initialization");
+  console.log("  --help            Show this help");
+  console.log("");
+  console.log("EXAMPLES:");
+  console.log("  # Start new chat");
+  console.log("  npx tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
+  console.log("");
+  console.log("  # Append to existing chat and save");
+  console.log("  npx tune-sdk --user \"hi how are you?\" --filename newchat.chat --save");
+  console.log("");
+  console.log("  # Stop at specific word");
+  console.log("  npx tune-sdk --user \"continue\" --filename chat.chat --stop \"END\"");
+  console.log("");
+  console.log("  #Set context variable");
+  console.log("  npx tune-sdk --set-test=\"hello\" --user \"@test\" --system \"You are echo you print everythting back\"");
+  return console.log("");
+}
+showHelp;
+
+function validateArgs(args) {
+  assert(!!args && (typeof args === "object"), "Arguments must be an object");
+  if (args.user) assert(typeof args.user === "string", "--user must be a string");
+  if (args.system) assert(typeof args.system === "string", "--system must be a string");
+  if (args.filename) assert(typeof args.filename === "string", "--filename must be a string");
+  if (args.text) assert(typeof args.text === "string", "--text must be a string");
+  if (args.response) assert(typeof args.response === "string", "--response must be a string");
+  if (args.stop) assert(typeof args.stop === "string", "--stop must be a string");
+  if (args.path) assert(typeof args.path === "string", "--path must be a string");
+  if (args.home) assert(typeof args.home === "string", "--home must be a string");
+  if (!!args.save) assert(typeof args.save === "boolean", "--save must be a boolean");
+  if (!!args.rpc) assert(typeof args.rpc === "boolean", "--rpc must be a boolean");
+  if (!!args.debug) assert(typeof args.debug === "boolean" || typeof args.debug === "string", "--debug must be a boolean");
+  if (!!args.silent) assert(typeof args.silent === "boolean", "--silent must be a boolean");
+  if (!!args.forceInit) assert(typeof args.forceInit === "boolean", "--force-init must be a boolean");
+  if (args.params) assert(!!args.params && (typeof args.params === "object"), "--set-* parameters must form a valid object");
+  if ((args.stop && (typeof args.stop === "string"))) assert((args.stop === "assistant") || (args.stop === "step") || (args.stop.length > 0), "--stop must be 'assistant', 'step', or a non-empty custom string");
+  if ((!args.rpc && !args.help && !args.user && !args.filename)) assert(false, "Must specify --user, --filename, --rpc, or --help");
+  return args;
+}
+validateArgs;
+
+function parseArgs(args) {
+  var curKey, res, res1, key, value, stop, _ref, _len;
+  assert(Array.isArray(args), "parseArgs expects an array of arguments");
+  var curKey;
+  curKey = null;
+  var res;
+  res = args.reduce((function(memo, arg) {
+    var key, value, _ref, _i;
+    assert(typeof arg === "string", "Each argument must be a string");
+    if (arg.startsWith("--")) {
+      _ref = arg.substring(2)
+        .split("=");
+      key = _ref[0];
+      value = _ref[1];
+      assert((typeof key === "string") && (key.length > 0), "Argument key must be a non-empty string");
+      if (!!value) {
+        memo[key] = value;
+        curKey = null;
+      } else {
+        curKey = key;
+        memo[key] = true;
+      }
+    } else if (curKey) {
+      memo[curKey] = arg;
+      curKey = null;
+    }
+    return memo;
+  }), {});
+  assert(!!res && (typeof res === "object"), "Parsed arguments must form an object");
+  var res1;
+  res1 = {};
+  _ref = res;
+  for (key in _ref) {
+    value = _ref[key];
+    assert(typeof key === "string", "Argument keys must be strings");
+    if (key.startsWith("set-")) {
+      res1.params = res1.params || {}
+      assert(key.substr(4).length > 0, "Set parameter name cannot be empty");
+      res1.params[key.substr(4)] = value;
+    } else {
+      res1[key] = value;
+    }
+  }
+  if ((res1.h || res1.help)) res1.help = true;
+  stop = res1.stop;
+  if ((!!stop && (stop !== "step" && stop !== "assistant"))) {
+    assert(typeof stop === "string", "Custom stop condition must be a string");
+    assert(stop.length > 0, "Custom stop condition cannot be empty");
+    res1.stop = (function(msgs) {
+      var lastMsg;
+      assert(Array.isArray(msgs), "Messages must be an array");
+      if (!msgs.length) return false;
+      var lastMsg;
+      lastMsg = msgs["slice"](-1)[0];
+      assert(!!lastMsg && (typeof lastMsg === "object"), "Last message must be an object");
+      if (!lastMsg.content) return false;
+      assert(typeof lastMsg.content === "string", "Message content must be a string");
+      return (-1 !== lastMsg.content.indexOf(stop));
+    });
+  }
+  return res1;
+}
+parseArgs;
+tune = require("../dist/tune.js");
+rpc = require("../dist/rpc.js");
+path = require("path");
+fs = require("fs");
+os = require("os");
+cp = require("child_process");
+stream = require("stream");
+
+function getHomedir(args) {
+  assert(!!args && (typeof args === "object"), "getHomedir expects args to be an object");
+  if (args.home) assert(typeof args.home === "string", "args.home must be a string");
+  return path.resolve(path.normalize((args.home || process.env.TUNE_HOME || "~/.tune")
+    .replace("~", os.homedir())));
+}
+getHomedir;
+async function initConfig(args) {
+  var homedir, stdout, stderr, _ref, _i;
+  assert(!!args && (typeof args === "object"), "initConfig expects args to be an object");
+  var homedir;
+  homedir = getHomedir(args);
+  assert(typeof homedir === "string", "Home directory must be a string");
+  if ((!args.forceInit && fs.existsSync(homedir))) return;
+  console.error("[tune-sdk] initialize " + homedir);
+  fs.mkdirSync(homedir, {
+    recursive: true
+  });
+  console.error("[tune-sdk] copying files");
+  fs.copyFileSync(path.resolve(__dirname, "../config/default.ctx.js"), path.resolve(homedir, "default.ctx.js"));
+  fs.copyFileSync(path.resolve(__dirname, "../config/package.json"), path.resolve(homedir, "package.json"));
+  console.error("[tune-sdk] installing npm");
+  try {
+    _ref = cp.execSync("npm i", {
+      cwd: homedir,
+      encoding: "utf8"
+    });
+    stdout = _ref[0];
+    stderr = _ref[1];
+    if (stdout.trim()) console.error("[tune-sdk]", stdout.trim());
+    stderr.trim() ? console.error("[tune-sdk]", stderr.trim()) : undefined;
+  } catch (err) {}
+  return console.error("[tune-sdk] done");
+}
+initConfig;
+async function suggest(params, ctx) {
+  var node, _ref;
+  var node;
+  node = await ctx.resolve(params.query, {
+    output: "all",
+    match: "regex"
+  });
+  if (!node) {
+    _ref = [];
+  } else if (!Array.isArray(node)) {
+    _ref = Array(node);
+  } else {
+    _ref = node;
+  }
+  node = _ref;
+  return node.map((function(item) {
+    return {
+      name: item.name,
+      dirname: item.dirname,
+      source: item.source || item.fullname,
+      fullname: item.fullname,
+      basename: (item.fullname ? path.basename(item.fullname) : undefined),
+      type: item.type
+    }
+  }));
+}
+suggest;
+async function remoteContext(name, params) {
+  var server, node;
+  var server;
+  server = this;
+  var node;
+  node = await server.resolve({
+    name: name,
+    params: params
+  });
+  if ((((typeof node !== "undefined") && (node !== null) && !Number.isNaN(node) && (typeof node.error !== "undefined") && (node.error !== null) && !Number.isNaN(node.error)) ? node.error : undefined)) return;
+  node.read = (function() {
+    return server.read({
+      name: name,
+      params: params
+    });
+  });
+  node.exec = (function() {
+    return server.exec({
+      name: name,
+      params: params
+    });
+  });
+  return node;
+}
+remoteContext;
+async function runRpc(args) {
+  var inStream, outStream, debugStream, ctx, server;
+  var inStream;
+  var outStream;
+  var debugStream;
+  var ctx;
+  var server;
+  inStream = stream.Readable.toWeb(process.stdin);
+  outStream = stream.Writable.toWeb(process.stdout);
+  debugStream = ((typeof args.debug === "string") ? fs.createWriteStream(args.debug, {
+    flags: "a"
+  }) : undefined);
+  ctx = await initContext(args);
+  server = rpc.jsonrpc({
+    inStream: inStream,
+    outStream: outStream,
+    debug: ((typeof args.debug === "string") ? (function() {
+      var _i;
+      var args = 1 <= arguments.length ? [].slice.call(arguments, 0, _i = arguments.length - 0) : (_i = 0, []);
+      return debugStream.write(args.join(" ") + "\n", "utf8");
+    }) : true),
+    name: "server"
+  }, {
+    init: (async function(methods) {
+      if ((-1 !== methods.indexOf("resolve"))) ctx.use(remoteContext.bind(server));
+      return "done";
+    }),
+    file2run: (async function(params, stream) {
+      return tune.file2run({
+        filename: params.filename,
+        response: params.response,
+        stream: stream,
+        stop: params.stop,
+        text: params.text,
+        system: params.system,
+        user: params.user,
+        save: params.save
+      }, {}, ctx);
+    }),
+    suggest: (async function(params) {
+      return suggest(params, ctx);
+    })
+  });
+  return null;
+}
+runRpc;
+async function run(args) {
+  var ctx, stop, params, res;
+  ctx = await initContext(args);
+  var stop;
+  stop = args.stop || "assistant";
+  var params;
+  params = args.params || {}
+  delete args.params;
+  var res;
+  res = await ctx.file2run(args, params);
+  return (!args.silient ? console.log(res) : undefined);
+}
+run;
+async function initContext(args) {
+  var dirs, pwd, ctx, dir, ctxName, ext, module, m, _i, _ref, _len, _i0, _ref0, _len0;
+  var dirs;
+  var pwd;
+  dirs = [];
+  pwd = process.cwd();
+  if (args.path) dirs = args.path.split(path.delimiter)
+    .map((function(dir) {
+      return path.resolve(pwd, dir);
+    }));
+  dirs.push(getHomedir(args));
+  dirs.unshift(pwd);
+  process.env.TUNE_PATH = dirs.join(path.delimiter);
+  ctx = tune.makeContext({
+    TUNE_PATH: process.env.TUNE_PATH,
+    TUNE_HOME: getHomedir(args)
+  });
+  _ref = dirs;
+  for (_i = 0, _len = _ref.length; _i < _len; ++_i) {
+    dir = _ref[_i];
+    var ctxName;
+    ctxName = ["default.ctx.js", "default.ctx.cjs", "default.ctx.mjs"]
+      .map((function(name) {
+        return path.join(dir, name);
+      }))
+      .find((function(name) {
+        return fs.existsSync(name);
+      }));
+    if (!ctxName) continue;
+    var ext;
+    var module;
+    ext = path.extname(ctxName);
+    module = null;
+    if ((ext === ".js" || ext === ".cjs")) {
+      module = require(ctxName);
+    } else {
+      module = await import(ctxName);
+      module = module.default;
+    }
+    if ((typeof module === "function")) {
+      ctx.use(module);
+    } else if (Array.isArray(module)) {
+      _ref0 = module;
+      for (_i0 = 0, _len0 = _ref0.length; _i0 < _len0; ++_i0) {
+        m = _ref0[_i0];
+        if ((typeof m === "function")) {
+          ctx.use(m);
+        } else {
+          throw Error(tpl("err: Context file export is not an array of functions or function {name}: {module}", {
+            name: ctxName,
+            module: m
+          }));
+        }
+      }
+    } else {
+      throw Error(tpl("err: Context file export is not an array of functions or function {name}: {module}", {
+        name: ctxName,
+        module: module
+      }));
+    }
+  }
+  return ctx;
+}
+initContext;
+async function main() {
+  var args, _ref;
+  try {
+    var args;
+    args = parseArgs(process.argv.slice(2));
+    if (args.help) {
+      showHelp();
+      process.exit(0);
+    }
+    validateArgs(args);
+    await initConfig(args);
+    _ref = args.rpc ? await runRpc(args) : await run(args);
+  } catch (e) {
+    console.error(e);
+    _ref = process.exit(1);
+  }
+  return _ref;
+}
+main;
+
+function tpl(str) {
+  var _i;
+  var params = 2 <= arguments.length ? [].slice.call(arguments, 1, _i = arguments.length - 0) : (_i = 1, []);
+  return (function(paramIndex, params) {
+    var _ref;
+    try {
+      _ref = str.replace(/{(\W*)(\w*)(\W*)}/gm, (function(_, pre, name, post) {
+        return (function(res) {
+          paramIndex += 1;
+          return ((typeof res !== 'undefined') ? ((pre || "") + res + (post || "")) : "");
+        })(params[name || paramIndex]);
+      }));
+    } catch (e) {
+      _ref = console.log.apply(console, [].concat([e, str]).concat(params));
+    }
+    return _ref;
+  })(0, (((typeof params[0] === "object") && (params.length === 1)) ? params[0] : params));
+}
+tpl;
+exports.parseArgs = parseArgs;
+exports.rpc = rpc;
+exports.main = main;
+exports.run = run;

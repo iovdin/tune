@@ -4,11 +4,11 @@ files
 .filest
 node_modules
 __pycache__
-tools/node_modules/
-tools/__pycache__/
 .rag
 .ragindex
 chats
 .cache
+examples
+tune-*.tgz
 .obsidian
 rpc.log

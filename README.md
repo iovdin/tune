@@ -54,7 +54,7 @@ npx tune-sdk --user "hi how are you?" --filename newchat.chat  --save
 npx tune-sdk --system "You are Groot" --user "Hi how are you?"
 
 #set context variable
-npx tune-sdk --set "test=hello" --user "@test" --system "You are echo you print everythting back"  
+npx tune-sdk --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
 ```
 
 

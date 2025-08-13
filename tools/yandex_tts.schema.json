@@ -1,0 +1,41 @@
+{
+  "description": "Fetch audio from Yandex's TTS",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "Text input to convert to speech. + Set stress/accent e.g. 'h+ello'\nSpecify context-dependent pause: <[small]>, allowed: tiny, small, medium, large, huge\nHighlight emcented]> or **emphasized word**"
+      },
+      "voice": {
+        "type": "string",
+        "enum": [ "alena-neutral", "alena-good",
+  "filipp",
+  "ermil-neutral", "ermil-good",
+  "jane-neutral", "jane-good", "jane-evil",
+  "omazh-neutral", "omazh-evil",
+  "zahar-neutral", "zahar-good",
+  "dasha-neutral", "dasha-good", "dasha-friendly",
+  "julia-neutral", "julia-strict",
+  "lera-neutral", "lera-friendly",
+  "masha-good", "masha-strict", "masha-friendly",
+  "marina-neutral", "marina-whisper", "marina-friendly",
+  "alexander-neutral", "alexander-good",
+  "kirill-neutral", "kirill-strict", "kirill-good",
+  "anton-neutral", "anton-good",
+  "madi_ru",
+  "saule_ru-neutral", "saule_ru-strict", "saule_ru-whisper",
+  "zamira_ru-neutral", "zamira_ru-strict", "zamira_ru-friendly",
+  "zhanar_ru-neutral", "zhanar_ru-strict", "zhanar_ru-friendly",
+  "yulduz_ru-neutral", "yulduz_ru-strict", "yulduz_ru-friendly", "yulduz_ru-whisper"
+],
+        "description": "Voice type to use for TTS"
+      },
+      "filename": {
+        "type": "string",
+        "description": "wav filename to save the audio to"
+      }
+    },
+    "required": ["text", "voice", "filename"]
+  }
+}
