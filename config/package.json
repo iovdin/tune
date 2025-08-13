@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "tune-basic-toolset": "latest",
+    "tune-fs": "latest",
+    "tune-models": "latest",
+    "tune-sdk": "latest"
+  }
+}
