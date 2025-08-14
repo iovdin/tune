@@ -4,7 +4,8 @@ Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=
 With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make apps and agents. 
 
 ## Demo
-<img src="https://github.com/iovdin/tune/blob/770f382a03a25e15eeef293f553b6aee0f3531f6/docs/assets/gifs/tune.gif">
+<video src="https://github.com/user-attachments/assets/23f8ab30-58db-4159-8761-f212a7960e0c">
+</video>
 
 ## Template Language
 
