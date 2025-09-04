@@ -5,20 +5,27 @@ function showHelp() {
   console.log("TUNE-CLI - Command Line Interface for Tune SDK");
   console.log("");
   console.log("USAGE:");
-  console.log("  npx tune-sdk [OPTIONS]");
+  console.log("  tune-sdk [cmd] [OPTIONS]");
   console.log("");
-  console.log("TLDR EXAMPLES:");
+  console.log("COMMANDS:");
+  console.log("  rpc                   Start RPC server mode");
+  console.log("  init                  Initialize Tune config directory");
+  console.log("");
+  console.log("EXAMPLES:");
   console.log("  # Quick chat with system prompt");
-  console.log("  npx tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
+  console.log("  tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
   console.log("");
   console.log("  # Continue existing chat");
-  console.log("  npx tune-sdk --user \"continue the conversation\" --filename chat.chat --save");
+  console.log("  tune-sdk --user \"continue the conversation\" --filename chat.chat --save");
   console.log("");
   console.log("  # Set context variables");
-  console.log("  npx tune-sdk --set-test=hello --user \"@test\" --system \"Echo assistant\"");
+  console.log("  tune-sdk --set-test=hello --user \"@test\" --system \"Echo assistant\"");
   console.log("");
   console.log("  # RPC mode for editor integration");
-  console.log("  npx tune-sdk --rpc");
+  console.log("  tune-sdk rpc");
+  console.log("");
+  console.log("  # Initialize or reinitialize config directory");
+  console.log("  tune-sdk init --force");
   console.log("");
   console.log("OPTIONS:");
   console.log("  --user <text>         User message to send");
@@ -29,26 +36,13 @@ function showHelp() {
   console.log("  --text <content>      chat content");
   console.log("  --response <type>     Response format: content|json|messages|chat (default: content)");
   console.log("  --set-<name>=<value>  Set context parameter");
-  console.log("  --rpc                 Start RPC server mode");
   console.log("  --path <paths>        Additional search paths (colon-separated)");
   console.log("  --home <dir>          Tune config directory (default: ~/.tune)");
   console.log("  --debug               Enable debug output");
   console.log("  --silent              Suppress output");
-  console.log("  --force-init          Force config initialization");
-  console.log("  --help            Show this help");
-  console.log("");
-  console.log("EXAMPLES:");
-  console.log("  # Start new chat");
-  console.log("  npx tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
-  console.log("");
-  console.log("  # Append to existing chat and save");
-  console.log("  npx tune-sdk --user \"hi how are you?\" --filename newchat.chat --save");
-  console.log("");
-  console.log("  # Stop at specific word");
-  console.log("  npx tune-sdk --user \"continue\" --filename chat.chat --stop \"END\"");
-  console.log("");
-  console.log("  #Set context variable");
-  console.log("  npx tune-sdk --set-test=\"hello\" --user \"@test\" --system \"You are echo you print everythting back\"");
+  console.log("  --force               Force config initialization (with 'init')");
+  console.log("  --help                Show this help");
+  console.log("  --version             Show CLI version");
   return console.log("");
 }
 showHelp;
@@ -64,13 +58,18 @@ function validateArgs(args) {
   if (args.path) assert(typeof args.path === "string", "--path must be a string");
   if (args.home) assert(typeof args.home === "string", "--home must be a string");
   if (!!args.save) assert(typeof args.save === "boolean", "--save must be a boolean");
-  if (!!args.rpc) assert(typeof args.rpc === "boolean", "--rpc must be a boolean");
   if (!!args.debug) assert(typeof args.debug === "boolean" || typeof args.debug === "string", "--debug must be a boolean");
   if (!!args.silent) assert(typeof args.silent === "boolean", "--silent must be a boolean");
-  if (!!args.forceInit) assert(typeof args.forceInit === "boolean", "--force-init must be a boolean");
+  if (!!args.force) assert(typeof args.force === "boolean", "--force must be a boolean");
+  if (typeof args.rpc !== "undefined") assert(false, "Use 'tune-sdk rpc' instead of --rpc");
+  if (typeof args.forceInit !== "undefined") assert(false, "Use 'tune-sdk init --force' instead of --force-init");
   if (args.params) assert(!!args.params && (typeof args.params === "object"), "--set-* parameters must form a valid object");
   if ((args.stop && (typeof args.stop === "string"))) assert((args.stop === "assistant") || (args.stop === "step") || (args.stop.length > 0), "--stop must be 'assistant', 'step', or a non-empty custom string");
-  if ((!args.rpc && !args.help && !args.user && !args.filename)) assert(false, "Must specify --user, --filename, --rpc, or --help");
+  if (args.cmd) {
+    assert(typeof args.cmd === "string", "Command must be a string");
+    assert((args.cmd === "rpc") || (args.cmd === "init"), "Unknown command: " + args.cmd);
+  }
+  if ((!args.help && !args.version && !args.cmd && !args.user && !args.filename)) assert(false, "Must specify --user, --filename, a command (rpc|init), --version, or --help");
   return args;
 }
 validateArgs;
@@ -100,6 +99,12 @@ function parseArgs(args) {
     } else if (curKey) {
       memo[curKey] = arg;
       curKey = null;
+    } else {
+      if (!memo.__cmd) {
+        memo.__cmd = arg;
+      } else {
+        assert(false, "Only a single positional command is allowed");
+      }
     }
     return memo;
   }), {});
@@ -110,6 +115,10 @@ function parseArgs(args) {
   for (key in _ref) {
     value = _ref[key];
     assert(typeof key === "string", "Argument keys must be strings");
+    if (key === "__cmd") {
+      res1.cmd = value;
+      continue;
+    }
     if (key.startsWith("set-")) {
       res1.params = res1.params || {}
       assert(key.substr(4).length > 0, "Set parameter name cannot be empty");
@@ -119,6 +128,7 @@ function parseArgs(args) {
     }
   }
   if ((res1.h || res1.help)) res1.help = true;
+  if ((res1.v || res1.version)) res1.version = true;
   stop = res1.stop;
   if ((!!stop && (stop !== "step" && stop !== "assistant"))) {
     assert(typeof stop === "string", "Custom stop condition must be a string");
@@ -159,7 +169,7 @@ async function initConfig(args) {
   var homedir;
   homedir = getHomedir(args);
   assert(typeof homedir === "string", "Home directory must be a string");
-  if ((!args.forceInit && fs.existsSync(homedir))) return;
+  if ((!args.force && fs.existsSync(homedir))) return;
   console.error("[tune-sdk] initialize " + homedir);
   fs.mkdirSync(homedir, {
     recursive: true
@@ -292,6 +302,17 @@ async function run(args) {
   return (!args.silient ? console.log(res) : undefined);
 }
 run;
+
+function flatten(array) {
+  return array.reduce((memo, item) => {
+    if (Array.isArray(item)) {
+      return memo.concat(item)
+    }
+    memo.push(item)
+    return memo
+  }, [])
+}
+
 async function initContext(args) {
   var dirs, pwd, ctx, dir, ctxName, ext, module, m, _i, _ref, _len, _i0, _ref0, _len0;
   var dirs;
@@ -334,7 +355,7 @@ async function initContext(args) {
     if ((typeof module === "function")) {
       ctx.use(module);
     } else if (Array.isArray(module)) {
-      _ref0 = module;
+      _ref0 = module.flat(Infinity);
       for (_i0 = 0, _len0 = _ref0.length; _i0 < _len0; ++_i0) {
         m = _ref0[_i0];
         if ((typeof m === "function")) {
@@ -365,9 +386,26 @@ async function main() {
       showHelp();
       process.exit(0);
     }
+    if (args.version) {
+      try {
+        var pkg = require(path.resolve(__dirname, "../package.json"));
+        console.log(pkg.version || "0.0.0");
+      } catch (e) {
+        console.log("0.0.0");
+      }
+      process.exit(0);
+    }
     validateArgs(args);
-    await initConfig(args);
-    _ref = args.rpc ? await runRpc(args) : await run(args);
+    if (args.cmd === "rpc") {
+      await initConfig(args); // ensure config exists if needed
+      _ref = await runRpc(args);
+    } else if (args.cmd === "init") {
+      await initConfig(args);
+      _ref = null;
+    } else {
+      await initConfig(args); // auto-init if missing
+      _ref = await run(args);
+    }
   } catch (e) {
     console.error(e);
     _ref = process.exit(1);

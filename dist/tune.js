@@ -1159,10 +1159,18 @@ Context.prototype.exec = (async function(name, args) {
   return _ref;
 });
 Context.prototype.write = (async function(name, args) {
-  var ws;
-  ws = ws || this.ws;
+  var ws, cur, res, _res, _ref;
+  ws = (this.ws || [])
+    .slice();
   if (!ws.length) return;
-  return ws[0](name, args, this, this.write.bind(this, name, args, ws.slice(1)));
+  cur = ws.shift();
+  _res = [];
+  while (cur) {
+    res = await cur.call(this, name, args, this);
+    if (res) break;
+    if (typeof(_ref = (cur = ws.shift())) !== 'undefined') _res.push(_ref);
+  }
+  return _res;
 });
 
 function envmd(md) {
@@ -1221,18 +1229,20 @@ function makeContext() {
   var ctx;
   ctx = new Context();
   if (!args[0]) return ctx;
-  args.forEach((function(md) {
-    var _ref;
-    if ((typeof md === "function")) {
-      _ref = ctx.use(md);
-    } else if (typeof md === "object") {
-      _ref = ctx.use(envmd(md));
-    } else {
-      _ref = undefined;
-      throw new TuneError("context middlewares might be either function or an object");
-    }
-    return _ref;
-  }));
+  args
+    .flat(Infinity)
+    .forEach((function(md) {
+      var _ref;
+      if ((typeof md === "function")) {
+        _ref = ctx.use(md);
+      } else if (typeof md === "object") {
+        _ref = ctx.use(envmd(md));
+      } else {
+        _ref = undefined;
+        throw new TuneError("context middlewares might be either function or an object");
+      }
+      return _ref;
+    }));
   return ctx;
 }
 makeContext;
@@ -1853,7 +1863,7 @@ async function payload2http(payload, ctx) {
     stack = TuneError.ctx2stack(ctx);
     var lastStack;
     lastStack = stack.pop();
-    throw new TuneError("llm file not found", (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.filename !== "undefined") && (lastStack.filename !== null) && !Number.isNaN(lastStack.filename)) ? lastStack.filename : undefined), (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.row !== "undefined") && (lastStack.row !== null) && !Number.isNaN(lastStack.row)) ? lastStack.row : undefined), (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.col !== "undefined") && (lastStack.col !== null) && !Number.isNaN(lastStack.col)) ? lastStack.col : undefined), stack);
+    throw new TuneError("llm file not found, check your env or ~/.tune/.env for provider api keys, like OPENAI_KEY, ANTHROPIC_KEY etc ", (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.filename !== "undefined") && (lastStack.filename !== null) && !Number.isNaN(lastStack.filename)) ? lastStack.filename : undefined), (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.row !== "undefined") && (lastStack.row !== null) && !Number.isNaN(lastStack.row)) ? lastStack.row : undefined), (((typeof lastStack !== "undefined") && (lastStack !== null) && !Number.isNaN(lastStack) && (typeof lastStack.col !== "undefined") && (lastStack.col !== null) && !Number.isNaN(lastStack.col)) ? lastStack.col : undefined), stack);
   }
   var body;
   body = Object.assign({}, payload);
@@ -2076,7 +2086,8 @@ function text2run(text, ctx, opts) {
                 tc = delta.tool_calls[0];
                 tcIdx = tc.index || 0;
                 msg.tool_calls[tcIdx] = msg.tool_calls[tcIdx] || tc;
-                msg.tool_calls[tcIdx].function.arguments += tc.function.arguments;
+                msg.tool_calls[tcIdx].function.arguments = msg.tool_calls[tcIdx].function.arguments || "";
+                msg.tool_calls[tcIdx].function.arguments += (tc.function.arguments || "");
               }
               return msg;
             }), {
@@ -2115,7 +2126,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergeDPeG9, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergzwE3tN, _ref;
   var lctx;
   lctx = ctx.clone();
   lctx.ms.unshift(envmd(params));
@@ -2181,7 +2192,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergeDPeG9 = new AsyncIter();
+    itergzwE3tN = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2190,20 +2201,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergeDPeG9.result = {
+          itergzwE3tN.result = {
             value: $lastRes
           }
         }
-        _ref = itergeDPeG9.result = {
+        _ref = itergzwE3tN.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergeDPeG9.err = e);
+        _ref = (itergzwE3tN.err = e);
       }
       return _ref;
     })();
-    _ref = itergeDPeG9;
+    _ref = itergzwE3tN;
   }
   return _ref;
 }

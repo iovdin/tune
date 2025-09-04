@@ -7,6 +7,18 @@ With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make 
 <video src="https://github.com/user-attachments/assets/23f8ab30-58db-4159-8761-f212a7960e0c">
 </video>
 
+
+## Setup
+install tune-sdk
+```bash
+npm install -g tune-sdk
+
+tune-sdk init
+```
+
+edit `~/.tune/.env` file and add `OPENAI_KEY` and other keys
+
+
 ## Template Language
 
 ```chat
@@ -25,9 +37,41 @@ With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make 
 ```
 [read more](https://iovdin.github.io/tune/template-language)
 
+## Extend with Middlewares
+Extend Tune with middlewares:
 
-## Batteries Included
-**Anthropic/OpenAI/Gemini/Openrouter/Mistral/Groq** models providers are supported and **30+ tools** come with text editor.
+* [tune-fs](https://www.npmjs.com/package/tune-fs) - connect tools & files from local filesystem
+* [tune-models](https://www.npmjs.com/package/tune-models) - connect llm models from Anthropic/OpenAI/Gemini/Openrouter/Mistral/Groq
+* [tune-basic-toolset](https://www.npmjs.com/package/tune-basic-toolset) - basic tools like read file, write file, shell etc.
+* [tune-s3](https://www.npmjs.com/package/tune-s3) - read/write files from s3
+
+For example:
+```sh
+cd ~/.tune 
+npm install tune-models
+```
+
+Edit `default.ctx.js` and add middlewares
+```javascript
+const models = require('tune-models')
+
+module.exports = [
+    ...
+    models({
+        default: "gpt-5-mini"
+    })
+    ...
+]
+```
+
+Edit `.env` file and add provider's keys
+
+```.env
+OPENAI_KEY="<openai_key>"
+ANTHROPIC_KEY="<anthropic_key>"
+```
+
+Use it in chat
 ```chat
 system: 
 @gemini-2.5-pro @openai_imgen
@@ -42,20 +86,23 @@ a simple stickman drawing with a talking bubble saying 'Hello world'
 tool_result: 
 image generated
 ```
-[read more](tools/README.md)
+
 
 ## CLI
 
 ```bash
+# install tune globally
+npm install -g tune-sdk
+
 # append user message to newchat.chat run and save
-npx tune-sdk --user "hi how are you?" --filename newchat.chat  --save
+tune-sdk --user "hi how are you?" --filename newchat.chat  --save
 
 # start new chat with system prompt and initial user message 
 # print result to console
-npx tune-sdk --system "You are Groot" --user "Hi how are you?"
+tune-sdk --system "You are Groot" --user "Hi how are you?"
 
 #set context variable
-npx tune-sdk --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
+tune-sdk --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
 ```
 
 
