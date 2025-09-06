@@ -175,20 +175,21 @@ async function initConfig(args) {
     recursive: true
   });
   console.error("[tune-sdk] copying files");
-  fs.copyFileSync(path.resolve(__dirname, "../config/default.ctx.js"), path.resolve(homedir, "default.ctx.js"));
-  fs.copyFileSync(path.resolve(__dirname, "../config/package.json"), path.resolve(homedir, "package.json"));
+  fs.cpSync(path.resolve(__dirname, "../config"), path.resolve(homedir), { recursive: true });
   console.error("[tune-sdk] installing npm");
   try {
     _ref = cp.execSync("npm i", {
       cwd: homedir,
       encoding: "utf8"
     });
-    stdout = _ref[0];
-    stderr = _ref[1];
+    stdout = _ref;
     if (stdout.trim()) console.error("[tune-sdk]", stdout.trim());
-    stderr.trim() ? console.error("[tune-sdk]", stderr.trim()) : undefined;
-  } catch (err) {}
-  return console.error("[tune-sdk] done");
+    //stderr.trim() ? console.error("[tune-sdk]", stderr.trim()) : undefined;
+  } catch (err) {
+    console.error(err)
+  }
+  console.error("[tune-sdk] done");
+  console.error(`[tune-sdk] edit ${homedir}/.env and add OPENAI_KEY and other keys, change ${homedir}/default.ctx.js to customize tune`);
 }
 initConfig;
 async function suggest(params, ctx) {

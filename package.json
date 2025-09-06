@@ -1,6 +1,6 @@
 {
   "name": "tune-sdk",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "tune - LLM chat in text file",
   "main": "dist/tune.js",
   "module": "dist/tune.mjs",
@@ -30,8 +30,5 @@
     "type": "git",
     "url": "https://github.com/iovdin/tune"
   },
-  "license": "MIT",
-  "dependencies": {
-    "tune-sdk": "^0.2.3"
-  }
+  "license": "MIT"
 }

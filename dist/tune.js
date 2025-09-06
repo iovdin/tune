@@ -2126,7 +2126,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergzwE3tN, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergrN0Lbw, _ref;
   var lctx;
   lctx = ctx.clone();
   lctx.ms.unshift(envmd(params));
@@ -2192,7 +2192,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergzwE3tN = new AsyncIter();
+    itergrN0Lbw = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2201,20 +2201,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergzwE3tN.result = {
+          itergrN0Lbw.result = {
             value: $lastRes
           }
         }
-        _ref = itergzwE3tN.result = {
+        _ref = itergrN0Lbw.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergzwE3tN.err = e);
+        _ref = (itergrN0Lbw.err = e);
       }
       return _ref;
     })();
-    _ref = itergzwE3tN;
+    _ref = itergrN0Lbw;
   }
   return _ref;
 }

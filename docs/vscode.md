@@ -1,12 +1,8 @@
 # Tune - AI chat in text file
-[![Reddit](https://img.shields.io/badge/Reddit-%23FF4500.svg?style=for-the-badge&logo=Reddit&logoColor=white)](https://www.reddit.com/r/tuneai/) 
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hu32FNYPYD)
-
-Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=iovdin.tune) for Visual Studio Code and [plugin](https://github.com/iovdin/tune.nvim) for Neovim that lets you chat with large language models (LLMs) in a text file. 
-With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make apps and agents. 
+Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=iovdin.tune) for Visual Studio Code to chat with LLM in text file. 
 
 ## Demo
-<video src="https://f003.backblazeb2.com/file/tuneai/video/nvim.mp4">
+<video src="https://f003.backblazeb2.com/file/tuneai/video/vscode.mp4">
 </video>
 
 
