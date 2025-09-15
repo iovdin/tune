@@ -6,6 +6,9 @@ Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=
 </video>
 
 
+- `<Shift>+<Enter>` - to make llm respond 1 time
+- `<Ctrl|Cmd>+<Enter>` - make llm respond until assistant without tool calls 
+
 ## Setup
 install tune-sdk
 ```bash

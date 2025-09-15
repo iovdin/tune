@@ -1098,13 +1098,22 @@ async function resolve(ctx, name, args, middlewares) {
       result = result.concat(res);
       i++;
       continue;
-    }
-    if ((typeof res !== "object")) throw Error(tpl("resolved '@{name}' node must be 'object' but got '{res}'", {
-      name: name,
-      res: typeof res
-    }));
-    if (!res.type) throw Error(tpl("resolved '@{name}' node must have a 'type' property", {
-      name: name
+    }(Array.isArray(res) ? res : [res])
+    .forEach((function(item) {
+      var _ref;
+      if ((typeof item !== "object")) throw Error(tpl("resolved '@{name}' node must be 'object' but got '{res}'", {
+        name: name,
+        res: typeof item
+      }));
+      if (!item.type) {
+        _ref = undefined;
+        throw Error(tpl("resolved '@{name}' node must have a 'type' property", {
+          name: name
+        }));
+      } else {
+        _ref = undefined;
+      }
+      return _ref;
     }));
     if ((output === "first")) {
       result = res;
@@ -2126,7 +2135,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergrN0Lbw, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergr0ddyl, _ref;
   var lctx;
   lctx = ctx.clone();
   lctx.ms.unshift(envmd(params));
@@ -2192,7 +2201,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergrN0Lbw = new AsyncIter();
+    itergr0ddyl = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2201,20 +2210,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergrN0Lbw.result = {
+          itergr0ddyl.result = {
             value: $lastRes
           }
         }
-        _ref = itergrN0Lbw.result = {
+        _ref = itergr0ddyl.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergrN0Lbw.err = e);
+        _ref = (itergr0ddyl.err = e);
       }
       return _ref;
     })();
-    _ref = itergrN0Lbw;
+    _ref = itergr0ddyl;
   }
   return _ref;
 }

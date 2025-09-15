@@ -12,3 +12,9 @@ chats
 .cache
 .obsidian
 rpc.log
+
+
+
+
+# Ignore Smart Environment folder
+.smart-env
