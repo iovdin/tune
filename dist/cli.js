@@ -300,7 +300,7 @@ async function run(args) {
   delete args.params;
   var res;
   res = await ctx.file2run(args, params);
-  return (!args.silient ? console.log(res) : undefined);
+  return (!args.silent ? console.log(res) : undefined);
 }
 run;
 

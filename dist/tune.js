@@ -1,4 +1,4 @@
-var $roles, fs, assert, util;
+var $roles;
 
 function extend() {
   var _i;
@@ -1060,7 +1060,7 @@ Context.prototype.use = (function(middleware) {
   var _ref;
   if ((typeof middleware !== "function")) {
     _ref = undefined;
-    throw Error(tpl("middleware {} is not a function", util.inspect(middleware)));
+    throw Error(tpl("middleware {} is not a function", ((typeof util !== 'undefined') ? util.inspect(middleware) : middleware)));
   } else {
     _ref = ((middleware.name === "write") ? this.ws.push(middleware) : this.ms.push(middleware));
   }
@@ -1116,7 +1116,7 @@ async function resolve(ctx, name, args, middlewares) {
       return _ref;
     }));
     if ((output === "first")) {
-      result = res;
+      result = (Array.isArray(res) ? res[0] : res);
       break;
     }
     result.push(res);
@@ -1202,7 +1202,7 @@ function envmd(md) {
         _ref = (lmd[name].name = name);
       } else {
         _ref = undefined;
-        throw new TuneError(("unsupported type of value '" + name + "': " + util.inspect(md)));
+        throw new TuneError(("unsupported type of value '" + name + "': " + ((typeof util !== 'undefined') ? util.inspect(md) : md)));
       }
       return _ref;
     }));
@@ -2135,7 +2135,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergr0ddyl, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergVSO3pP, _ref;
   var lctx;
   lctx = ctx.clone();
   lctx.ms.unshift(envmd(params));
@@ -2201,7 +2201,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergr0ddyl = new AsyncIter();
+    itergVSO3pP = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2210,20 +2210,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergr0ddyl.result = {
+          itergVSO3pP.result = {
             value: $lastRes
           }
         }
-        _ref = itergr0ddyl.result = {
+        _ref = itergVSO3pP.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergr0ddyl.err = e);
+        _ref = (itergVSO3pP.err = e);
       }
       return _ref;
     })();
-    _ref = itergr0ddyl;
+    _ref = itergVSO3pP;
   }
   return _ref;
 }
@@ -2478,9 +2478,6 @@ function pick(obj) {
   })({});
 }
 pick;
-fs = require("fs");
-assert = require("node:assert/strict");
-util = require("util");
 exports.makeContext = makeContext;
 exports.Context = Context;
 exports.text2roles = text2roles;
