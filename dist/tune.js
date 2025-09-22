@@ -2135,10 +2135,10 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergVSO3pP, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergYImHSV, _ref;
   var lctx;
   lctx = ctx.clone();
-  lctx.ms.unshift(envmd(params));
+  if (params) lctx.ms.unshift(envmd(params));
   var text;
   var stop;
   text = args.text;
@@ -2147,9 +2147,9 @@ async function file2run(args, params, ctx) {
     node = await ctx.resolve(args.filename);
     if (node) lctx.stack.push(node);
     if ((node && !text)) text = await node.read();
-    if ((!node && !text)) throw new TuneError(tpl("'{}' not found", args.filename));
   }
   if ((!text && args.system)) text = tpl("system:\n{system}", args);
+  if (!text) throw new TuneError("ether 'text' or 'system' should be specified or 'filename' should exist ");
   if (args.user) text += tpl("\nuser:\n{user}", args);
   var response;
   response = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.response !== "undefined") && (args.response !== null) && !Number.isNaN(args.response)) ? args.response : (((typeof "content" !== "undefined") && ("content" !== null) && !Number.isNaN("content")) ? "content" : undefined));
@@ -2201,7 +2201,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergVSO3pP = new AsyncIter();
+    itergYImHSV = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2210,20 +2210,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergVSO3pP.result = {
+          itergYImHSV.result = {
             value: $lastRes
           }
         }
-        _ref = itergVSO3pP.result = {
+        _ref = itergYImHSV.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergVSO3pP.err = e);
+        _ref = (itergYImHSV.err = e);
       }
       return _ref;
     })();
-    _ref = itergVSO3pP;
+    _ref = itergYImHSV;
   }
   return _ref;
 }
