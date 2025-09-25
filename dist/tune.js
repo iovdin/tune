@@ -1036,10 +1036,13 @@ function Context() {
   var _i;
   var args = 1 <= arguments.length ? [].slice.call(arguments, 0, _i = arguments.length - 0) : (_i = 0, []);
   this.ms = args.filter((function(item) {
-    return (item.name !== "write");
+    return (item.name !== "write" && item.name !== "usage");
   }));
   this.ws = args.filter((function(item) {
     return (item.name === "write");
+  }));
+  this.us = args.filter((function(item) {
+    return (item.name === "usage");
   }));
   this.stack = [];
   this.type = "Context";
@@ -1052,19 +1055,27 @@ Context.prototype.clone = (function() {
   res = new Context();
   res.ms = this.ms.concat([]);
   res.ws = this.ws.concat([]);
+  res.us = this.us.concat([]);
   res.stack = (this.stack || [])
     .concat([]);
   return res;
 });
 Context.prototype.use = (function(middleware) {
-  var _ref;
+  var _ref, _ref0;
   if ((typeof middleware !== "function")) {
-    _ref = undefined;
+    _ref0 = undefined;
     throw Error(tpl("middleware {} is not a function", ((typeof util !== 'undefined') ? util.inspect(middleware) : middleware)));
   } else {
-    _ref = ((middleware.name === "write") ? this.ws.push(middleware) : this.ms.push(middleware));
+    if ((middleware.name === "write")) {
+      _ref = this.ws.push(middleware);
+    } else if (middleware.name === "usage") {
+      _ref = this.us.push(middleware);
+    } else {
+      _ref = this.ms.push(middleware);
+    }
+    _ref0 = _ref;
   }
-  return _ref;
+  return _ref0;
 });
 async function resolve(ctx, name, args, middlewares) {
   var i, output, match, type, result, res, md;
@@ -1178,6 +1189,20 @@ Context.prototype.write = (async function(name, args) {
     res = await cur.call(this, name, args, this);
     if (res) break;
     if (typeof(_ref = (cur = ws.shift())) !== 'undefined') _res.push(_ref);
+  }
+  return _res;
+});
+Context.prototype.usage = (async function(provider, model, usage) {
+  var us, cur, res, _res;
+  us = (this.us || [])
+    .slice();
+  if (!us.length) return;
+  cur = us.shift();
+  _res = [];
+  while (cur) {
+    res = await cur.call(this, provider, model, usage);
+    cur = us.shift();
+    if (typeof res !== 'undefined') _res.push(res);
   }
   return _res;
 });
@@ -1441,7 +1466,7 @@ text2call;
 async function text2payload(text, ctx) {
   var ast;
   ast = await text2ast(text, ctx);
-  return await ast2payload(ast);
+  return await ast2payload(ast, ctx);
 }
 text2payload;
 async function text2ast(text, ctx, resolve) {
@@ -1612,9 +1637,8 @@ async function text2ast(text, ctx, resolve) {
   return await parse(text, true, ctx);
 }
 text2ast;
-
-function ast2payload(ast) {
-  var payload, toolId, tools, llms, messages, roles, lastRole, lastChar;
+async function ast2payload(ast, ctx) {
+  var payload, toolId, tools, llms, messages, roles, lastRole, lastChar, llm;
   var payload;
   var toolId;
   var tools;
@@ -1855,7 +1879,13 @@ function ast2payload(ast) {
     }))
     .reduce(transformRoles, Array());
   if (tools.length) payload.tools = tools;
-  if (llms.length) payload.llm = llms["slice"](-1)[0];
+  var llm;
+  llm;
+  if (llms.length) llm = llms["slice"](-1)[0];
+  if (!llm) llm = await ctx.resolve("default", {
+    type: "llm"
+  });
+  payload.llm = llm;
   return payload;
 }
 ast2payload;
@@ -1864,9 +1894,6 @@ async function payload2http(payload, ctx) {
   var llm;
   llm = payload.llm;
   delete payload.llm;
-  if (!llm) llm = await ctx.resolve("default", {
-    type: "llm"
-  });
   if (!llm) {
     var stack;
     stack = TuneError.ctx2stack(ctx);
@@ -2001,12 +2028,16 @@ function text2run(text, ctx, opts) {
   }
   stop;
   async function doit() {
-    var ast, payload, res, ctype, err, reader, data, done, reData, reComment;
+    var ast, payload, provider, model, res, ctype, err, reader, data, done, reData, reComment, usage;
     while (!stop(msgs)) {
       var ast;
       ast = await text2ast(text + "\n" + msg2text(msgs), ctx);
       var payload;
       payload = await ast2payload(ast, ctx);
+      var provider;
+      var model;
+      provider = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.source !== "undefined") && (payload.llm.source !== null) && !Number.isNaN(payload.llm.source)) ? payload.llm.source : undefined);
+      model = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.name !== "undefined") && (payload.llm.name !== null) && !Number.isNaN(payload.llm.name)) ? payload.llm.name : undefined);
       if (stream) payload.stream = stream;
       var res;
       res = await toolCall(payload, ctx);
@@ -2023,6 +2054,7 @@ function text2run(text, ctx, opts) {
       ctype = res.headers.get("content-type");
       if ((!stream || ctype.includes("application/json"))) {
         res = await res.json();
+        if (res.usage) await ctx.usage(provider, model, res.usage);
         if (((((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res[0] !== "undefined") && (res[0] !== null) && !Number.isNaN(res[0]) && (typeof res[0].error !== "undefined") && (res[0].error !== null) && !Number.isNaN(res[0].error)) ? res[0].error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.error !== "undefined") && (res.error !== null) && !Number.isNaN(res.error)) ? res.error : undefined)) || (res.object === "error"))) {
           var err;
           err = new TuneError(tpl("{type: }{message}", (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res[0] !== "undefined") && (res[0] !== null) && !Number.isNaN(res[0]) && (typeof res[0].error !== "undefined") && (res[0].error !== null) && !Number.isNaN(res[0].error)) ? res[0].error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.error !== "undefined") && (res.error !== null) && !Number.isNaN(res.error)) ? res.error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res)) ? res : undefined)))));
@@ -2041,6 +2073,7 @@ function text2run(text, ctx, opts) {
       var done;
       var reData;
       var reComment;
+      var usage;
       reader = res.body
         .pipeThrough(new TextDecoderStream("utf8"))
         .getReader();
@@ -2048,6 +2081,7 @@ function text2run(text, ctx, opts) {
       done = false;
       reData = new RegExp("^data: (.*)");
       reComment = new RegExp("^:.*");
+      usage = undefined;
       if (ctype.includes("text/event-stream")) {
         while (!done) {
           res = await reader.read();
@@ -2079,6 +2113,7 @@ function text2run(text, ctx, opts) {
             }));
             it = it.reduce((function(msg, chunk) {
               var delta, tc, tcIdx;
+              if (chunk.usage) usage = chunk.usage;
               var delta;
               delta = (((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.choices !== "undefined") && (chunk.choices !== null) && !Number.isNaN(chunk.choices) && (typeof chunk.choices[0] !== "undefined") && (chunk.choices[0] !== null) && !Number.isNaN(chunk.choices[0]) && (typeof chunk.choices[0].delta !== "undefined") && (chunk.choices[0].delta !== null) && !Number.isNaN(chunk.choices[0].delta)) ? chunk.choices[0].delta : (((typeof {} !== "undefined") && ({} !== null) && !Number.isNaN({})) ? {} : undefined));
               if ((((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.error !== "undefined") && (chunk.error !== null) && !Number.isNaN(chunk.error)) ? chunk.error : undefined)) {
@@ -2110,6 +2145,7 @@ function text2run(text, ctx, opts) {
           })(data += (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.value !== "undefined") && (res.value !== null) && !Number.isNaN(res.value)) ? res.value : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
         }
         msgs = iter.result.value;
+        if (usage) await ctx.usage(provider, model, usage);
       }
     }
     return (stream ? (iter.result = {
@@ -2135,7 +2171,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergYImHSV, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergXy2XWO, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2149,8 +2185,9 @@ async function file2run(args, params, ctx) {
     if ((node && !text)) text = await node.read();
   }
   if ((!text && args.system)) text = tpl("system:\n{system}", args);
-  if (!text) throw new TuneError("ether 'text' or 'system' should be specified or 'filename' should exist ");
+  text = text || "";
   if (args.user) text += tpl("\nuser:\n{user}", args);
+  if (!text) throw new TuneError("ether 'text' or 'system' or 'user' should be specified or 'filename' should exist ");
   var response;
   response = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.response !== "undefined") && (args.response !== null) && !Number.isNaN(args.response)) ? args.response : (((typeof "content" !== "undefined") && ("content" !== null) && !Number.isNaN("content")) ? "content" : undefined));
 
@@ -2201,7 +2238,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergYImHSV = new AsyncIter();
+    itergXy2XWO = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2210,20 +2247,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergYImHSV.result = {
+          itergXy2XWO.result = {
             value: $lastRes
           }
         }
-        _ref = itergYImHSV.result = {
+        _ref = itergXy2XWO.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergYImHSV.err = e);
+        _ref = (itergXy2XWO.err = e);
       }
       return _ref;
     })();
-    _ref = itergYImHSV;
+    _ref = itergXy2XWO;
   }
   return _ref;
 }
