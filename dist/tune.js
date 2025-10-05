@@ -1,4 +1,4 @@
-var $roles;
+var util, $roles;
 
 function extend() {
   var _i;
@@ -38,6 +38,7 @@ AsyncIter.prototype.next = (async function() {
   if (self.err) throw self.err;
   return result;
 });
+if ((typeof require !== 'undefined')) util = require("util");
 
 function TuneError(message, filename, row, col, stack, originalError) {
   var lastItem;
@@ -1091,7 +1092,7 @@ async function resolve(ctx, name, args, middlewares) {
   output = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.output !== "undefined") && (args.output !== null) && !Number.isNaN(args.output)) ? args.output : (((typeof "first" !== "undefined") && ("first" !== null) && !Number.isNaN("first")) ? "first" : undefined));
   match = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.match !== "undefined") && (args.match !== null) && !Number.isNaN(args.match)) ? args.match : (((typeof "exact" !== "undefined") && ("exact" !== null) && !Number.isNaN("exact")) ? "exact" : undefined));
   type = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.type !== "undefined") && (args.type !== null) && !Number.isNaN(args.type)) ? args.type : (((typeof "any" !== "undefined") && ("any" !== null) && !Number.isNaN("any")) ? "any" : undefined));
-  result = ((output === "all") ? [] : undefined);
+  result = [];
   res = undefined;
   while (i < middlewares.length) {
     var md;
@@ -1105,12 +1106,16 @@ async function resolve(ctx, name, args, middlewares) {
       i++;
       continue;
     }
-    if (((output === "all") && Array.isArray(res))) {
-      result = result.concat(res);
-      i++;
-      continue;
-    }(Array.isArray(res) ? res : [res])
-    .forEach((function(item) {
+    if (Array.isArray(res)) {
+      res = res.flat(Infinity);
+      if (!res.length) {
+        i++;
+        continue;
+      }
+    } else {
+      res = [res];
+    }
+    res.forEach((function(item) {
       var _ref;
       if ((typeof item !== "object")) throw Error(tpl("resolved '@{name}' node must be 'object' but got '{res}'", {
         name: name,
@@ -1126,14 +1131,12 @@ async function resolve(ctx, name, args, middlewares) {
       }
       return _ref;
     }));
-    if ((output === "first")) {
-      result = (Array.isArray(res) ? res[0] : res);
-      break;
-    }
     result.push(res);
+    if ((output === "first")) break;
     i++;
   }
-  return result;
+  result = result.flat(Infinity);
+  return ((result.length <= 1) ? result[0] : result);
 }
 resolve;
 Context.prototype.resolve = (async function(name, args) {
@@ -2171,7 +2174,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergXy2XWO, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, iterg89gCT4, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2238,7 +2241,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergXy2XWO = new AsyncIter();
+    iterg89gCT4 = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2247,20 +2250,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergXy2XWO.result = {
+          iterg89gCT4.result = {
             value: $lastRes
           }
         }
-        _ref = itergXy2XWO.result = {
+        _ref = iterg89gCT4.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergXy2XWO.err = e);
+        _ref = (iterg89gCT4.err = e);
       }
       return _ref;
     })();
-    _ref = itergXy2XWO;
+    _ref = iterg89gCT4;
   }
   return _ref;
 }
