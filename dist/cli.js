@@ -1,6 +1,25 @@
 var assert, tune, rpc, path, fs, os, cp, stream;
 assert = require("assert");
 
+function tpl(str) {
+  var _i;
+  var params = 2 <= arguments.length ? [].slice.call(arguments, 1, _i = arguments.length - 0) : (_i = 1, []);
+  return (function(paramIndex, params) {
+    var _ref;
+    try {
+      _ref = str.replace(/{(\W*)(\w*)(\W*)}/gm, (function(_, pre, name, post) {
+        return (function(res) {
+          paramIndex += 1;
+          return ((typeof res !== 'undefined') ? ((pre || "") + res + (post || "")) : "");
+        })(params[name || paramIndex]);
+      }));
+    } catch (e) {
+      _ref = console.log.apply(console, [].concat([e, str]).concat(params));
+    }
+    return _ref;
+  })(0, (((typeof params[0] === "object") && (params.length === 1)) ? params[0] : params));
+}
+
 function showHelp() {
   console.log("TUNE-CLI - Command Line Interface for Tune SDK");
   console.log("");
@@ -408,31 +427,13 @@ async function main() {
       _ref = await run(args);
     }
   } catch (e) {
-    console.error(e);
+    console.error(e.stack);
     _ref = process.exit(1);
   }
   return _ref;
 }
 main;
 
-function tpl(str) {
-  var _i;
-  var params = 2 <= arguments.length ? [].slice.call(arguments, 1, _i = arguments.length - 0) : (_i = 1, []);
-  return (function(paramIndex, params) {
-    var _ref;
-    try {
-      _ref = str.replace(/{(\W*)(\w*)(\W*)}/gm, (function(_, pre, name, post) {
-        return (function(res) {
-          paramIndex += 1;
-          return ((typeof res !== 'undefined') ? ((pre || "") + res + (post || "")) : "");
-        })(params[name || paramIndex]);
-      }));
-    } catch (e) {
-      _ref = console.log.apply(console, [].concat([e, str]).concat(params));
-    }
-    return _ref;
-  })(0, (((typeof params[0] === "object") && (params.length === 1)) ? params[0] : params));
-}
 tpl;
 exports.parseArgs = parseArgs;
 exports.rpc = rpc;

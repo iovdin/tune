@@ -1,4 +1,4 @@
-var util, $roles;
+var util, AsyncLocalStorage, als, $roles;
 
 function extend() {
   var _i;
@@ -38,7 +38,18 @@ AsyncIter.prototype.next = (async function() {
   if (self.err) throw self.err;
   return result;
 });
-if ((typeof require !== 'undefined')) util = require("util");
+if ((typeof require !== 'undefined')) {
+  util = require("util");
+  AsyncLocalStorage = require("node:async_hooks").AsyncLocalStorage;
+  als = new AsyncLocalStorage();
+} else {
+  als = {
+    getStore: (function() {}),
+    run: (async function(store, func) {
+      return func();
+    })
+  };
+}
 
 function TuneError(message, filename, row, col, stack, originalError) {
   var lastItem;
@@ -1079,29 +1090,46 @@ Context.prototype.use = (function(middleware) {
   return _ref0;
 });
 async function resolve(ctx, name, args, middlewares) {
-  var i, output, match, type, result, res, md;
+  var i, output, match, type, result, res, resolveStack, md;
   middlewares = middlewares || ctx.ms;
   if (!middlewares.length) return;
+  if (((typeof name !== "string") && !(name instanceof String))) throw Error(tpl("resolve '{name}' is not a string", {
+    name: name
+  }));
   var i;
   var output;
   var match;
   var type;
   var result;
   var res;
+  var resolveStack;
   i = 0;
   output = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.output !== "undefined") && (args.output !== null) && !Number.isNaN(args.output)) ? args.output : (((typeof "first" !== "undefined") && ("first" !== null) && !Number.isNaN("first")) ? "first" : undefined));
   match = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.match !== "undefined") && (args.match !== null) && !Number.isNaN(args.match)) ? args.match : (((typeof "exact" !== "undefined") && ("exact" !== null) && !Number.isNaN("exact")) ? "exact" : undefined));
   type = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.type !== "undefined") && (args.type !== null) && !Number.isNaN(args.type)) ? args.type : (((typeof "any" !== "undefined") && ("any" !== null) && !Number.isNaN("any")) ? "any" : undefined));
   result = [];
   res = undefined;
+  resolveStack = als.getStore() || [];
   while (i < middlewares.length) {
     var md;
     md = middlewares[i];
-    res = await md.call(ctx, name, {
-      output: output,
-      match: match,
-      type: type
-    });
+    if (resolveStack.some((function(item) {
+        return ((item.md === md) && (item.name === name));
+      }))) {
+      i++;
+      continue;
+    }
+    if ((resolveStack.length > 50)) throw Error("resolve stack overflow");
+    res = await als.run(resolveStack.concat(Array({
+      md: md,
+      name: name
+    })), (async function() {
+      return md.call(ctx, name, {
+        output: output,
+        match: match,
+        type: type
+      });
+    }));
     if (!res) {
       i++;
       continue;
@@ -1151,7 +1179,7 @@ Context.prototype.file2run = (function(opts, params) {
 Context.prototype.text2ast = (async function(text) {
   return text2ast(text, this);
 });
-Context.prototype.text2paylod = (async function(text) {
+Context.prototype.text2payload = (async function(text) {
   return text2payload(text, this);
 });
 Context.prototype.msg2text = msg2text;
@@ -2174,7 +2202,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, iterg89gCT4, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergnVy4sP, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2241,7 +2269,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    iterg89gCT4 = new AsyncIter();
+    itergnVy4sP = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2250,20 +2278,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          iterg89gCT4.result = {
+          itergnVy4sP.result = {
             value: $lastRes
           }
         }
-        _ref = iterg89gCT4.result = {
+        _ref = itergnVy4sP.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (iterg89gCT4.err = e);
+        _ref = (itergnVy4sP.err = e);
       }
       return _ref;
     })();
-    _ref = iterg89gCT4;
+    _ref = itergnVy4sP;
   }
   return _ref;
 }
