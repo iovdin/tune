@@ -2,7 +2,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-%23FF4500.svg?style=for-the-badge&logo=Reddit&logoColor=white)](https://www.reddit.com/r/tuneai/) 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/hu32FNYPYD)
 
-Tune is a handy [extension](https://marketplace.visualstudio.com/items?itemName=iovdin.tune) for Visual Studio Code and [plugin](https://github.com/iovdin/tune.nvim) for Neovim that lets you chat with large language models (LLMs) in a text file. 
+Tune is a handy [extension for Visual Studio Code and](https://marketplace.visualstudio.com/items?itemName=iovdin.tune) and [plugin for Neovim](https://github.com/iovdin/tune.nvim) and [plugin for Sublime Text](https://github.com/iovdin/tune-sublime) that lets you chat with large language models (LLMs) in a text file. 
 With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make apps and agents. 
 
 ## Demo
@@ -24,6 +24,7 @@ edit `~/.tune/.env` file and add `OPENAI_KEY` and other keys
 ## Template Language
 
 ```chat
+user:
 @myprompt     include file
 @image        include image
 @path/to/file include file at path
@@ -38,6 +39,43 @@ edit `~/.tune/.env` file and add `OPENAI_KEY` and other keys
 
 ```
 [read more](https://iovdin.github.io/tune/template-language)
+
+
+## Diagram
+
+```mermaid
+flowchart TD 
+
+  subgraph Entry[" "]
+    Editor["VSCode/Neovim/Sublime Text"]
+    CLI["CLI"]
+    App["App"]
+  end
+
+  subgraph Core[" "]
+    MD1["~/.tune/default.ctx.js"]
+    MD2["require('tune-fs')
+require('tune-models')
+"]
+    CTX["tune.makeContext(...middlewares)"]
+    F2R["ctx.file2run(params)"]
+  end
+
+  
+  MD1 --> |cli middlewares| CTX
+  MD2 --> |app middlewares| CTX
+  Editor -->| $ tune-sdk rpc | Core
+  CLI --> | $ tune-sdk --user hello | Core
+  App --> Core
+  
+  
+  
+  F2R -->|ctx.resolve #40; system.txt #124; shell #124; gpt-5  #41; | CTX
+  CTX -->| #123; type: text #124; tool #124; llm #125; | F2R
+
+  F2R --> |fetch| LLM["https://provider.com/v1/chat/completions"]
+  F2R --> |call| Tool
+```
 
 ## Extend with Middlewares
 Extend Tune with middlewares:
