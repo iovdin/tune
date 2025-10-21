@@ -13,3 +13,5 @@ tune-*.tgz
 .obsidian
 rpc.log
 tools
+.github
+test
