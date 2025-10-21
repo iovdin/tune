@@ -1569,12 +1569,14 @@ async function text2ast(text, ctx, resolve) {
         continue;
       }(function(it) {
         it = it.replace(/\\\}/g, "}");
+        it = it.replace(/\\\|/g, "__PIPE_ESC__");
         it = it.split("|");
         it = it.map((function(it) {
           return it.trim();
         }));
         it = it.map((function(item, index) {
           var idx;
+          item = item.replace(/__PIPE_ESC__/g, "|");
           if ((index === 0)) return item;
           var idx;
           idx = item.indexOf(" ");
@@ -2202,7 +2204,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergnVy4sP, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergJeXzne, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2269,7 +2271,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergnVy4sP = new AsyncIter();
+    itergJeXzne = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2278,20 +2280,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergnVy4sP.result = {
+          itergJeXzne.result = {
             value: $lastRes
           }
         }
-        _ref = itergnVy4sP.result = {
+        _ref = itergJeXzne.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergnVy4sP.err = e);
+        _ref = (itergJeXzne.err = e);
       }
       return _ref;
     })();
-    _ref = itergnVy4sP;
+    _ref = itergJeXzne;
   }
   return _ref;
 }
