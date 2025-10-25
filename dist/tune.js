@@ -2023,16 +2023,20 @@ TunePromise.prototype.finally = (function(onFinally) {
 });
 
 function text2run(text, ctx, opts) {
-  var msgs, stopVal, stream, resolve, reject, p, iter;
+  var msgs, stopVal, stream, hookMsg, resolve, reject, p, iter;
   if (!ctx) throw Error("context not set");
   var msgs;
   var stopVal;
   var stream;
+  var hookMsg;
   var resolve;
   var reject;
   msgs = [];
   stopVal = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.stop !== "undefined") && (opts.stop !== null) && !Number.isNaN(opts.stop)) ? opts.stop : (((typeof "step" !== "undefined") && ("step" !== null) && !Number.isNaN("step")) ? "step" : undefined));
   stream = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.stream !== "undefined") && (opts.stream !== null) && !Number.isNaN(opts.stream)) ? opts.stream : (((typeof false !== "undefined") && (false !== null) && !Number.isNaN(false)) ? false : undefined));
+  hookMsg = (function(msg) {
+    return msg;
+  });
   resolve = undefined;
   reject = undefined;
   var p;
@@ -2071,11 +2075,20 @@ function text2run(text, ctx, opts) {
       var model;
       provider = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.source !== "undefined") && (payload.llm.source !== null) && !Number.isNaN(payload.llm.source)) ? payload.llm.source : undefined);
       model = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.name !== "undefined") && (payload.llm.name !== null) && !Number.isNaN(payload.llm.name)) ? payload.llm.name : undefined);
+      hookMsg = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.hookMsg !== "undefined") && (payload.llm.hookMsg !== null) && !Number.isNaN(payload.llm.hookMsg)) ? payload.llm.hookMsg : (((typeof(function(msg) {
+        return msg;
+      }) !== "undefined") && ((function(msg) {
+        return msg;
+      }) !== null) && !Number.isNaN((function(msg) {
+        return msg;
+      }))) ? (function(msg) {
+        return msg;
+      }) : undefined));
       if (stream) payload.stream = stream;
       var res;
       res = await toolCall(payload, ctx);
       if (res.length) {
-        msgs = msgs.concat(res);
+        msgs = msgs.concat(res.map(hookMsg));
         iter.result = {
           value: msgs
         };
@@ -2094,7 +2107,7 @@ function text2run(text, ctx, opts) {
           err._stack = TuneError.ctx2stack(ctx);
           throw err;
         }
-        msgs.push((((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.message !== "undefined") && (res.message !== null) && !Number.isNaN(res.message)) ? res.message : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.choices !== "undefined") && (res.choices !== null) && !Number.isNaN(res.choices) && (typeof res.choices[0] !== "undefined") && (res.choices[0] !== null) && !Number.isNaN(res.choices[0]) && (typeof res.choices[0].message !== "undefined") && (res.choices[0].message !== null) && !Number.isNaN(res.choices[0].message)) ? res.choices[0].message : undefined)));
+        msgs.push(hookMsg((((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.message !== "undefined") && (res.message !== null) && !Number.isNaN(res.message)) ? res.message : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.choices !== "undefined") && (res.choices !== null) && !Number.isNaN(res.choices) && (typeof res.choices[0] !== "undefined") && (res.choices[0] !== null) && !Number.isNaN(res.choices[0]) && (typeof res.choices[0].message !== "undefined") && (res.choices[0].message !== null) && !Number.isNaN(res.choices[0].message)) ? res.choices[0].message : undefined))));
         iter.result = {
           value: msgs,
           done: true
@@ -2171,6 +2184,7 @@ function text2run(text, ctx, opts) {
               role: "assistant",
               content: ""
             });
+            it = hookMsg(it);
             it = (iter.result = {
               value: msgs.concat(Array(it))
             });
@@ -2204,7 +2218,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergJeXzne, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergYbx9Yp, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2271,7 +2285,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergJeXzne = new AsyncIter();
+    itergYbx9Yp = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2280,20 +2294,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergJeXzne.result = {
+          itergYbx9Yp.result = {
             value: $lastRes
           }
         }
-        _ref = itergJeXzne.result = {
+        _ref = itergYbx9Yp.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergJeXzne.err = e);
+        _ref = (itergYbx9Yp.err = e);
       }
       return _ref;
     })();
-    _ref = itergJeXzne;
+    _ref = itergYbx9Yp;
   }
   return _ref;
 }
