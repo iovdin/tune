@@ -1636,13 +1636,18 @@ async function text2ast(text, ctx, resolve) {
         if ((resolved.type === "text" || resolved.type === "image" || resolved.type === "audio")) resolved.value = await resolved.read();
         if ((resolved.type === "tool")) {
           var schema;
-          schema = resolved.schema;
+          schema = Object.assign({}, resolved.schema);
           if (!schema) throw new TuneError(("schema has to be set" + " for '" + resolved.name + "'"), filename, row, col);
           schema.name = resolved.name;
           if (!schema.description) throw new TuneError(("no description set" + " for '" + resolved.name + "'"), filename, row, col);
           if (!schema.parameters) throw new TuneError(("no parameters set" + " for '" + resolved.name + "'"), filename, row, col);
           if (!schema.parameters.type) throw new TuneError(("no parameters.type set" + " for '" + resolved.name + "'"), filename, row, col);
           if (!schema.parameters.properties) throw new TuneError(("no parameters.properties set" + " for '" + resolved.name + "'"), filename, row, col);
+          if (((typeof schema !== 'undefined') && (typeof schema.$escape_output !== 'undefined'))) {
+            resolved.escapeOutput = schema.$escape_output;
+            delete schema.$escape_output;
+          }
+          resolved.schema = schema;
         }
         index = m.index + match.length;
         if ((recursive && (resolved.prefix.length === 2) && (resolved.type === "text"))) {
@@ -1911,7 +1916,14 @@ async function ast2payload(ast, ctx) {
       return item;
     }))
     .reduce(transformRoles, Array());
-  if (tools.length) payload.tools = tools;
+  if (tools.length) payload.tools = tools.reduce((function(memo, tool, index) {
+    if (!tools
+      .slice(1 + index)
+      .find((function(item) {
+        return (item.name === tool.name);
+      }))) memo.push(tool);
+    return memo;
+  }), []);
   var llm;
   llm;
   if (llms.length) llm = llms["slice"](-1)[0];
@@ -1962,7 +1974,7 @@ async function toolCall(payload, ctx) {
       return memo;
     }), {});
   return Promise.all(lastMsg.tool_calls.map((async function(item) {
-    var res, tc, tool;
+    var res, tc, tool, content;
     var res;
     res;
     var tc;
@@ -1994,10 +2006,13 @@ async function toolCall(payload, ctx) {
       return _ref;
     }
     transformRes;
+    var content;
+    content = transformRes(res);
+    if ((((typeof tools !== "undefined") && (tools !== null) && !Number.isNaN(tools) && (typeof tools[tc.name] !== "undefined") && (tools[tc.name] !== null) && !Number.isNaN(tools[tc.name]) && (typeof tools[tc.name].escapeOutput !== "undefined") && (tools[tc.name].escapeOutput !== null) && !Number.isNaN(tools[tc.name].escapeOutput)) ? tools[tc.name].escapeOutput : (((typeof true !== "undefined") && (true !== null) && !Number.isNaN(true)) ? true : undefined))) content = escape(content);
     return {
       role: "tool",
       id: item.id,
-      content: transformRes(res)
+      content: content
     }
   })));
 }
@@ -2218,7 +2233,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergYbx9Yp, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergGIHFbu, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2285,7 +2300,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergYbx9Yp = new AsyncIter();
+    itergGIHFbu = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2294,20 +2309,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergYbx9Yp.result = {
+          itergGIHFbu.result = {
             value: $lastRes
           }
         }
-        _ref = itergYbx9Yp.result = {
+        _ref = itergGIHFbu.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergYbx9Yp.err = e);
+        _ref = (itergGIHFbu.err = e);
       }
       return _ref;
     })();
-    _ref = itergYbx9Yp;
+    _ref = itergGIHFbu;
   }
   return _ref;
 }
@@ -2460,8 +2475,8 @@ msg2role;
 
 function escape(text) {
   return String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)))
-    .replace(/{(\s*\w+\s*)}/g, "{!$1}")
-    .replace(/^(s|u|a|c|tr|tc|err):/gm, "\\$1:");
+    .replace(/@/g, "\\@")
+    .replace(/^(s|u|a|c|tr|tc|err|system|user|comment|assistant|tool_call|tool_result):/gm, "\\$1:");
 }
 escape;
 
