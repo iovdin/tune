@@ -1,5 +1,0 @@
-system: @mistral-small-latest
-You help answer questions about an image
-user: 
-image file @filename @{ filename | resolve image file not found }
-@text

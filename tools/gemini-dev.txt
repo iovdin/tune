@@ -1,7 +1,0 @@
-@rf @wf @sh @@gemini25 @patch
-
-Use sh tool to know more about environment you are in
-use rf if you need to read source code of a file
-use wf if you need to create a new file or overwrite existing
-use patch for small changes in a file
-Do not include code into your answers except using wf tool

@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "escodegen": "^2.1.0",
-    "esprima": "^4.0.1",
-    "mime-types": "^3.0.1"
-  }
-}
