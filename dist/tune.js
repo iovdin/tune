@@ -1635,9 +1635,9 @@ async function text2ast(text, ctx, resolve) {
         });
         if ((resolved.type === "text" || resolved.type === "image" || resolved.type === "audio")) resolved.value = await resolved.read();
         if ((resolved.type === "tool")) {
+          if (!resolved.schema) throw new TuneError(("schema has to be set" + " for '" + resolved.name + "'"), filename, row, col);
           var schema;
           schema = Object.assign({}, resolved.schema);
-          if (!schema) throw new TuneError(("schema has to be set" + " for '" + resolved.name + "'"), filename, row, col);
           schema.name = resolved.name;
           if (!schema.description) throw new TuneError(("no description set" + " for '" + resolved.name + "'"), filename, row, col);
           if (!schema.parameters) throw new TuneError(("no parameters set" + " for '" + resolved.name + "'"), filename, row, col);
@@ -2233,7 +2233,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergGIHFbu, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, iterg2cEuOp, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2300,7 +2300,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergGIHFbu = new AsyncIter();
+    iterg2cEuOp = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2309,20 +2309,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergGIHFbu.result = {
+          iterg2cEuOp.result = {
             value: $lastRes
           }
         }
-        _ref = itergGIHFbu.result = {
+        _ref = iterg2cEuOp.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergGIHFbu.err = e);
+        _ref = (iterg2cEuOp.err = e);
       }
       return _ref;
     })();
-    _ref = itergGIHFbu;
+    _ref = iterg2cEuOp;
   }
   return _ref;
 }

@@ -1,0 +1,14 @@
+{
+  "description": "There is a tool list available, find ones and connect that are appropriate for the task",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "User task description"
+      }
+    },
+    "required": ["text"]
+  },
+  "$escape_output": false
+}

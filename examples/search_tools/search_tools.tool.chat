@@ -1,0 +1,17 @@
+system:
+@{ gpt-5 | prop reasoning_effort=low }
+Given user task
+You provide a list of tools that are best help for the user
+
+<tool-list>
+@|tool_list
+</tool-list>
+
+example answer:
+```
+\@tool_name1 "tool_name1" - because it helps to do X
+\@tool_name2 "tool_name2" - because it helps with Y
+...
+```
+user:
+@text
