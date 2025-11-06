@@ -110,7 +110,7 @@ module.exports = async function toolList(node, args, ctx) {
 
 ```
 
-Back to our **search_tools.tool.js**
+Back to our **search_tools.tool.chat**
 ```chat
 system:
 ...
