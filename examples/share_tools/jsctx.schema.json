@@ -1,0 +1,13 @@
+{
+  "description": "run js code",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "js code to execute (body of an async IIFE). Use 'ctx' inside code to call tools available, e.g. await ctx.exec(\"tool_name\", { param: value }),  it is also possible to call LLM from code:   await ctx.file2run({ system: \"You are helpful assistant\" user: \"user request: @data \"  }, { data: ...content...) "
+      }
+    },
+    "required": ["text"]
+  }
+}
