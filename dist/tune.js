@@ -2190,9 +2190,7 @@ function text2run(text, ctx, opts) {
                 msg.tool_calls = msg.tool_calls || [];
                 tc = delta.tool_calls[0];
                 tcIdx = tc.index || 0;
-                msg.tool_calls[tcIdx] = msg.tool_calls[tcIdx] || tc;
-                msg.tool_calls[tcIdx].function.arguments = msg.tool_calls[tcIdx].function.arguments || "";
-                msg.tool_calls[tcIdx].function.arguments += (tc.function.arguments || "");
+                !msg.tool_calls[tcIdx] ? msg.tool_calls[tcIdx] = tc : msg.tool_calls[tcIdx].function.arguments += (tc.function.arguments || "");
               }
               return msg;
             }), {
@@ -2233,7 +2231,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, iterg2cEuOp, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergkjZius, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2300,7 +2298,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    iterg2cEuOp = new AsyncIter();
+    itergkjZius = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2309,20 +2307,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          iterg2cEuOp.result = {
+          itergkjZius.result = {
             value: $lastRes
           }
         }
-        _ref = iterg2cEuOp.result = {
+        _ref = itergkjZius.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (iterg2cEuOp.err = e);
+        _ref = (itergkjZius.err = e);
       }
       return _ref;
     })();
-    _ref = iterg2cEuOp;
+    _ref = itergkjZius;
   }
   return _ref;
 }
