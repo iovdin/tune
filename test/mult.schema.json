@@ -1,0 +1,17 @@
+{
+  "description": "Multiply two numbers",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "a": {
+        "type": "number",
+        "description": "First number to multiply"
+      },
+      "b": {
+        "type": "number",
+        "description": "Second number to multiply"
+      }
+    },
+    "required": ["a", "b"]
+  }
+}

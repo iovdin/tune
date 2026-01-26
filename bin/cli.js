@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
-const cli = require("../dist/cli.js")
+const cli = require("../src/cli.js")
 cli.main()

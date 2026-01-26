@@ -1,4 +1,4 @@
-var util, AsyncLocalStorage, als, $roles;
+var als, util, AsyncLocalStorage, $roles;
 
 function extend() {
   var _i;
@@ -20,13 +20,17 @@ function extend() {
 extend;
 
 function AsyncIter() {
-  return (this[Symbol.asyncIterator] = this);
+  return this;
 }
 AsyncIter;
+AsyncIter.prototype[Symbol.asyncIterator] = (function() {
+  return this;
+});
 AsyncIter.prototype.next = (async function() {
   var self, result;
   var self;
   self = this;
+  if ((self.lastReturn && self.lastReturn.done)) return self.lastReturn;
   await _once((function() {
     return (!!self.err || !!self.result);
   }), (function() {
@@ -35,20 +39,24 @@ AsyncIter.prototype.next = (async function() {
   var result;
   result = self.result;
   self.result = undefined;
+  self.lastReturn = result;
+  if ((result && result.value && result.done)) result = {
+    value: result.value
+  };
   if (self.err) throw self.err;
   return result;
 });
-if ((typeof require !== 'undefined')) {
-  util = require("util");
-  AsyncLocalStorage = require("node:async_hooks").AsyncLocalStorage;
-  als = new AsyncLocalStorage();
-} else {
+if ((typeof window !== 'undefined')) {
   als = {
     getStore: (function() {}),
     run: (async function(store, func) {
       return func();
     })
   };
+} else {
+  util = require("util");
+  AsyncLocalStorage = require("node:async_hooks").AsyncLocalStorage;
+  als = new AsyncLocalStorage();
 }
 
 function TuneError(message, filename, row, col, stack, originalError) {
@@ -1151,8 +1159,9 @@ async function resolve(ctx, name, args, middlewares) {
       }));
       if (!item.type) {
         _ref = undefined;
-        throw Error(tpl("resolved '@{name}' node must have a 'type' property", {
-          name: name
+        throw Error(tpl("resolved '@{name}' node must have a 'type' property {item}", {
+          name: name,
+          item: JSON.stringify(item)
         }));
       } else {
         _ref = undefined;
@@ -2231,7 +2240,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergkjZius, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergEXej98, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2298,7 +2307,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergkjZius = new AsyncIter();
+    itergEXej98 = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2307,20 +2316,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergkjZius.result = {
+          itergEXej98.result = {
             value: $lastRes
           }
         }
-        _ref = itergkjZius.result = {
+        _ref = itergEXej98.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergkjZius.err = e);
+        _ref = (itergEXej98.err = e);
       }
       return _ref;
     })();
-    _ref = itergkjZius;
+    _ref = itergEXej98;
   }
   return _ref;
 }

@@ -1,11 +1,15 @@
 function AsyncIter() {
-  return (this[Symbol.asyncIterator] = this);
+  return this;
 }
 AsyncIter;
+AsyncIter.prototype[Symbol.asyncIterator] = (function() {
+  return this;
+});
 AsyncIter.prototype.next = (async function() {
   var self, result;
   var self;
   self = this;
+  if ((self.lastReturn && self.lastReturn.done)) return self.lastReturn;
   await _once((function() {
     return (!!self.err || !!self.result);
   }), (function() {
@@ -14,6 +18,10 @@ AsyncIter.prototype.next = (async function() {
   var result;
   result = self.result;
   self.result = undefined;
+  self.lastReturn = result;
+  if ((result && result.value && result.done)) result = {
+    value: result.value
+  };
   if (self.err) throw self.err;
   return result;
 });

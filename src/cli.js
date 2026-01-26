@@ -168,7 +168,7 @@ function parseArgs(args) {
 }
 parseArgs;
 tune = require("../dist/tune.js");
-rpc = require("../dist/rpc.js");
+rpc = require("../src/rpc.js");
 path = require("path");
 fs = require("fs");
 os = require("os");
@@ -247,7 +247,10 @@ async function remoteContext(name, params) {
     name: name,
     params: params
   });
-  if ((((typeof node !== "undefined") && (node !== null) && !Number.isNaN(node) && (typeof node.error !== "undefined") && (node.error !== null) && !Number.isNaN(node.error)) ? node.error : undefined)) return;
+  if (!node) return
+  // backward compatible, remove in the future
+  if (node.error) return
+
   node.read = (function() {
     return server.read({
       name: name,
