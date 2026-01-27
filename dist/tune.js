@@ -1159,9 +1159,8 @@ async function resolve(ctx, name, args, middlewares) {
       }));
       if (!item.type) {
         _ref = undefined;
-        throw Error(tpl("resolved '@{name}' node must have a 'type' property {item}", {
-          name: name,
-          item: JSON.stringify(item)
+        throw Error(tpl("resolved '@{name}' node must have a 'type' property", {
+          name: name
         }));
       } else {
         _ref = undefined;
@@ -2240,7 +2239,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergEXej98, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergQIFpf6, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2307,7 +2306,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergEXej98 = new AsyncIter();
+    itergQIFpf6 = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2316,20 +2315,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergEXej98.result = {
+          itergQIFpf6.result = {
             value: $lastRes
           }
         }
-        _ref = itergEXej98.result = {
+        _ref = itergQIFpf6.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergEXej98.err = e);
+        _ref = (itergQIFpf6.err = e);
       }
       return _ref;
     })();
-    _ref = itergEXej98;
+    _ref = itergQIFpf6;
   }
   return _ref;
 }
