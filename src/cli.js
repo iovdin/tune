@@ -346,6 +346,9 @@ async function initContext(args) {
     }));
   dirs.push(getHomedir(args));
   dirs.unshift(pwd);
+  if (process.env.TUNE_PATH) {
+    dirs = dirs.concat(process.env.TUNE_PATH.split(path.delimiter))
+  }
   process.env.TUNE_PATH = dirs.join(path.delimiter);
   ctx = tune.makeContext({
     TUNE_PATH: process.env.TUNE_PATH,

@@ -2181,7 +2181,7 @@ function text2run(text, ctx, opts) {
               return JSON.parse(item);
             }));
             it = it.reduce((function(msg, chunk) {
-              var delta, tc, tcIdx;
+              var delta, tc, tcIdx, func;
               if (chunk.usage) usage = chunk.usage;
               var delta;
               delta = (((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.choices !== "undefined") && (chunk.choices !== null) && !Number.isNaN(chunk.choices) && (typeof chunk.choices[0] !== "undefined") && (chunk.choices[0] !== null) && !Number.isNaN(chunk.choices[0]) && (typeof chunk.choices[0].delta !== "undefined") && (chunk.choices[0].delta !== null) && !Number.isNaN(chunk.choices[0].delta)) ? chunk.choices[0].delta : (((typeof {} !== "undefined") && ({} !== null) && !Number.isNaN({})) ? {} : undefined));
@@ -2194,11 +2194,21 @@ function text2run(text, ctx, opts) {
               if (delta.content) {
                 msg.content = msg.content || "";
                 msg.content += delta.content;
-              } else if (delta.tool_calls) {
+              }
+              if (delta.reasoning) {
+                msg.reasoning = msg.reasoning || "";
+                msg.reasoning += delta.reasoning;
+              }
+              if (delta.tool_calls) {
                 msg.tool_calls = msg.tool_calls || [];
                 tc = delta.tool_calls[0];
                 tcIdx = tc.index || 0;
-                !msg.tool_calls[tcIdx] ? msg.tool_calls[tcIdx] = tc : msg.tool_calls[tcIdx].function.arguments += (tc.function.arguments || "");
+                if (!msg.tool_calls[tcIdx]) {
+                  msg.tool_calls[tcIdx] = tc;
+                } else {
+                  func = msg.tool_calls[tcIdx].function;
+                  func.arguments = (func.arguments || "") + (tc.function.arguments || "");
+                }
               }
               return msg;
             }), {
@@ -2239,7 +2249,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergQIFpf6, _ref;
+  var lctx, text, stop, node, response, res, r, chunk, itergH2RRGq, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2306,7 +2316,7 @@ async function file2run(args, params, ctx) {
       stream: true
     });
     chunk = {};
-    itergQIFpf6 = new AsyncIter();
+    itergH2RRGq = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2315,20 +2325,20 @@ async function file2run(args, params, ctx) {
           res = (chunk.value || "");
           if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergQIFpf6.result = {
+          itergH2RRGq.result = {
             value: $lastRes
           }
         }
-        _ref = itergQIFpf6.result = {
+        _ref = itergH2RRGq.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergQIFpf6.err = e);
+        _ref = (itergH2RRGq.err = e);
       }
       return _ref;
     })();
-    _ref = itergQIFpf6;
+    _ref = itergH2RRGq;
   }
   return _ref;
 }

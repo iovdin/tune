@@ -11,7 +11,8 @@ const tests = {};
 
 // Assume API keys are set like in original tests
 const env = {
-  OPENAI_KEY: process.env.OPENAI_KEY
+  OPENAI_KEY: process.env.OPENAI_KEY,
+  OPENROUTER_KEY: process.env.OPENROUTER_KEY
 };
 
 // Default LLM config reused in tests
@@ -35,6 +36,25 @@ const defaultLLM = {
     };
   }
 };
+
+const mkllm = (model) => ({
+  type: "llm",
+  exec: async (args, ctx) => {
+    // Accept either full payload or args with messages/tools
+    const bodyPayload = Object.assign({}, args);
+    bodyPayload.model = model
+    return {
+      url: "https://openrouter.ai/api/v1/chat/completions",
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + process.env.OPENROUTER_KEY
+      },
+      body: JSON.stringify(bodyPayload)
+    };
+  }
+});
+
 
 // Batch 1: Core TuneError and text parsing tests
 
@@ -1008,10 +1028,10 @@ tests.text2stream2 = async function() {
       },
       exec: (args) => args.a + args.b
     },
-    "default": defaultLLM 
+    "default": defaultLLM
   });
 
-  const res = await tune.text2run("u: @plus add 1234 to 4321", ctx, {
+  let res = await tune.text2run("u: @plus add 1234 to 4321", ctx, {
     stream: true,
     stop: "assistant"
   });
@@ -1020,6 +1040,43 @@ tests.text2stream2 = async function() {
   let msgs;
   
   for await (msgs of res) {
+  }
+  
+  const lastMsg = msgs[msgs.length - 1];
+  assert.ok(lastMsg.content);
+  assert.equal(lastMsg.role, "assistant");
+};
+
+tests.text2stream3 = async function() {
+  const ctx = tune.makeContext({
+    plus: {
+      type: "tool",
+      schema: {
+        "description": "add 2 numbers, a + b",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "a": { "type": "number", "description": "first argument" },
+            "b": { "type": "number", "description": "second argument" }
+          },
+          "required": ["a", "b"]
+        }
+      },
+      exec: (args) => args.a + args.b
+    },
+    "default": mkllm("qwen/qwen3-32b")
+  });
+
+  let res = await tune.text2run("u: @plus add 1234 to 4321", ctx, {
+    stream: true,
+    stop: "assistant"
+  });
+  
+  let chunk = {};
+  let msgs;
+  
+  for await (msgs of res) {
+    // console.log(JSON.stringify(msgs, null, "  "))
   }
   
   const lastMsg = msgs[msgs.length - 1];
@@ -1180,11 +1237,16 @@ tests.text2run1 = async function() {
       },
       exec: (args) => args.a * args.b
     },
-    "default": defaultLLM
+    "default": defaultLLM,
+    "qwen32b": mkllm("qwen/qwen3-32b")
   });
 
   console.log("text2run1 - multiturn 1");
   let res = await tune.text2run("s: @system @mult\nu: 2 * 2", ctx);
+  assert.deepEqual(JSON.parse(res[0].tool_calls[0].function.arguments), { a: 2, b: 2 });
+
+  console.log("text2run1 - multiturn 1 (qwen)");
+  res = await tune.text2run("s: @qwen32b @system @mult\nu: 2 * 2", ctx);
   assert.deepEqual(JSON.parse(res[0].tool_calls[0].function.arguments), { a: 2, b: 2 });
 
   console.log("text2run1 - multiturn 2");
@@ -1620,7 +1682,7 @@ tests.cli2 = async function() {
 
   console.log("cli2 - system user filename - takes filename");
   filename = mkfile();
-  const prompt = "@gpt-4.1 You count up to 10 with user";
+  const prompt = "You count up to 10 with user";
   execCmd(`npx tune-sdk --system '${prompt}' --user '1' --save --filename ${filename}`);
   execCmd(`npx tune-sdk --system '${prompt}' --user '3' --save --filename ${filename}`);
   const roles = tune.text2roles(fs.readFileSync(filename, "utf8"));
