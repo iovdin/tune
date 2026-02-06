@@ -1423,6 +1423,102 @@ tests.file2run1 = async function() {
 
 };
 
+tests.file2run2 = async function() {
+  // Non-streaming: ensure saving happens after every completed loop step.
+  // We simulate a 3-step run:
+  //   1) assistant requests a tool
+  //   2) tool result is produced
+  //   3) assistant returns final content
+  let writes = [];
+
+  const ctx = tune.makeContext(
+    {
+      OPENAI_KEY: process.env.OPENAI_KEY,
+      plus: {
+        type: "tool",
+        schema: {
+          description: "add 2 numbers, a + b",
+          parameters: {
+            type: "object",
+            properties: {
+              a: { type: "number" },
+              b: { type: "number" }
+            },
+            required: ["a", "b"]
+          }
+        },
+        exec: (args) => args.a + args.b
+      },
+      "default": defaultLLM 
+    },
+    async function write(filename, content) {
+      writes.push({ filename, content });
+    }
+  );
+
+  console.log("file2run2 save non streaming");
+  const out = await ctx.file2run({ 
+    user: "@plus 22+22?", 
+    filename: "chat", 
+    save: true 
+  });
+  assert.match(out, /44/);
+
+  // 3 turn-end saves: after tool_calls assistant, after tool_result, after final assistant.
+  assert.equal(writes.length, 3);
+  assert.equal(writes[0].filename, "chat");
+  assert.match(writes[0].content, /tool_call:\s+plus/);
+  assert.doesNotMatch(writes[0].content, /tool_result:/);
+
+  assert.match(writes[1].content, /tool_call:\s+plus/);
+  assert.match(writes[1].content, /tool_result:\s*\n44/);
+
+  assert.match(writes[2].content, /tool_result:\s*\n44/);
+  assert.match(writes[2].content, /assistant:\s*.*44.*/);
+
+  // Streaming: ensure we still save (once) on turn end, not on token chunks.
+  writes = [];
+
+
+  console.log("file2run2 save streaming");
+  const iter = await ctx.file2run({ 
+    user: "@plus 22+22?", 
+    filename: "chat", 
+    save: true,
+    stream: true
+  });
+  let last;
+  for await (const chunk of iter) last = chunk;
+  assert.match(last, /44/);
+
+  // 3 turn-end saves: after tool_calls assistant, after tool_result, after final assistant.
+  assert.equal(writes.length, 3);
+  assert.equal(writes[0].filename, "chat");
+  assert.match(writes[0].content, /tool_call:\s+plus/);
+  assert.doesNotMatch(writes[0].content, /tool_result:/);
+
+  assert.match(writes[1].content, /tool_call:\s+plus/);
+  assert.match(writes[1].content, /tool_result:\s*\n44/);
+
+  assert.match(writes[2].content, /tool_result:\s*\n44/);
+  assert.match(writes[2].content, /assistant:\s*.*44.*/);
+
+  console.log("file2run2 - save params")
+  // Ensure save respects both `save` and `filename` flags.
+  writes = [];
+  // filename set but save disabled
+  await ctx.file2run({ user: "hi", filename: "chat", save: false });
+  assert.equal(writes.length, 0);
+
+  // save enabled but filename missing
+  await ctx.file2run({ user: "hi", save: true });
+  assert.equal(writes.length, 0);
+
+  // both enabled
+  await ctx.file2run({ user: "hi", filename: "chat", save: true });
+  assert.equal(writes.length, 1);
+};
+
 tests.errors = async function() {
   // Empty test in original
   return;
