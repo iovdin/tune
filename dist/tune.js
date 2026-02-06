@@ -2046,12 +2046,13 @@ TunePromise.prototype.finally = (function(onFinally) {
 });
 
 function text2run(text, ctx, opts) {
-  var msgs, stopVal, stream, hookMsg, resolve, reject, p, iter;
+  var msgs, stopVal, stream, hookMsg, hookTurnEnd, resolve, reject, p, iter;
   if (!ctx) throw Error("context not set");
   var msgs;
   var stopVal;
   var stream;
   var hookMsg;
+  var hookTurnEnd;
   var resolve;
   var reject;
   msgs = [];
@@ -2060,6 +2061,7 @@ function text2run(text, ctx, opts) {
   hookMsg = (function(msg) {
     return msg;
   });
+  hookTurnEnd = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.hookTurnEnd !== "undefined") && (opts.hookTurnEnd !== null) && !Number.isNaN(opts.hookTurnEnd)) ? opts.hookTurnEnd : (((typeof(function() {}) !== "undefined") && ((function() {}) !== null) && !Number.isNaN((function() {}))) ? (function() {}) : undefined));
   resolve = undefined;
   reject = undefined;
   var p;
@@ -2088,7 +2090,7 @@ function text2run(text, ctx, opts) {
   }
   stop;
   async function doit() {
-    var ast, payload, provider, model, res, ctype, err, reader, data, done, reData, reComment, usage;
+    var ast, payload, provider, model, res, ctype, err, reader, data, done, reData, reComment, usage, _ref;
     while (!stop(msgs)) {
       var ast;
       ast = await text2ast(text + "\n" + msg2text(msgs), ctx);
@@ -2115,6 +2117,7 @@ function text2run(text, ctx, opts) {
         iter.result = {
           value: msgs
         };
+        hookTurnEnd(msgs);
         continue;
       }
       payload = await payload2http(payload, ctx);
@@ -2135,6 +2138,7 @@ function text2run(text, ctx, opts) {
           value: msgs,
           done: true
         };
+        hookTurnEnd(msgs);
         continue;
       }
       var reader;
@@ -2223,13 +2227,20 @@ function text2run(text, ctx, opts) {
           })(data += (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.value !== "undefined") && (res.value !== null) && !Number.isNaN(res.value)) ? res.value : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
         }
         msgs = iter.result.value;
+        hookTurnEnd(msgs);
         if (usage) await ctx.usage(provider, model, usage);
       }
     }
-    return (stream ? (iter.result = {
-      value: msgs,
-      done: true
-    }) : resolve(msgs));
+    if (stream) {
+      iter.result = {
+        value: msgs,
+        done: true
+      };
+      _ref = hookTurnEnd(msgs);
+    } else {
+      _ref = resolve(msgs);
+    }
+    return _ref;
   }
   doit;
   doit()
@@ -2249,23 +2260,51 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, node, response, res, r, chunk, itergH2RRGq, _ref;
+  var lctx, text, stop, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergHd2WMp, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
   var text;
   var stop;
+  var turnsSaved;
   text = args.text;
   stop = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.stop !== "undefined") && (args.stop !== null) && !Number.isNaN(args.stop)) ? args.stop : (((typeof "assistant" !== "undefined") && ("assistant" !== null) && !Number.isNaN("assistant")) ? "assistant" : undefined));
+  turnsSaved = 0;
+  var longFormatRegex;
+  var isLong;
+  longFormatRegex = /^(system|user|tool_call|tool_result|assistant|error):/;
+  isLong = false;
+  async function save(res) {
+    var _ref;
+    if ((args.filename && (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.save !== "undefined") && (args.save !== null) && !Number.isNaN(args.save)) ? args.save : undefined))) {
+      if ((turnsSaved === res.length)) return;
+      turnsSaved = res.length;
+      _ref = await ctx.write(args.filename, text + "\n" + msg2text(res, isLong));
+    } else {
+      _ref = undefined;
+    }
+    return _ref;
+  }
+  save;
+  var initialText;
+  initialText = (args.system ? tpl("system:\n{system}", args) : "");
   if (args.filename) {
     node = await ctx.resolve(args.filename);
-    if (node) lctx.stack.push(node);
+    node ? lctx.stack.push(node) : lctx.stack.push({
+      name: args.filename,
+      type: "text",
+      fullname: args.filename,
+      read: (async function() {
+        return initialText;
+      })
+    });
     if ((node && !text)) text = await node.read();
   }
-  if ((!text && args.system)) text = tpl("system:\n{system}", args);
+  if ((!text && args.system)) text = initialText;
   text = text || "";
-  if (args.user) text += tpl("\nuser:\n{user}", args);
+  if (args.user) text += ((text ? "\n" : "") + tpl("user:\n{user}", args));
   if (!text) throw new TuneError("ether 'text' or 'system' or 'user' should be specified or 'filename' should exist ");
+  isLong = longFormatRegex.test(text);
   var response;
   response = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.response !== "undefined") && (args.response !== null) && !Number.isNaN(args.response)) ? args.response : (((typeof "content" !== "undefined") && ("content" !== null) && !Number.isNaN("content")) ? "content" : undefined));
 
@@ -2291,54 +2330,42 @@ async function file2run(args, params, ctx) {
     return _ref;
   }
   transformOutput;
-  async function save() {
-    var longFormatRegex, _ref;
-    if ((args.filename && (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.save !== "undefined") && (args.save !== null) && !Number.isNaN(args.save)) ? args.save : undefined))) {
-      var longFormatRegex;
-      longFormatRegex = /^(system|user|tool_call|tool_result|assistant|error):/;
-      _ref = await ctx.write(args.filename, text + "\n" + msg2text(res, longFormatRegex.test(text)));
-    } else {
-      _ref = undefined;
-    }
-    return _ref;
-  }
-  save;
   if (!args.stream) {
     var res;
     res = await lctx.text2run(text, {
-      stop: stop
+      stop: stop,
+      hookTurnEnd: save
     });
-    await save();
     _ref = transformOutput(res);
   } else {
     r = await lctx.text2run(text, {
       stop: stop,
-      stream: true
+      stream: true,
+      hookTurnEnd: save
     });
     chunk = {};
-    itergH2RRGq = new AsyncIter();
+    itergHd2WMp = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
         while (!chunk.done) {
           chunk = await r.next();
           res = (chunk.value || "");
-          if (chunk.done) await save();
           $lastRes = transformOutput(res) || $lastRes;
-          itergH2RRGq.result = {
+          itergHd2WMp.result = {
             value: $lastRes
           }
         }
-        _ref = itergH2RRGq.result = {
+        _ref = itergHd2WMp.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergH2RRGq.err = e);
+        _ref = (itergHd2WMp.err = e);
       }
       return _ref;
     })();
-    _ref = itergH2RRGq;
+    _ref = itergHd2WMp;
   }
   return _ref;
 }
@@ -2492,7 +2519,7 @@ msg2role;
 function escape(text) {
   return String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)))
     .replace(/@/g, "\\@")
-    .replace(/^(s|u|a|c|tr|tc|err|system|user|comment|assistant|tool_call|tool_result):/gm, "\\$1:");
+    .replace(/^(s|u|a|c|tr|tc|err|system|user|comment|assistant|tool_call|tool_result|error):/gm, "\\$1:");
 }
 escape;
 
