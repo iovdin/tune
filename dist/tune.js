@@ -2046,12 +2046,13 @@ TunePromise.prototype.finally = (function(onFinally) {
 });
 
 function text2run(text, ctx, opts) {
-  var msgs, stopVal, stream, hookMsg, hookTurnEnd, resolve, reject, p, iter;
+  var msgs, stopVal, stream, hookMsg, errors, hookTurnEnd, resolve, reject, p, iter;
   if (!ctx) throw Error("context not set");
   var msgs;
   var stopVal;
   var stream;
   var hookMsg;
+  var errors;
   var hookTurnEnd;
   var resolve;
   var reject;
@@ -2061,6 +2062,7 @@ function text2run(text, ctx, opts) {
   hookMsg = (function(msg) {
     return msg;
   });
+  errors = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.errors !== "undefined") && (opts.errors !== null) && !Number.isNaN(opts.errors)) ? opts.errors : (((typeof "throw" !== "undefined") && ("throw" !== null) && !Number.isNaN("throw")) ? "throw" : undefined));
   hookTurnEnd = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.hookTurnEnd !== "undefined") && (opts.hookTurnEnd !== null) && !Number.isNaN(opts.hookTurnEnd)) ? opts.hookTurnEnd : (((typeof(function() {}) !== "undefined") && ((function() {}) !== null) && !Number.isNaN((function() {}))) ? (function() {}) : undefined));
   resolve = undefined;
   reject = undefined;
@@ -2245,7 +2247,7 @@ function text2run(text, ctx, opts) {
   doit;
   doit()
     .catch((function(e) {
-      var err;
+      var err, _ref, _ref0;
       var err;
       err = e;
       if ((e.name !== "TuneError")) {
@@ -2253,22 +2255,42 @@ function text2run(text, ctx, opts) {
         err._stack = TuneError.ctx2stack(ctx);
         err.error = e;
       }
-      return (stream ? (iter.err = err) : reject(err));
+      if ((errors === "throw")) {
+        _ref0 = (stream ? (iter.err = err) : reject(err));
+      } else {
+        msgs.push({
+          role: "error",
+          content: err.stack
+        });
+        if (stream) {
+          iter.result = {
+            value: msgs,
+            done: true
+          };
+          _ref = hookTurnEnd(msgs);
+        } else {
+          _ref = resolve(msgs);
+        }
+        _ref0 = _ref;
+      }
+      return _ref0;
     }));
   if (stream) resolve(iter);
   return p;
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergHd2WMp, _ref;
+  var lctx, text, stop, errors, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergeNE023, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
   var text;
   var stop;
+  var errors;
   var turnsSaved;
   text = args.text;
   stop = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.stop !== "undefined") && (args.stop !== null) && !Number.isNaN(args.stop)) ? args.stop : (((typeof "assistant" !== "undefined") && ("assistant" !== null) && !Number.isNaN("assistant")) ? "assistant" : undefined));
+  errors = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.errors !== "undefined") && (args.errors !== null) && !Number.isNaN(args.errors)) ? args.errors : (((typeof "throw" !== "undefined") && ("throw" !== null) && !Number.isNaN("throw")) ? "throw" : undefined));
   turnsSaved = 0;
   var longFormatRegex;
   var isLong;
@@ -2321,7 +2343,7 @@ async function file2run(args, params, ctx) {
         _ref = res;
         break;
       case "chat":
-        _ref = msg2text(res, true);
+        _ref = msg2text(res, isLong);
         break;
       default:
         _ref = undefined;
@@ -2334,17 +2356,19 @@ async function file2run(args, params, ctx) {
     var res;
     res = await lctx.text2run(text, {
       stop: stop,
+      errors: errors,
       hookTurnEnd: save
     });
     _ref = transformOutput(res);
   } else {
     r = await lctx.text2run(text, {
       stop: stop,
+      errors: errors,
       stream: true,
       hookTurnEnd: save
     });
     chunk = {};
-    itergHd2WMp = new AsyncIter();
+    itergeNE023 = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2352,20 +2376,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergHd2WMp.result = {
+          itergeNE023.result = {
             value: $lastRes
           }
         }
-        _ref = itergHd2WMp.result = {
+        _ref = itergeNE023.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergHd2WMp.err = e);
+        _ref = (itergeNE023.err = e);
       }
       return _ref;
     })();
-    _ref = itergHd2WMp;
+    _ref = itergeNE023;
   }
   return _ref;
 }
@@ -2378,7 +2402,7 @@ function msg2text(msg, long) {
     return (long ? tpl("{role}:{new_line}{content}", {
       role: role,
       content: content,
-      new_line: ((role === "system" || role === "user" || role === "assistant" || role === "tool_result") ? "\n" : " ")
+      new_line: ((role === "system" || role === "user" || role === "assistant" || role === "tool_result" || role === "error") ? "\n" : " ")
     }) : tpl("{role}: {content}", {
       role: $roles.long2short[role],
       content: content
@@ -2491,7 +2515,7 @@ function msg2text(msg, long) {
         _ref = mkline("comment", msg.content);
         break;
       case "error":
-        _ref = mkline("error ", msg.content);
+        _ref = mkline("error", msg.content);
         break;
       default:
         _ref = undefined;
