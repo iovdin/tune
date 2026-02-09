@@ -297,7 +297,7 @@ async function runRpc(args) {
       },
       read: async function read(name) {
         const node = await cleanCtx.resolve(name)
-        if (!node) {
+        if (!node || node.type === 'image') {
           return ""
         }
         // todo binary
