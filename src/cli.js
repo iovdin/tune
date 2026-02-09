@@ -88,7 +88,7 @@ function validateArgs(args) {
     assert(typeof args.cmd === "string", "Command must be a string");
     assert((args.cmd === "rpc") || (args.cmd === "init"), "Unknown command: " + args.cmd);
   }
-  if ((!args.help && !args.version && !args.cmd && !args.user && !args.filename)) assert(false, "Must specify --user, --filename, a command (rpc|init), --version, or --help");
+  if ((!args.help && !args.version && !args.cmd && !args.user && !args.filename && !args.text)) assert(false, "Must specify --user, --filename, a command (rpc|init), --version, or --help");
   return args;
 }
 validateArgs;
@@ -274,6 +274,7 @@ async function runRpc(args) {
     flags: "a"
   }) : undefined);
   ctx = await initContext(args);
+  let cleanCtx = ctx.clone()
   server = rpc.jsonrpc({
     inStream: inStream,
     outStream: outStream,
@@ -284,10 +285,35 @@ async function runRpc(args) {
     }) : true),
     name: "server"
   }, {
-    init: (async function(methods) {
-      if ((-1 !== methods.indexOf("resolve"))) ctx.use(remoteContext.bind(server));
-      return;
-    }),
+      init: (async function(methods) {
+        if ((-1 !== methods.indexOf("resolve"))) ctx.use(remoteContext.bind(server));
+        return;
+      }),
+      resolve: async function(name, params) {
+        const node = await cleanCtx.resolve(name, params)
+        delete node.exec
+        delete node.read
+        return node 
+      },
+      read: async function read(name) {
+        const node = await cleanCtx.resolve(name)
+        if (!node) {
+          return ""
+        }
+        // todo binary
+        return node.read()
+      },
+
+      write: async function write(name, content) {
+        return cleanCtx.write(name, content)
+      },
+      exec: async function exec(name, params) {
+        const node  = await cleanCtx.resolve(name)
+        if (!node) {
+          throw Error(`cant execute ${name} - not found`)
+        }
+        return node.exec(params, cleanCtx)
+      },
       file2run: (async function(params, stream) {
         // backward compatibility
         let payload = params
@@ -298,6 +324,7 @@ async function runRpc(args) {
         }
         return ctx.file2run({
           ...payload, 
+          errors: "message",
           stream
         }, args);
       }),
@@ -319,7 +346,7 @@ async function run(args) {
   params = args.params || {}
   delete args.params;
   var res;
-  res = await ctx.file2run(args, params);
+  res = await ctx.file2run({ ...args, errors: "message", stop }, params);
   return (!args.silent ? console.log(res) : undefined);
 }
 run;

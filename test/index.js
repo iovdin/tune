@@ -92,6 +92,7 @@ tests.tuneError = async function() {
   console.log("tuneError - convert ctx stack to error stack");
 };
 
+
 tests.text2ast1 = async function() {
   const ast = await tune.text2ast("pre\nuser: post");
   
@@ -1790,6 +1791,43 @@ tests.cli2 = async function() {
 
   assert.equal(out, "hello");
 };
+
+tests.errProp = async function () {
+  const ctx = tune.makeContext({
+    OPENAI_KEY: process.env.OPENAI_KEY,
+    default: defaultLLM 
+  });
+
+  let res = await ctx.text2run("u: @notfound hi", { errors: "message" })
+  assert.equal(res[0].role, "error")
+
+  res = await ctx.file2run({ 
+    user: "@notfound hi", 
+    errors: "message", 
+    response: "messages"
+  })
+  assert.equal(res[0].role, "error")
+  // assert.equal(res)
+
+  // CONTEXTS
+  // called from code, should throw or add message.role = error
+  // from rpc
+  // from another chat as tool
+  // from command line
+
+  // RETRIES - stop, tool retries
+  
+  // Error types
+  // types of errors
+  // u: @{ name | noexec }
+  // user: @not_found
+  // u: @{ name | proc_throws }
+  // u: llm file not found
+  // OPENAI_KEY not found
+  // tool error @py - python not found, error in python script
+  // ctx.text2run("")
+
+}
 
 tests.hooks = async function() {
   const ctx = tune.makeContext({
