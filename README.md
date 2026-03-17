@@ -15,7 +15,7 @@ install tune-sdk
 ```bash
 npm install -g tune-sdk
 
-tune-sdk init
+tune init
 ```
 
 edit `~/.tune/.env` file and add `OPENAI_KEY` and other keys
@@ -64,8 +64,8 @@ require('tune-models')
   
   MD1 --> |cli middlewares| CTX
   MD2 --> |app middlewares| CTX
-  Editor -->| $ tune-sdk rpc | Core
-  CLI --> | $ tune-sdk --user hello | Core
+  Editor -->| $ tune rpc | Core
+  CLI --> | $ tune --user hello | Core
   App --> Core
   
   
@@ -138,14 +138,14 @@ image generated
 npm install -g tune-sdk
 
 # append user message to newchat.chat run and save
-tune-sdk --user "hi how are you?" --filename newchat.chat  --save
+tune --user "hi how are you?" --filename newchat.chat  --save
 
 # start new chat with system prompt and initial user message 
 # print result to console
-tune-sdk --system "You are Groot" --user "Hi how are you?"
+tune --system "You are Groot" --user "Hi how are you?"
 
 #set context variable
-tune-sdk --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
+tune --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
 ```
 
 

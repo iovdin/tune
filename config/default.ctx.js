@@ -15,8 +15,8 @@ module.exports = [
   basics(),
   tunefs({ paths: dirs, makeSchema: true }),
   models({
-    default: "gpt-5-mini",
-    alias: { "sonnet": "claude-sonnet-4-20250514"}
+    default: "gpt-5.4",
+    alias: { "sonnet": "claude-sonnet-4-6"}
   }),
   writer()
 ]

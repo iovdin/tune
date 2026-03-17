@@ -4,7 +4,10 @@
   "description": "tune - LLM chat in text file",
   "main": "dist/tune.js",
   "module": "dist/tune.mjs",
-  "bin": "bin/cli.js",
+  "bin": { 
+    "tune": "bin/cli.js",
+    "tune-sdk": "bin/cli.js" 
+  },
   "exports": {
     ".": {
       "require": "./dist/tune.js",

@@ -1195,6 +1195,8 @@ Context.prototype.envmd = envmd;
 Context.prototype.text2roles = text2roles;
 Context.prototype.roles2text = roles2text;
 Context.prototype.text2call = text2call;
+Context.prototype.escape = escape;
+Context.prototype.unescape = unescape;
 Context.prototype.read = (async function(name, args) {
   var resolved, _ref;
   var resolved;
@@ -2280,7 +2282,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergeNE023, _ref;
+  var lctx, text, stop, errors, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergZsk35p, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2312,18 +2314,21 @@ async function file2run(args, params, ctx) {
   initialText = (args.system ? tpl("system:\n{system}", args) : "");
   if (args.filename) {
     node = await ctx.resolve(args.filename);
-    node ? lctx.stack.push(node) : lctx.stack.push({
-      name: args.filename,
-      type: "text",
-      fullname: args.filename,
-      read: (async function() {
-        return initialText;
-      })
-    });
+    if (node) lctx.stack.push(node);
     if ((node && !text)) text = await node.read();
   }
   if ((!text && args.system)) text = initialText;
   text = text || "";
+  node = node || {
+    type: "text",
+    read: (async function() {
+      return text;
+    })
+  }
+  node.name = args.filename;
+  node.fullname = args.filename;
+  node.mimetype = "text/chat";
+  lctx.stack.push(node);
   if (args.user) text += ((text ? "\n" : "") + tpl("user:\n{user}", args));
   if (!text) throw new TuneError("ether 'text' or 'system' or 'user' should be specified or 'filename' should exist ");
   isLong = longFormatRegex.test(text);
@@ -2368,7 +2373,7 @@ async function file2run(args, params, ctx) {
       hookTurnEnd: save
     });
     chunk = {};
-    itergeNE023 = new AsyncIter();
+    itergZsk35p = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2376,20 +2381,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergeNE023.result = {
+          itergZsk35p.result = {
             value: $lastRes
           }
         }
-        _ref = itergeNE023.result = {
+        _ref = itergZsk35p.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergeNE023.err = e);
+        _ref = (itergZsk35p.err = e);
       }
       return _ref;
     })();
-    _ref = itergeNE023;
+    _ref = itergZsk35p;
   }
   return _ref;
 }

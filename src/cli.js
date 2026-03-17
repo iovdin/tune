@@ -1,6 +1,16 @@
 var assert, tune, rpc, path, fs, os, cp, stream;
 assert = require("assert");
 
+
+// tune app - run web server from current directory serving index.html and making it availble to call ctx via websocket
+// tune ps - list of executing agents or the ones finished
+// tune spawn - spawn an agent
+// tune kill - kill/stop agent
+// tune serve - tune manage server, run in background and spawn agents 
+// tune  - execute call/file and quit
+// tune rpc - run rpc server
+
+
 function tpl(str) {
   var _i;
   var params = 2 <= arguments.length ? [].slice.call(arguments, 1, _i = arguments.length - 0) : (_i = 1, []);
@@ -21,10 +31,10 @@ function tpl(str) {
 }
 
 function showHelp() {
-  console.log("TUNE-CLI - Command Line Interface for Tune SDK");
+  console.log("TUNE-CLI - Command Line Interface for Tune");
   console.log("");
   console.log("USAGE:");
-  console.log("  tune-sdk [cmd] [OPTIONS]");
+  console.log("  tune [cmd] [OPTIONS]");
   console.log("");
   console.log("COMMANDS:");
   console.log("  rpc                   Start RPC server mode");
@@ -32,19 +42,19 @@ function showHelp() {
   console.log("");
   console.log("EXAMPLES:");
   console.log("  # Quick chat with system prompt");
-  console.log("  tune-sdk --system \"You are Groot\" --user \"Hi how are you?\"");
+  console.log("  tune --system \"You are Groot\" --user \"Hi how are you?\"");
   console.log("");
   console.log("  # Continue existing chat");
-  console.log("  tune-sdk --user \"continue the conversation\" --filename chat.chat --save");
+  console.log("  tune --user \"continue the conversation\" --filename chat.chat --save");
   console.log("");
   console.log("  # Set context variables");
-  console.log("  tune-sdk --set-test=hello --user \"@test\" --system \"Echo assistant\"");
+  console.log("  tune --set-test=hello --user \"@test\" --system \"Echo assistant\"");
   console.log("");
   console.log("  # RPC mode for editor integration");
-  console.log("  tune-sdk rpc");
+  console.log("  tune rpc");
   console.log("");
   console.log("  # Initialize or reinitialize config directory");
-  console.log("  tune-sdk init --force");
+  console.log("  tune init --force");
   console.log("");
   console.log("OPTIONS:");
   console.log("  --user <text>         User message to send");
@@ -80,8 +90,8 @@ function validateArgs(args) {
   if (!!args.debug) assert(typeof args.debug === "boolean" || typeof args.debug === "string", "--debug must be a boolean");
   if (!!args.silent) assert(typeof args.silent === "boolean", "--silent must be a boolean");
   if (!!args.force) assert(typeof args.force === "boolean", "--force must be a boolean");
-  if (typeof args.rpc !== "undefined") assert(false, "Use 'tune-sdk rpc' instead of --rpc");
-  if (typeof args.forceInit !== "undefined") assert(false, "Use 'tune-sdk init --force' instead of --force-init");
+  if (typeof args.rpc !== "undefined") assert(false, "Use 'tune rpc' instead of --rpc");
+  if (typeof args.forceInit !== "undefined") assert(false, "Use 'tune init --force' instead of --force-init");
   if (args.params) assert(!!args.params && (typeof args.params === "object"), "--set-* parameters must form a valid object");
   if ((args.stop && (typeof args.stop === "string"))) assert((args.stop === "assistant") || (args.stop === "step") || (args.stop.length > 0), "--stop must be 'assistant', 'step', or a non-empty custom string");
   if (args.cmd) {
@@ -189,26 +199,26 @@ async function initConfig(args) {
   homedir = getHomedir(args);
   assert(typeof homedir === "string", "Home directory must be a string");
   if ((!args.force && fs.existsSync(homedir))) return;
-  console.error("[tune-sdk] initialize " + homedir);
+  console.error("[tune] initialize " + homedir);
   fs.mkdirSync(homedir, {
     recursive: true
   });
-  console.error("[tune-sdk] copying files");
+  console.error("[tune] copying files");
   fs.cpSync(path.resolve(__dirname, "../config"), path.resolve(homedir), { recursive: true });
-  console.error("[tune-sdk] installing npm");
+  console.error("[tune] installing npm");
   try {
     _ref = cp.execSync("npm i", {
       cwd: homedir,
       encoding: "utf8"
     });
     stdout = _ref;
-    if (stdout.trim()) console.error("[tune-sdk]", stdout.trim());
-    //stderr.trim() ? console.error("[tune-sdk]", stderr.trim()) : undefined;
+    if (stdout.trim()) console.error("[tune]", stdout.trim());
+    //stderr.trim() ? console.error("[tune]", stderr.trim()) : undefined;
   } catch (err) {
     console.error(err)
   }
-  console.error("[tune-sdk] done");
-  console.error(`[tune-sdk] edit ${homedir}/.env and add OPENAI_KEY and other keys, change ${homedir}/default.ctx.js to customize tune`);
+  console.error("[tune] done");
+  console.error(`[tune] edit ${homedir}/.env and add OPENAI_KEY and other keys, change ${homedir}/default.ctx.js to customize tune`);
 }
 initConfig;
 async function suggest(params, ctx) {
