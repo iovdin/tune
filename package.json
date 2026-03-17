@@ -1,6 +1,6 @@
 {
   "name": "tune-sdk",
-  "version": "0.2.23",
+  "version": "0.2.24",
   "description": "tune - LLM chat in text file",
   "main": "dist/tune.js",
   "module": "dist/tune.mjs",

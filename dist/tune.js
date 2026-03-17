@@ -2282,7 +2282,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, longFormatRegex, isLong, initialText, node, response, res, r, chunk, itergZsk35p, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergMKZ8fG, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2290,10 +2290,12 @@ async function file2run(args, params, ctx) {
   var stop;
   var errors;
   var turnsSaved;
+  var node;
   text = args.text;
   stop = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.stop !== "undefined") && (args.stop !== null) && !Number.isNaN(args.stop)) ? args.stop : (((typeof "assistant" !== "undefined") && ("assistant" !== null) && !Number.isNaN("assistant")) ? "assistant" : undefined));
   errors = (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.errors !== "undefined") && (args.errors !== null) && !Number.isNaN(args.errors)) ? args.errors : (((typeof "throw" !== "undefined") && ("throw" !== null) && !Number.isNaN("throw")) ? "throw" : undefined));
   turnsSaved = 0;
+  node = null;
   var longFormatRegex;
   var isLong;
   longFormatRegex = /^(system|user|tool_call|tool_result|assistant|error):/;
@@ -2314,22 +2316,21 @@ async function file2run(args, params, ctx) {
   initialText = (args.system ? tpl("system:\n{system}", args) : "");
   if (args.filename) {
     node = await ctx.resolve(args.filename);
-    if (node) lctx.stack.push(node);
     if ((node && !text)) text = await node.read();
   }
   if ((!text && args.system)) text = initialText;
   text = text || "";
+  if (args.user) text += ((text ? "\n" : "") + tpl("user:\n{user}", args));
   node = node || {
-    type: "text",
-    read: (async function() {
-      return text;
-    })
+    type: "text"
   }
   node.name = args.filename;
   node.fullname = args.filename;
   node.mimetype = "text/chat";
+  node.read = (async function() {
+    return text;
+  });
   lctx.stack.push(node);
-  if (args.user) text += ((text ? "\n" : "") + tpl("user:\n{user}", args));
   if (!text) throw new TuneError("ether 'text' or 'system' or 'user' should be specified or 'filename' should exist ");
   isLong = longFormatRegex.test(text);
   var response;
@@ -2373,7 +2374,7 @@ async function file2run(args, params, ctx) {
       hookTurnEnd: save
     });
     chunk = {};
-    itergZsk35p = new AsyncIter();
+    itergMKZ8fG = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2381,20 +2382,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergZsk35p.result = {
+          itergMKZ8fG.result = {
             value: $lastRes
           }
         }
-        _ref = itergZsk35p.result = {
+        _ref = itergMKZ8fG.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergZsk35p.err = e);
+        _ref = (itergMKZ8fG.err = e);
       }
       return _ref;
     })();
-    _ref = itergZsk35p;
+    _ref = itergMKZ8fG;
   }
   return _ref;
 }
