@@ -6,8 +6,7 @@ Tune is a handy [extension for Visual Studio Code and](https://marketplace.visua
 With tune [javascript sdk](https://www.npmjs.com/package/tune-sdk) you can make apps and agents. 
 
 ## Demo
-<video src="https://github.com/user-attachments/assets/23f8ab30-58db-4159-8761-f212a7960e0c">
-</video>
+[![asciicast](https://asciinema.org/a/757894.png)](https://asciinema.org/a/757894)
 
 
 ## Setup
