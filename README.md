@@ -136,6 +136,8 @@ image generated
 # install tune globally
 npm install -g tune-sdk
 
+tune "hi how are you?"
+
 # append user message to newchat.chat run and save
 tune --user "hi how are you?" --filename newchat.chat  --save
 
@@ -143,8 +145,10 @@ tune --user "hi how are you?" --filename newchat.chat  --save
 # print result to console
 tune --system "You are Groot" --user "Hi how are you?"
 
-#set context variable
-tune --set-test "hello" --user "@test" --system "You are echo you print everythting back"  
+# set context variable
+tune --set test="hello" --user "@test" --system "You are echo you print everythting back"  
+# prints hello
+
 ```
 
 
