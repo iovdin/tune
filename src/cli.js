@@ -1,6 +1,12 @@
-var assert, tune, rpc, path, fs, os, cp, stream;
-assert = require("assert");
-
+const { Command, Option } = require("commander");
+const tune = require("../dist/tune.js");
+const ws = require("./ws.js");
+const rpc = require("./rpc.js");
+const path = require("path");
+const fs = require("fs");
+const os = require("os");
+const cp = require("child_process");
+const stream = require("stream");
 
 // tune app - run web server from current directory serving index.html and making it availble to call ctx via websocket
 // tune ps - list of executing agents or the ones finished
@@ -10,195 +16,15 @@ assert = require("assert");
 // tune  - execute call/file and quit
 // tune rpc - run rpc server
 
-
-function tpl(str) {
-  var _i;
-  var params = 2 <= arguments.length ? [].slice.call(arguments, 1, _i = arguments.length - 0) : (_i = 1, []);
-  return (function(paramIndex, params) {
-    var _ref;
-    try {
-      _ref = str.replace(/{(\W*)(\w*)(\W*)}/gm, (function(_, pre, name, post) {
-        return (function(res) {
-          paramIndex += 1;
-          return ((typeof res !== 'undefined') ? ((pre || "") + res + (post || "")) : "");
-        })(params[name || paramIndex]);
-      }));
-    } catch (e) {
-      _ref = console.log.apply(console, [].concat([e, str]).concat(params));
-    }
-    return _ref;
-  })(0, (((typeof params[0] === "object") && (params.length === 1)) ? params[0] : params));
-}
-
-function showHelp() {
-  console.log("TUNE-CLI - Command Line Interface for Tune");
-  console.log("");
-  console.log("USAGE:");
-  console.log("  tune [cmd] [OPTIONS]");
-  console.log("");
-  console.log("COMMANDS:");
-  console.log("  rpc                   Start RPC server mode");
-  console.log("  init                  Initialize Tune config directory");
-  console.log("");
-  console.log("EXAMPLES:");
-  console.log("  # Quick chat with system prompt");
-  console.log("  tune --system \"You are Groot\" --user \"Hi how are you?\"");
-  console.log("");
-  console.log("  # Continue existing chat");
-  console.log("  tune --user \"continue the conversation\" --filename chat.chat --save");
-  console.log("");
-  console.log("  # Set context variables");
-  console.log("  tune --set-test=hello --user \"@test\" --system \"Echo assistant\"");
-  console.log("");
-  console.log("  # RPC mode for editor integration");
-  console.log("  tune rpc");
-  console.log("");
-  console.log("  # Initialize or reinitialize config directory");
-  console.log("  tune init --force");
-  console.log("");
-  console.log("OPTIONS:");
-  console.log("  --user <text>         User message to send");
-  console.log("  --system <text>       System prompt to use");
-  console.log("  --filename <file>     Chat file to load/save");
-  console.log("  --save                Save conversation to file");
-  console.log("  --stop <mode>         Stop condition: assistant|step|<custom>");
-  console.log("  --text <content>      chat content");
-  console.log("  --response <type>     Response format: content|json|messages|chat (default: content)");
-  console.log("  --set-<name>=<value>  Set context parameter");
-  console.log("  --path <paths>        Additional search paths (colon-separated)");
-  console.log("  --home <dir>          Tune config directory (default: ~/.tune)");
-  console.log("  --debug               Enable debug output");
-  console.log("  --silent              Suppress output");
-  console.log("  --force               Force config initialization (with 'init')");
-  console.log("  --help                Show this help");
-  console.log("  --version             Show CLI version");
-  return console.log("");
-}
-showHelp;
-
-function validateArgs(args) {
-  assert(!!args && (typeof args === "object"), "Arguments must be an object");
-  if (args.user) assert(typeof args.user === "string", "--user must be a string");
-  if (args.system) assert(typeof args.system === "string", "--system must be a string");
-  if (args.filename) assert(typeof args.filename === "string", "--filename must be a string");
-  if (args.text) assert(typeof args.text === "string", "--text must be a string");
-  if (args.response) assert(typeof args.response === "string", "--response must be a string");
-  if (args.stop) assert(typeof args.stop === "string", "--stop must be a string");
-  if (args.path) assert(typeof args.path === "string", "--path must be a string");
-  if (args.home) assert(typeof args.home === "string", "--home must be a string");
-  if (!!args.save) assert(typeof args.save === "boolean", "--save must be a boolean");
-  if (!!args.debug) assert(typeof args.debug === "boolean" || typeof args.debug === "string", "--debug must be a boolean");
-  if (!!args.silent) assert(typeof args.silent === "boolean", "--silent must be a boolean");
-  if (!!args.force) assert(typeof args.force === "boolean", "--force must be a boolean");
-  if (typeof args.rpc !== "undefined") assert(false, "Use 'tune rpc' instead of --rpc");
-  if (typeof args.forceInit !== "undefined") assert(false, "Use 'tune init --force' instead of --force-init");
-  if (args.params) assert(!!args.params && (typeof args.params === "object"), "--set-* parameters must form a valid object");
-  if ((args.stop && (typeof args.stop === "string"))) assert((args.stop === "assistant") || (args.stop === "step") || (args.stop.length > 0), "--stop must be 'assistant', 'step', or a non-empty custom string");
-  if (args.cmd) {
-    assert(typeof args.cmd === "string", "Command must be a string");
-    assert((args.cmd === "rpc") || (args.cmd === "init"), "Unknown command: " + args.cmd);
-  }
-  if ((!args.help && !args.version && !args.cmd && !args.user && !args.filename && !args.text)) assert(false, "Must specify --user, --filename, a command (rpc|init), --version, or --help");
-  return args;
-}
-validateArgs;
-
-function parseArgs(args) {
-  var curKey, res, res1, key, value, stop, _ref, _len;
-  assert(Array.isArray(args), "parseArgs expects an array of arguments");
-  var curKey;
-  curKey = null;
-  var res;
-  res = args.reduce((function(memo, arg) {
-    var key, value, _ref, _i;
-    assert(typeof arg === "string", "Each argument must be a string");
-    if (arg.startsWith("--")) {
-      _ref = arg.substring(2)
-        .split("=");
-      key = _ref[0];
-      value = _ref[1];
-      assert((typeof key === "string") && (key.length > 0), "Argument key must be a non-empty string");
-      if (!!value) {
-        memo[key] = value;
-        curKey = null;
-      } else {
-        curKey = key;
-        memo[key] = true;
-      }
-    } else if (curKey) {
-      memo[curKey] = arg;
-      curKey = null;
-    } else {
-      if (!memo.__cmd) {
-        memo.__cmd = arg;
-      } else {
-        assert(false, "Only a single positional command is allowed");
-      }
-    }
-    return memo;
-  }), {});
-  assert(!!res && (typeof res === "object"), "Parsed arguments must form an object");
-  var res1;
-  res1 = {};
-  _ref = res;
-  for (key in _ref) {
-    value = _ref[key];
-    assert(typeof key === "string", "Argument keys must be strings");
-    if (key === "__cmd") {
-      res1.cmd = value;
-      continue;
-    }
-    if (key.startsWith("set-")) {
-      res1.params = res1.params || {}
-      assert(key.substr(4).length > 0, "Set parameter name cannot be empty");
-      res1.params[key.substr(4)] = value;
-    } else {
-      res1[key] = value;
-    }
-  }
-  if ((res1.h || res1.help)) res1.help = true;
-  if ((res1.v || res1.version)) res1.version = true;
-  stop = res1.stop;
-  if ((!!stop && (stop !== "step" && stop !== "assistant"))) {
-    assert(typeof stop === "string", "Custom stop condition must be a string");
-    assert(stop.length > 0, "Custom stop condition cannot be empty");
-    res1.stop = (function(msgs) {
-      var lastMsg;
-      assert(Array.isArray(msgs), "Messages must be an array");
-      if (!msgs.length) return false;
-      var lastMsg;
-      lastMsg = msgs["slice"](-1)[0];
-      assert(!!lastMsg && (typeof lastMsg === "object"), "Last message must be an object");
-      if (!lastMsg.content) return false;
-      assert(typeof lastMsg.content === "string", "Message content must be a string");
-      return (-1 !== lastMsg.content.indexOf(stop));
-    });
-  }
-  return res1;
-}
-parseArgs;
-tune = require("../dist/tune.js");
-rpc = require("../src/rpc.js");
-path = require("path");
-fs = require("fs");
-os = require("os");
-cp = require("child_process");
-stream = require("stream");
-
-function getHomedir(args) {
-  assert(!!args && (typeof args === "object"), "getHomedir expects args to be an object");
-  if (args.home) assert(typeof args.home === "string", "args.home must be a string");
-  return path.resolve(path.normalize((args.home || process.env.TUNE_HOME || "~/.tune")
+function getHomedir(home) {
+  return path.resolve(path.normalize((home || process.env.TUNE_HOME || "~/.tune")
     .replace("~", os.homedir())));
 }
-getHomedir;
-async function initConfig(args) {
-  var homedir, stdout, stderr, _ref, _i;
-  assert(!!args && (typeof args === "object"), "initConfig expects args to be an object");
-  var homedir;
-  homedir = getHomedir(args);
-  assert(typeof homedir === "string", "Home directory must be a string");
-  if ((!args.force && fs.existsSync(homedir))) return;
+
+async function initConfig({ home, force }) {
+  let stdout, stderr, _i;
+  const homedir = getHomedir(home);
+  if (!force && fs.existsSync(homedir)) return;
   console.error("[tune] initialize " + homedir);
   fs.mkdirSync(homedir, {
     recursive: true
@@ -207,11 +33,10 @@ async function initConfig(args) {
   fs.cpSync(path.resolve(__dirname, "../config"), path.resolve(homedir), { recursive: true });
   console.error("[tune] installing npm");
   try {
-    _ref = cp.execSync("npm i", {
+    stdout = cp.execSync("npm i", {
       cwd: homedir,
       encoding: "utf8"
     });
-    stdout = _ref;
     if (stdout.trim()) console.error("[tune]", stdout.trim());
     //stderr.trim() ? console.error("[tune]", stderr.trim()) : undefined;
   } catch (err) {
@@ -220,7 +45,7 @@ async function initConfig(args) {
   console.error("[tune] done");
   console.error(`[tune] edit ${homedir}/.env and add OPENAI_KEY and other keys, change ${homedir}/default.ctx.js to customize tune`);
 }
-initConfig;
+
 async function suggest(params, ctx) {
   var node, _ref;
   var node;
@@ -247,7 +72,7 @@ async function suggest(params, ctx) {
     }
   }));
 }
-suggest;
+
 async function remoteContext(name, params) {
   var server, node;
   var server;
@@ -275,20 +100,20 @@ async function remoteContext(name, params) {
   });
   return node;
 }
-remoteContext;
-async function runRpc(args) {
+
+async function runRpc({ debug, home, path }) {
   var inStream, outStream, debugStream, ctx, server;
   inStream = stream.Readable.toWeb(process.stdin);
   outStream = stream.Writable.toWeb(process.stdout);
-  debugStream = ((typeof args.debug === "string") ? fs.createWriteStream(args.debug, {
+  debugStream = ((typeof debug === "string") ? fs.createWriteStream(debug, {
     flags: "a"
   }) : undefined);
-  ctx = await initContext(args);
+  ctx = await initContext({ home, path });
   let cleanCtx = ctx.clone()
   server = rpc.jsonrpc({
     inStream: inStream,
     outStream: outStream,
-    debug: ((typeof args.debug === "string") ? (function() {
+    debug: ((typeof debug === "string") ? (function() {
       var _i;
       var args = 1 <= arguments.length ? [].slice.call(arguments, 0, _i = arguments.length - 0) : (_i = 0, []);
       return debugStream.write(args.join(" ") + "\n", "utf8");
@@ -346,20 +171,13 @@ async function runRpc(args) {
   // console.log("node", node)
   return null;
 }
-runRpc;
-async function run(args) {
-  var ctx, stop, params, res;
-  ctx = await initContext(args);
-  var stop;
-  stop = args.stop || "assistant";
-  var params;
-  params = args.params || {}
-  delete args.params;
-  var res;
-  res = await ctx.file2run({ ...args, errors: "message", stop }, params);
-  return (!args.silent ? console.log(res) : undefined);
+async function run({ home, stop, params, silent, user, system, save, text , response, path, filename }) {
+  const ctx = await initContext({ home, path });
+  const res = await ctx.file2run({ user, system, save, text, response, errors: "message", stop, filename }, params);
+  if (!silent) {
+    console.log(res)
+  }
 }
-run;
 
 function flatten(array) {
   return array.reduce((memo, item) => {
@@ -371,17 +189,17 @@ function flatten(array) {
   }, [])
 }
 
-async function initContext(args) {
+async function initContext({ home, path: addPaths }) {
   var dirs, pwd, ctx, dir, ctxName, ext, module, m, _i, _ref, _len, _i0, _ref0, _len0;
   var dirs;
   var pwd;
   dirs = [];
   pwd = process.cwd();
-  if (args.path) dirs = args.path.split(path.delimiter)
+  if (addPaths) dirs = addPaths.split(path.delimiter)
     .map((function(dir) {
       return path.resolve(pwd, dir);
     }));
-  dirs.push(getHomedir(args));
+  dirs.push(getHomedir(home));
   dirs.unshift(pwd);
   if (process.env.TUNE_PATH) {
     dirs = dirs.concat(process.env.TUNE_PATH.split(path.delimiter))
@@ -389,7 +207,7 @@ async function initContext(args) {
   process.env.TUNE_PATH = dirs.join(path.delimiter);
   ctx = tune.makeContext({
     TUNE_PATH: process.env.TUNE_PATH,
-    TUNE_HOME: getHomedir(args)
+    TUNE_HOME: getHomedir(home)
   });
   _ref = dirs;
   for (_i = 0, _len = _ref.length; _i < _len; ++_i) {
@@ -422,61 +240,111 @@ async function initContext(args) {
         if ((typeof m === "function")) {
           ctx.use(m);
         } else {
-          throw Error(tpl("err: Context file export is not an array of functions or function {name}: {module}", {
-            name: ctxName,
-            module: m
-          }));
+          throw Error(`err: Context file export is not an array of functions or function ${ctxName}: ${m}`);
         }
       }
     } else {
-      throw Error(tpl("err: Context file export is not an array of functions or function {name}: {module}", {
-        name: ctxName,
-        module: module
-      }));
+      throw Error(`err: Context file export is not an array of functions or function ${ctxName}: ${m}`);
     }
   }
   return ctx;
 }
-initContext;
 async function main() {
-  var args, _ref;
-  try {
-    var args;
-    args = parseArgs(process.argv.slice(2));
-    if (args.help) {
-      showHelp();
-      process.exit(0);
-    }
-    if (args.version) {
-      try {
-        var pkg = require(path.resolve(__dirname, "../package.json"));
-        console.log(pkg.version || "0.0.0");
-      } catch (e) {
-        console.log("0.0.0");
-      }
-      process.exit(0);
-    }
-    validateArgs(args);
-    if (args.cmd === "rpc") {
-      await initConfig(args); // ensure config exists if needed
-      _ref = await runRpc(args);
-    } else if (args.cmd === "init") {
-      await initConfig(args);
-      _ref = null;
-    } else {
-      await initConfig(args); // auto-init if missing
-      _ref = await run(args);
-    }
-  } catch (e) {
-    console.error(e.stack);
-    _ref = process.exit(1);
-  }
-  return _ref;
-}
-main;
 
-tpl;
-exports.parseArgs = parseArgs;
+  let version = "0.0.0";
+  try {
+    var pkg = require(path.resolve(__dirname, "../package.json"));
+    version = pkg.version || "0.0.0"
+  } catch (e) {
+  }
+
+  const program = new Command();
+
+  program
+    .name("tune")
+    .description("Command Line Interface for Tune")
+    .version(version)
+    .helpOption(true)
+    .option("--home <dir>", "Tune config directory (default: ~/.tune)")
+    .option("--path <paths>", "Additional search paths (colon-separated)")
+    .addHelpText("after", "\nEXAMPLES:\n  tune --system \"You are Groot\" --user \"Hi how are you?\"\n  tune --user \"continue the conversation\" --filename chat.chat --save\n  tune --set-test=hello --user \"@test\" --system \"Echo assistant\"\n  tune rpc\n  tune init --force\n");
+
+  program
+    .command("gen", { isDefault: true })
+    .description("start or continue ai conversation,\ndefault command")
+    .argument("[user]", "user message, the same as --user", (value) => value.replace(/\\n/g, "\n"))
+    .option("-u, --user <text>", "User message ", (value) => value.replace(/\\n/g, "\n"))
+    .option("-s, --system <text>", "System prompt to use", (value) => value.replace(/\\n/g, "\n"))
+    .option("-f, --filename <file>", "Chat file to load/save")
+    .option("--save", "Save conversation to file")
+    .addOption(new Option("--stop <mode>", "Stop condition", "assistant").choices(["assistant", "step"]).default("assistant"))
+    .option("--text <content>", "chat file content, overwrites system message", (value) => value.replace(/\\n/g, "\n"))
+    .addOption(new Option("-r, --response <type>", "response format").choices(["content", "json", "messages", "chat"]).default("content"))
+    .option("--silent", "generate response but do not print it")
+    .option("--set [params...]", "set a template variables, --set a=b --set c=d")
+    .action(async (user, opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() }
+      opts.user ||= user
+      opts.params = (opts.set || []).reduce((memo, item) => {
+        const [key, value] = item.split("=");
+        memo[key] = value
+        return memo
+      }, {})
+      // console.log("gen ", opts)
+      if (!opts.user && !opts.text && !opts.filename && !opts.system) {
+        return cmd.help();
+      }
+
+      await initConfig({ home: opts.home });
+      await run(opts);
+    })
+
+  program
+    .command("rpc")
+    .description("Start rpc server mode over stdio")
+    .option("-d, --debug [file]", "Enable debug output or write debug output to file")
+    .action(async (opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() }
+      // console.log(opts)
+      await initConfig(opts); // ensure config exists if needed
+      await runRpc(opts);
+    })
+
+  program
+    .command("ws")
+    .description("Start static webserver with tune context available browser side")
+    .option("-p, --port <port>", "port or socket to listen to", 8080)
+    .option("-s, --static", "should it serve static files like index.html etc", true)
+    .option("-r, --root <path>", "root directory for server", process.cwd())
+    .action( async (opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() }
+      // console.log(opts)
+      const { home, path, static, port, root } = opts
+      
+      await initConfig({ home });
+
+      const ctx = await initContext({ home, path });
+      ws({ port, static, root, ctx})
+    })
+
+  program
+    .command("init")
+    .description("Initialize Tune config directory")
+    .option("--force", "Force config initialization (with 'init')")
+    .action(async (opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() }
+      await initConfig(opts);
+    })
+
+  try {
+    await program.parseAsync(process.argv);
+  }catch (e) {
+    console.error(e.stack)
+    process.exit(1)
+  }
+}
+
 exports.rpc = rpc;
 exports.main = main;
 exports.run = run;
+exports.ws = ws;

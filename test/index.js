@@ -2,14 +2,18 @@ const assert = require('assert');
 const util = require('util');
 const path = require('path');
 const fs = require('fs');
+const cp = require("child_process");
+const stream = require("stream");
 
 const tune = require('../dist/tune');
 const cli = require('../src/cli');
 const rpc = require('../src/rpc');
+const ContextWebsocket = require('../src/contextws.js')
 
 const tests = {};
 
 // Assume API keys are set like in original tests
+
 const env = {
   OPENAI_KEY: process.env.OPENAI_KEY,
   OPENROUTER_KEY: process.env.OPENROUTER_KEY
@@ -1595,8 +1599,6 @@ tests.jsonrpc1 = async function() {
 
 let procs = []
 function spawnRPC(exports = {}) {
-  const cp = require("child_process");
-  const stream = require("stream");
 
   const proc = cp.spawn(
     "bun",
@@ -1731,25 +1733,12 @@ tests.jsonrpc3 = async function() {
     }
   }
 };
-tests.cli1 = async function() {
-  function tst(args, target) {
-    assert.deepEqual(cli.parseArgs(args.split(/\s+/)), target);
-  }
-  
-  console.log("test arguments parsing");
-  tst("--cli=1", { cli: "1" });
-  tst("--cli 1", { cli: "1" });
-  tst("--cli", { cli: true });
-  tst("--arg1 1 --arg2=2", { arg1: "1", arg2: "2" });
-  tst("--set-a 1", { params: { a: "1" } });
-};
-
 
 tests.cli2 = async function() {
   const cp = require("child_process");
 
   function execCmd(cmd) {
-    const out = cp.execSync(cmd, {
+    const out = cp.execSync(`node ../bin/cli.js ${cmd}`, {
       encoding: "utf8",
       env: Object.assign({}, process.env),
       cwd: __dirname
@@ -1758,7 +1747,10 @@ tests.cli2 = async function() {
   }
 
   console.log("cli2 - system + user");
-  let out = execCmd("npx tune-sdk --system '@echo' --user 'hello' --path tools/");
+  let out = execCmd("--system '@echo' --user 'hello' --path tools/");
+  assert.equal(out, "hello");
+
+  out = execCmd("-s @echo --path tools/ hello");
   assert.equal(out, "hello");
 
   // prepare chats directory
@@ -1770,7 +1762,7 @@ tests.cli2 = async function() {
 
   console.log("cli2 - save to file");
   let filename = mkfile();
-  out = execCmd(`npx tune-sdk --system '@echo' --user 'hello' --path tools/ --save --filename ${filename}`);
+  out = execCmd(`--system '@echo' --user 'hello' --path tools/ --save --filename ${filename}`);
   assert.equal(out, "hello");
   assert.ok(fs.existsSync(filename));
   const content = fs.readFileSync(filename, "utf8");
@@ -1780,14 +1772,14 @@ tests.cli2 = async function() {
   console.log("cli2 - system user filename - takes filename");
   filename = mkfile();
   const prompt = "You count up to 10 with user";
-  execCmd(`npx tune-sdk --system '${prompt}' --user '1' --save --filename ${filename}`);
-  execCmd(`npx tune-sdk --system '${prompt}' --user '3' --save --filename ${filename}`);
+  execCmd(`--system '${prompt}' --user '1' --save --filename ${filename}`);
+  execCmd(`--system '${prompt}' --user '3' --save --filename ${filename}`);
   const roles = tune.text2roles(fs.readFileSync(filename, "utf8"));
   assert.equal(roles.length, 5);
   fs.unlinkSync(filename);
 
   console.log("cli2 - set param");
-  out = execCmd("npx tune-sdk --system '@echo' --set-param 'hello' --user '@param'");
+  out = execCmd("--system '@echo' --set param=hello --user '@param'");
 
   assert.equal(out, "hello");
 };
@@ -1841,6 +1833,94 @@ tests.hooks = async function() {
   const res = await tune.text2run("user: hi how are you?", ctx);
   assert.equal(res[0].content, '');
 };
+
+async function once(cond, timeout=10000) {
+  let step = 50;
+  let time = 0 
+  while (!cond() && time < timeout) {
+    await new Promise((resolve) =>  setTimeout(resolve, step))
+    time += step
+  }
+  if (time >= timeout ) {
+    throw Error(`timeout`)
+  }
+}
+
+tests.ws = async function () {
+  const port = 8081
+  const proc = cp.spawn(
+    "node",
+    ["bin/cli.js", "ws", "--path", "test/", "--port", port],
+    {
+      encoding: "utf8",
+      env: process.env,
+      cwd: path.resolve(__dirname, ".."),
+      // stdio: ["inherit", "inherit", "inherit"]
+    }
+  );
+  procs.push(proc)
+
+  let out = ""
+  let up 
+  proc.stdout.on('data', (data) => {
+    out += data.toString()
+    up = out.match(/listening/)
+  })
+
+  proc.stderr.on('data', (data) => {
+    out += data.toString()
+    console.log(out)
+    process.exit(1)
+  })
+  await once(()=> !!up)
+
+  const ctx = new ContextWebsocket(`ws://localhost:${port}`)
+  console.log("read/write");
+  const filename = "test/tmp.txt";
+  await ctx.write(filename, "value")
+  assert.ok(fs.existsSync(filename));
+
+  res = await ctx.read(filename)
+  assert.equal(res.trim(), "value")
+
+  fs.unlinkSync(filename)
+  //TODO
+  /*
+  res = await ctx.read("test/sun.webp")
+  console.log(res)
+  */
+
+  console.log("tool");
+  res = await ctx.exec("test/mult.tool.js", { a: 2, b: 2})
+  assert.equal(res, 4)
+
+  console.log("llm");
+  res = await ctx.file2run({system: "@echo", user:"123"})
+  assert.equal(res, "123")
+
+  res = await ctx.file2run({system: "@echo", user:"123", stream: true})
+
+  let msgs
+  for await (let item of res) {
+    msgs = item
+  }
+  assert.equal(msgs, "123")
+
+
+  console.log("error")
+  res = await ctx.file2run({user: "@asdf"})
+  console.log(res)
+
+  /*TODO:
+  console.log("resolve")
+  res = await ctx.resolve("test/echo.prompt")
+  console.log(res)
+
+  res = await ctx.resolve(".*", { match: "regex", type: "tool" });
+  console.log(res)
+  */
+
+}
 
 // Test runner
 async function run(testList = []) {

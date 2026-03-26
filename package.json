@@ -1,12 +1,12 @@
 {
   "name": "tune-sdk",
-  "version": "0.2.24",
+  "version": "0.3.0",
   "description": "tune - LLM chat in text file",
   "main": "dist/tune.js",
   "module": "dist/tune.mjs",
-  "bin": { 
+  "bin": {
     "tune": "bin/cli.js",
-    "tune-sdk": "bin/cli.js" 
+    "tune-sdk": "bin/cli.js"
   },
   "exports": {
     ".": {
@@ -18,6 +18,9 @@
     },
     "./rpc": {
       "require": "./src/rpc.js"
+    },
+    "./contextws": {
+      "require": "./src/contextws.js"
     }
   },
   "keywords": [
@@ -34,5 +37,10 @@
   "scripts": {
     "test": "node test/index.js",
     "test:watch": "node --watch test/index.js"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "mime-types": "^3.0.2",
+    "ws": "^8.20.0"
   }
 }
