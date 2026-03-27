@@ -79,12 +79,12 @@ require('tune-models')
 ## Extend with Middlewares
 Extend Tune with middlewares:
 
-* [tune-fs](https://www.npmjs.com/package/tune-fs) - connect tools & files from local filesystem
-* [tune-models](https://www.npmjs.com/package/tune-models) - connect llm models from Anthropic/OpenAI/Gemini/Openrouter/Mistral/Groq
-* [tune-basic-toolset](https://www.npmjs.com/package/tune-basic-toolset) - basic tools like read file, write file, shell etc.
-* [tune-s3](https://www.npmjs.com/package/tune-s3) - read/write files from s3
-* [tune-mcp](https://www.npmjs.com/package/tune-mcp) - connect tools from mcp servers
-* [maik](https://www.npmjs.com/package/@iovdin/maik) - fetch all you emails, and index them into sqlite database
+* [tune-fs](https://github.com/iovdin/tune-fs) - connect tools & files from local filesystem
+* [tune-models](https://github.com/iovdin/tune-models) - connect llm models from Anthropic/OpenAI/Gemini/Openrouter/Mistral/Groq
+* [tune-basic-toolset](https://github.com/iovdin/tune-basic-toolset) - basic tools like read file, write file, shell etc.
+* [tune-s3](https://github.com/iovdin/tune-s3) - read/write files from s3
+* [tune-mcp](https://github.com/iovdin/tune-mcp) - connect tools from mcp servers
+* [maik](https://github.com/iovdin/maik) - fetch all you emails, and index them into sqlite database
 
 
 For example:
