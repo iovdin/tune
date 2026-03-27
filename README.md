@@ -14,6 +14,7 @@ install tune-sdk
 ```bash
 npm install -g tune-sdk
 
+# create ~/.tune folder and install batteries
 tune init
 ```
 
@@ -38,43 +39,6 @@ user:
 
 ```
 [read more](https://iovdin.github.io/tune/template-language)
-
-
-## Diagram
-
-```mermaid
-flowchart TD 
-
-  subgraph Entry[" "]
-    Editor["VSCode/Neovim/Sublime Text"]
-    CLI["CLI"]
-    App["App"]
-  end
-
-  subgraph Core[" "]
-    MD1["~/.tune/default.ctx.js"]
-    MD2["require('tune-fs')
-require('tune-models')
-"]
-    CTX["tune.makeContext(...middlewares)"]
-    F2R["ctx.file2run(params)"]
-  end
-
-  
-  MD1 --> |cli middlewares| CTX
-  MD2 --> |app middlewares| CTX
-  Editor -->| $ tune rpc | Core
-  CLI --> | $ tune --user hello | Core
-  App --> Core
-  
-  
-  
-  F2R -->|ctx.resolve #40; system.txt #124; shell #124; gpt-5  #41; | CTX
-  CTX -->| #123; type: text #124; tool #124; llm #125; | F2R
-
-  F2R --> |fetch| LLM["https://provider.com/v1/chat/completions"]
-  F2R --> |call| Tool
-```
 
 ## Extend with Middlewares
 Extend Tune with middlewares:
