@@ -119,27 +119,87 @@ tune --set test="hello" --user "@test" --system "You are echo you print everytht
 ## Javascript SDK
 `npm install tune-sdk`
 
-```javascript
-const tune = require("tune-sdk");
-const sonnet = require("./sonnet.llm.js");
+Tune core is middleware-based. A context resolves `@name` references into nodes like `text`, `tool`, `llm`, and `processor`.
 
-require('dotenv').config();
+```javascript
+const tune = require("tune-sdk")
 
 async function main() {
-  const ctx = tune.makeContext({
-    echo: "You are echo, you print everything back",
-    OPENROUTER_KEY: process.env.OPENROUTER_KEY,
-    "default": {
-      type: "llm",
-      exec: sonnet
+  const ctx = tune.makeContext()
+
+  ctx.use(async function middleware(name) {
+    if (name === "file.txt") {
+      return {
+        type: "text",
+        name: "file.txt",
+        read: async () => fs.readFileSync("file.txt", "utf8")
+      }
+    }
+
+    if (name === "readfile") {
+      return {
+        type: "tool",
+        name: "readfile",
+        schema: {
+          type: "object",
+          properties: {
+            filename: { type: "string" }
+          }
+        },
+        exec: async ({ filename }) => fs.readFileSync(filename, "utf8")
+      }
+    }
+
+    if (name === "gpt-5") {
+      return {
+        type: "llm",
+        name: "gpt-5",
+        exec: async (payload) => ({
+          url: "https://api.openai.com/v1/chat/completions",
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "gpt-5",
+            ...payload
+          })
+        })
+      }
+    }
+
+    if (name === "tail") {
+      return {
+        type: "processor",
+        name: "tail",
+        exec: async (node, args) => {
+          if (!node) return
+          if (node.type !== "text") throw Error("tail can only modify text nodes")
+          return {
+            ...node,
+            read: async () => {
+              const content = await node.read()
+              const n = parseInt(args.trim(), 10) || 20
+              return content.split("\n").slice(-n).join("\n")
+            }
+          }
+        }
+      }
     }
   })
 
-  const text = "s: @echo\nu: hello world";
-  const messages = await tune.text2run(text, ctx)
-  console.log(tune.msg2text(messages))
-  // a: hello world
+  const content = await ctx.file2run({
+    system: "@gpt-5 @readfile",
+    user: "can you read file.txt?",
+    stream: false,
+    response: "content"
+  })
+
+  console.log(content)
 }
+
 main()
 ```
+
 [read more](https://iovdin.github.io/tune/api) about javascript sdk
