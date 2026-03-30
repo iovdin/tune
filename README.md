@@ -203,3 +203,20 @@ main()
 ```
 
 [read more](https://iovdin.github.io/tune/api) about javascript sdk
+
+## Help / Manual
+
+You can access tune manuals and available middlewares manuals from 
+
+```chat
+system:
+@man include all manuals for all connected packages
+@man/ - list all the manuals, like list directory
+@man/tune - get manual for tune core package 
+@man/tune-basic-toolset - get manual for tune-basic-tool set package
+
+tool_call: rf { "filename": "man/tune-basic-toolset"}
+tool_result:
+@man/tune-basic-toolset
+
+```

@@ -9,6 +9,7 @@ const tune = require('../dist/tune');
 const cli = require('../src/cli');
 const rpc = require('../src/rpc');
 const ContextWebsocket = require('../src/contextws.js')
+const man = require('../src/man')
 
 const tests = {};
 
@@ -1820,6 +1821,33 @@ tests.errProp = async function () {
   // ctx.text2run("")
 
 }
+
+tests.man1 = async function() {
+  const ctx = tune.makeContext(man({ mount: 'man' }))
+
+  const all = await ctx.resolve('man', { type: 'text' })
+  assert.equal(all.type, 'text')
+  assert.equal(all.name, 'man')
+  const allText = await all.read()
+  assert.match(allText, /<tune>/)
+  assert.match(allText, /<\/tune>/)
+
+  const list = await ctx.resolve('man/', { type: 'text' })
+  assert.equal(list.type, 'text')
+  assert.equal(list.name, 'man/')
+  const listText = await list.read()
+  assert.match(listText, /tune - core tune docs/)
+
+  const one = await ctx.resolve('man/tune', { type: 'text' })
+  assert.equal(one.type, 'text')
+  assert.equal(one.name, 'man/tune')
+  const oneText = await one.read()
+  assert.ok(oneText.length > 0)
+
+  assert.equal(await ctx.resolve('other', { type: 'text' }), undefined)
+  assert.equal(await ctx.resolve('man/unknown', { type: 'text' }), undefined)
+  assert.equal(await ctx.resolve('man', { type: 'image' }), undefined)
+};
 
 tests.hooks = async function() {
   const ctx = tune.makeContext({

@@ -1,5 +1,6 @@
 const path = require('path')
 
+const man = require("tune-sdk/man");
 const models = require("tune-models")
 const basics = require("tune-basic-toolset")
 const tunefs = require("tune-fs")
@@ -11,6 +12,7 @@ if (process.env.TUNE_PATH) {
 }
 
 module.exports = [
+  man(),
   current(),
   basics(),
   tunefs({ paths: dirs, makeSchema: true }),

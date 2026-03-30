@@ -1,7 +1,7 @@
 {
   "name": "tune-sdk",
-  "version": "0.3.0",
-  "description": "tune - LLM chat in text file",
+  "version": "0.3.1",
+  "description": "chat with llm in a text file. core package",
   "main": "dist/tune.js",
   "module": "dist/tune.mjs",
   "bin": {
@@ -21,6 +21,9 @@
     },
     "./contextws": {
       "require": "./src/contextws.js"
+    },
+    "./man": {
+      "require": "./src/man.js"
     }
   },
   "keywords": [
