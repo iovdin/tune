@@ -215,8 +215,29 @@ system:
 @man/tune - get manual for tune core package 
 @man/tune-basic-toolset - get manual for tune-basic-tool set package
 
+read any of it as a file
 tool_call: rf { "filename": "man/tune-basic-toolset"}
 tool_result:
 @man/tune-basic-toolset
-
 ```
+
+To connect man middleware in `default.ctx.js`:
+
+```javascript
+const man = require('tune-sdk/man')
+
+module.exports = [
+    ...
+    man(),
+    ...
+]
+```
+
+To expose `README.md` of your npm package as `man/<package-name>`, in your package/src/index.js add:
+```javascript
+const man = require("tune-sdk/man");
+
+// this method will read package.json and README.md
+man.add(__dirname)
+````
+
