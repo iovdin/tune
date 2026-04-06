@@ -34,7 +34,7 @@ function read(man) {
   if (!fs.existsSync(filename)) {
     return `file ${filename} not found`
   }
-  return fs.readFileSync(filename)
+  return fs.readFileSync(filename, "utf8")
 }
 
 module.exports = ({ mount } = {}) => {

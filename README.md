@@ -94,7 +94,7 @@ image generated
 ```
 
 
-## CLI
+## Command Line
 
 ```bash
 # install tune globally
@@ -115,6 +115,44 @@ tune --set test="hello" --user "@test" --system "You are echo you print everytht
 
 ```
 
+### Static web server + context over WebSocket
+
+Make simple web apps that share the same tools, files, and models available in Tune Chat. Tune Chat and the web app share the same context:
+
+```javascript
+// Read files
+await ctx.read("path/to/file")
+
+// Write files
+await ctx.write("path/to/file", content)
+
+// Execute tools
+let result = await ctx.exec("tool", { param: "value" })
+// Note that `result` is always a string. If you expect JSON:
+result = JSON.parse(result)
+
+// Also render errors to the user, since you won’t be able to see and debug them otherwise.
+
+// Call LLM
+const result = await ctx.file2run({ user: "hi" })
+```
+
+Create an app, e.g. `index.html`:
+
+```html
+...
+<!-- Load the context into `window.ctx` -->
+<script src="/contextws.js"></script>
+...
+```
+
+Run the static web server from the folder:
+
+```bash
+$ tune ws
+
+listening on http://localhost:8080
+```
 
 ## Javascript SDK
 `npm install tune-sdk`
@@ -212,7 +250,7 @@ You can access tune manuals and available middlewares manuals from
 system:
 @man include all manuals for all connected packages
 @man/ - list all the manuals, like list directory
-@man/tune - get manual for tune core package 
+@man/tune-sdk - get manual for tune core package 
 @man/tune-basic-toolset - get manual for tune-basic-tool set package
 
 read any of it as a file
