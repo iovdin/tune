@@ -601,6 +601,69 @@ tests.msg2text1 = async function() {
   );
 };
 
+tests.escape1 = async function() {
+  console.log("msg2text user escape")
+
+  let ctx = tune.makeContext({ var: "@var" })
+  let msgs = [
+    { 
+      role: "user",
+      content: "@var\nu: hello"
+    }
+  ]
+  let text = tune.msg2text(msgs)
+  assert.equal(text, "u: \\@var\n\\u: hello")
+
+  let payload = await ctx.text2payload(text)
+  assert.deepEqual(msgs, payload.messages)
+
+  console.log("msg2text assistant escape")
+  msgs =  [{ 
+      role: "assistant",
+      content: "@var\nu: hello",
+  }]
+  text = tune.msg2text(msgs)
+  assert.equal(text, "a: @var\n\\u: hello")
+  payload = await ctx.text2payload(text)
+  assert.deepEqual(msgs, payload.messages)
+  
+  console.log("msg2text tool_call escape")
+  msgs = [{
+    role: "assistant",
+    content: null,
+    tool_calls: [
+      {
+        "id": "0",
+        "type": "function",
+        "function": {
+          "name": "sh",
+          "arguments": "{\"text\":\"@var\\nu: hello\"}"
+        }
+      }
+    ]},
+    { 
+      name: 'sh',
+      tool_call_id: '0',
+      role: "tool",
+      content: "@var\nu: hello"
+    }]
+  // TODO:
+  text = tune.msg2text(msgs)
+  assert.equal(text, "tc: sh\n@var\n\\u: hello\ntr: @var\n\\u: hello")
+  payload = await ctx.text2payload(text)
+  assert.deepEqual(msgs, payload.messages)
+}
+
+tests.escape2 = async function () {
+  const ctx = tune.makeContext({ var: "value" })
+  const text = "u: \\@var\na: \\@var\ntc: sh\n\\@var\ntr: \\@var"
+  const payload = await ctx.text2payload(text)
+  // console.log(JSON.stringify(payload.messages, null, "  "))
+  const result = tune.msg2text(payload.messages)
+  assert.equal(result, "u: \\@var\na: \\@var\ntc: sh\n\\@var\ntr: \\@var")
+
+}
+
 tests.text2call1 = async function() {
   console.log("text2call1 - 1");
   assert.deepEqual(tune.text2call("name"), {
@@ -1829,18 +1892,18 @@ tests.man1 = async function() {
   assert.equal(all.type, 'text')
   assert.equal(all.name, 'man')
   const allText = await all.read()
-  assert.match(allText, /<tune>/)
-  assert.match(allText, /<\/tune>/)
+  assert.match(allText, /<tune-sdk>/)
+  assert.match(allText, /<\/tune-sdk>/)
 
   const list = await ctx.resolve('man/', { type: 'text' })
   assert.equal(list.type, 'text')
   assert.equal(list.name, 'man/')
   const listText = await list.read()
-  assert.match(listText, /tune - core tune docs/)
+  assert.match(listText, /tune-sdk -/)
 
-  const one = await ctx.resolve('man/tune', { type: 'text' })
+  const one = await ctx.resolve('man/tune-sdk', { type: 'text' })
   assert.equal(one.type, 'text')
-  assert.equal(one.name, 'man/tune')
+  assert.equal(one.name, 'man/tune-sdk')
   const oneText = await one.read()
   assert.ok(oneText.length > 0)
 

@@ -1219,7 +1219,7 @@ Context.prototype.exec = (async function(name, args) {
   }
   return _ref;
 });
-Context.prototype.write = (async function(name, args) {
+Context.prototype.write = (async function(name, content, props) {
   var ws, cur, res, _res, _ref;
   ws = (this.ws || [])
     .slice();
@@ -1227,7 +1227,7 @@ Context.prototype.write = (async function(name, args) {
   cur = ws.shift();
   _res = [];
   while (cur) {
-    res = await cur.call(this, name, args, this);
+    res = await cur.call(this, name, content, props);
     if (res) break;
     if (typeof(_ref = (cur = ws.shift())) !== 'undefined') _res.push(_ref);
   }
@@ -1730,11 +1730,16 @@ async function ast2payload(ast, ctx) {
   roles.push(lastRole);
 
   function transformRoles(memo, item, index, arr) {
-    var tcItem, lines, toolIndex, tc;
-    if ((item.role === "user" || item.role === "system" || item.role === "tool_call")) item.content = (Array.isArray(item.content) ? item.content.map((function(item) {
-      if (item.text) item.text = unescape(item.text);
+    var escapeOptions, tcItem, lines, toolIndex, tc;
+    var escapeOptions;
+    escapeOptions = {
+      vars: item.role === "user" || item.role === "system" || item.role === "tool_call",
+      roles: true
+    };
+    item.content = (Array.isArray(item.content) ? item.content.map((function(item) {
+      if (item.text) item.text = unescape(item.text, escapeOptions);
       return item;
-    })) : unescape(item.content));
+    })) : unescape(item.content, escapeOptions));
 
     function findToolCalls() {
       var item1, _i, _ref, _len;
@@ -2018,7 +2023,10 @@ async function toolCall(payload, ctx) {
     transformRes;
     var content;
     content = transformRes(res);
-    if ((((typeof tools !== "undefined") && (tools !== null) && !Number.isNaN(tools) && (typeof tools[tc.name] !== "undefined") && (tools[tc.name] !== null) && !Number.isNaN(tools[tc.name]) && (typeof tools[tc.name].escapeOutput !== "undefined") && (tools[tc.name].escapeOutput !== null) && !Number.isNaN(tools[tc.name].escapeOutput)) ? tools[tc.name].escapeOutput : (((typeof true !== "undefined") && (true !== null) && !Number.isNaN(true)) ? true : undefined))) content = escape(content);
+    if ((((typeof tools !== "undefined") && (tools !== null) && !Number.isNaN(tools) && (typeof tools[tc.name] !== "undefined") && (tools[tc.name] !== null) && !Number.isNaN(tools[tc.name]) && (typeof tools[tc.name].escapeOutput !== "undefined") && (tools[tc.name].escapeOutput !== null) && !Number.isNaN(tools[tc.name].escapeOutput)) ? tools[tc.name].escapeOutput : (((typeof true !== "undefined") && (true !== null) && !Number.isNaN(true)) ? true : undefined))) content = escape(content, {
+      vars: true,
+      roles: false
+    });
     return {
       role: "tool",
       id: item.id,
@@ -2282,7 +2290,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergMKZ8fG, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, iterg8EYRCS, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2374,7 +2382,7 @@ async function file2run(args, params, ctx) {
       hookTurnEnd: save
     });
     chunk = {};
-    itergMKZ8fG = new AsyncIter();
+    iterg8EYRCS = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2382,20 +2390,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergMKZ8fG.result = {
+          iterg8EYRCS.result = {
             value: $lastRes
           }
         }
-        _ref = itergMKZ8fG.result = {
+        _ref = iterg8EYRCS.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergMKZ8fG.err = e);
+        _ref = (iterg8EYRCS.err = e);
       }
       return _ref;
     })();
-    _ref = itergMKZ8fG;
+    _ref = iterg8EYRCS;
   }
   return _ref;
 }
@@ -2405,6 +2413,10 @@ function msg2text(msg, long) {
   var _ref, _ref0, _ref1;
 
   function mkline(role, content) {
+    content = escape(content, {
+      vars: role === "user" || role === "system",
+      roles: true
+    });
     return (long ? tpl("{role}:{new_line}{content}", {
       role: role,
       content: content,
@@ -2503,7 +2515,9 @@ function msg2text(msg, long) {
               return tpl("{role}: {name}{ args}{\ntext}", {
                 name: tc.function.name,
                 args: args,
-                text: text,
+                text: escape(text, {
+                  roles: true
+                }),
                 role: (long ? "tool_call" : "tc")
               });
             }))
@@ -2546,18 +2560,35 @@ function msg2role(msg) {
 }
 msg2role;
 
-function escape(text) {
-  return String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)))
-    .replace(/@/g, "\\@")
-    .replace(/^(s|u|a|c|tr|tc|err|system|user|comment|assistant|tool_call|tool_result|error):/gm, "\\$1:");
+function escape(text, opts) {
+  var result;
+  var opts;
+  var result;
+  opts = opts || {
+    vars: true,
+    roles: true
+  }
+  result = String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
+  if (opts.vars) result = result.replace(/@/g, "\\@");
+  if (opts.roles) result = result.replace(/^(s|u|a|c|tr|tc|err|system|user|comment|assistant|tool_call|tool_result|error):/gm, "\\$1:");
+  return result;
 }
 escape;
 
-function unescape(text) {
-  return String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)))
+function unescape(text, opts) {
+  var result;
+  var opts;
+  var result;
+  opts = opts || {
+    vars: true,
+    roles: true
+  }
+  result = String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
+  if (opts.vars) result = result
     .replace(/\\(?<item>@{1,2}\{\s*[~\.\-\w/]+\s*)(?<proc>(?:\s*\|\s*\w+(?:\s+\w+)*)*\})/g, "$<item>$<proc>")
-    .replace(/\\(?<item>@{1,2}[~\.\-\w/]+)/g, "$<item>")
-    .replace(/^\\(s|system|u|user|a|assistant|c|comment|tr|tool_result|tc|tool_call|err|error):/gm, "$1:");
+    .replace(/\\(?<item>@{1,2}[~\.\-\w/]+)/g, "$<item>");
+  if (opts.roles) result = result.replace(/^\\(s|system|u|user|a|assistant|c|comment|tr|tool_result|tc|tool_call|err|error):/gm, "$1:");
+  return result;
 }
 unescape;
 
