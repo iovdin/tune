@@ -1,8 +1,26 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const WebSocket = require('ws');
 const mime = require('mime-types');
+
+// skips loopback, docker (172.x, 192.168.x docker ranges), and common vpn (tun/tap) interfaces
+function getPublicIPv4() {
+  const ifaces = os.networkInterfaces();
+  const skipNames = /^(docker|br-|veth|tun|tap|vmnet|vbox)/i;
+  const skipRanges = /^(172\.(1[6-9]|2\d|3[01])\.|10\.)/; // docker bridge ranges
+
+  for (const [name, addrs] of Object.entries(ifaces)) {
+    if (skipNames.test(name)) continue;
+    for (const addr of addrs) {
+      if (addr.family === 'IPv4' && !addr.internal && !skipRanges.test(addr.address)) {
+        return addr.address;
+      }
+    }
+  }
+  return 'localhost';
+}
 
 function makeServer({ port, static, root, ctx }) {
   root = path.join(root || process.cwd());
@@ -46,6 +64,7 @@ function makeServer({ port, static, root, ctx }) {
       let lctx = ctx.clone()
       let { id, method, args, ...rest } = JSON.parse(msg.toString());
       let result = { id }
+      console.log("[context]", method, ...args)
       if (method === "read") {
         const [ name, binary ] = args
         let content = await lctx.read(name, binary)
@@ -104,6 +123,9 @@ function makeServer({ port, static, root, ctx }) {
             }
           })()
         }
+      } else if (method === "log") {
+        console.log("[browser]:", ...args)
+        result.done = true
       } else {
         result.error = { message: `method not found ${method}`}
       }
@@ -115,7 +137,8 @@ function makeServer({ port, static, root, ctx }) {
     if (Number.isNaN(parseInt(port))) {
       console.log(`listening ${port}`);
     } else {
-      console.log(`listening http://localhost:${port}`);
+      const host = getPublicIPv4();
+      console.log(`listening http://${host}:${port}`);
     }
   });
 }

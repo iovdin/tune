@@ -72,7 +72,6 @@ function ContextWebsocket(url, { debug } = {}) {
   assert(typeof url !== 'undefined', 'url is not set');
 
   socket = new WebSocket(url);
-  console.log(socket)
 
   this.socket = socket;
   this.callbacks = Object.create(null);
@@ -105,7 +104,7 @@ ContextWebsocket.prototype._onClose = function () {
 
 ContextWebsocket.prototype._send = async function (payload) {
   const data = JSON.stringify(payload);
-  this.debug('==>', data);
+  this.debug('tune ==>', data);
   await this.ready;
   this.socket.send(data);
 };
@@ -135,7 +134,7 @@ ContextWebsocket.prototype._onMessage = function (event) {
     return;
   }
 
-  this.debug('<==', msg);
+  this.debug('tune <==', msg);
   if (!msg || !msg.id) return;
 
   const cb = this.callbacks[msg.id];
@@ -176,6 +175,7 @@ ContextWebsocket.prototype.read = function (name, binary) {
   return this._call('read', [name, binary], false);
 };
 
+
 ContextWebsocket.prototype.write = function (name, content) {
   return this._call('write', [name, content], false);
 };
@@ -197,5 +197,12 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = ContextWebsocket;
 } else {
   window.ContextWebsocket = ContextWebsocket;
-  window.ctx = new ContextWebsocket(window.location.origin.replace(/^http/, 'ws'));
+  window.ctx = new ContextWebsocket(window.location.origin.replace(/^http/, 'ws'), { debug: console.debug });
+  window.addEventListener('error', async (event) => {
+    window.ctx._call('log', [event.error?.stack || event.message ], false);
+  })
+  window.addEventListener('unhandledrejection', async (event) => {
+    const err = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+    window.ctx._call('log', [err.stack || err.message], false);
+  });
 }
