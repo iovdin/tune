@@ -66,7 +66,7 @@ module.exports = ({ mount } = {}) => {
           type: "text",
           name: `${mount}/`,
           source: "docs",
-          read: async () => mans.map(man => `${man.name} - ${man.description}`).join("\n")
+          read: async () => mans.map(man => `${mount}/${man.name} - ${man.description}`).join("\n")
         })
       }
 
@@ -108,7 +108,7 @@ module.exports = ({ mount } = {}) => {
       return {
         type: "text",
         name,
-        read: async () => mans.map(man => `${man.name} - ${man.description}`).join("\n")
+        read: async () => mans.map(man => `${mount}/${man.name} - ${man.description}`).join("\n")
       }
     }
 

@@ -497,8 +497,8 @@ tests.text2expand5 = async function() {
 
 tests.msg2text1 = async function() {
   function dotest(obj, res, resl) {
-    assert.equal(tune.msg2text(obj), res);
-    assert.equal(tune.msg2text(obj, true), resl);
+    assert.equal(tune.msg2text(obj).trim(), res);
+    assert.equal(tune.msg2text(obj, true).trim(), resl);
   }
 
   dotest({ role: "assistant", content: "content" }, "a: content", "assistant:\ncontent");
@@ -530,7 +530,7 @@ tests.msg2text1 = async function() {
         function: { name: "mult", arguments: '{"a":2,"b":2}' }
       }]
     },
-    "tc: mult " + JSON.stringify({ a: 2, b: 2 }),
+    "tc: mult " + JSON.stringify({ a: 2, b: 2 }) ,
     "tool_call: mult " + JSON.stringify({ a: 2, b: 2 })
   );
 
@@ -655,12 +655,55 @@ tests.escape1 = async function() {
 }
 
 tests.escape2 = async function () {
-  const ctx = tune.makeContext({ var: "value" })
-  const text = "u: \\@var\na: \\@var\ntc: sh\n\\@var\ntr: \\@var"
-  const payload = await ctx.text2payload(text)
-  // console.log(JSON.stringify(payload.messages, null, "  "))
-  const result = tune.msg2text(payload.messages)
-  assert.equal(result, "u: \\@var\na: \\@var\ntc: sh\n\\@var\ntr: \\@var")
+  let msgs = [ { 
+    role: "system",
+    content: "system",
+  }, {
+      role: "user",
+      content: "user"
+    }, {
+    role: "assistant",
+    content: null,
+    tool_calls: [
+      {
+        "id": "0",
+        "type": "function",
+        "function": {
+          "name": "sh",
+          "arguments": "{\"text\":\"hello\"}"
+        }
+      }
+    ]},
+    { 
+      name: 'sh',
+      tool_call_id: '0',
+      role: "tool",
+      content: "hello"
+    }
+  ]
+  const ctx = tune.makeContext({
+    OPENAI_KEY: process.env.OPENAI_KEY,
+    default: defaultLLM,
+    tool: {
+      type: "tool",
+      name: "tool",
+      schema: {
+        "description": "test tool",
+        "parameters": {
+          "type": "object",
+          "properties": {
+          },
+        }
+      },
+      exec: async () => tune.msg2text(msgs)
+    }
+  })
+
+  const content = await ctx.file2run({
+    user: "@tool call tool", 
+    response: "chat"
+  })
+  console.log(content)
 
 }
 

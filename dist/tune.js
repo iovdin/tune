@@ -1605,6 +1605,7 @@ async function text2ast(text, ctx, resolve) {
       })(ctx.stack || []);
       var resolved;
       resolved = await ctx.resolve(name);
+      if (!Array.isArray(resolved)) resolved = [resolved];
       if (proc) {
         while (pargs = proc.shift()) {
           var pname;
@@ -1616,7 +1617,16 @@ async function text2ast(text, ctx, resolve) {
           if (!p) throw new TuneError(("'" + pname + "' processor not found"), filename, row, col);
           if ((typeof p.exec !== "function")) throw new TuneError(("'" + pname + "' does not have exec function"), filename, row, col);
           try {
-            resolved = await p.exec.call(ctx, resolved, pargs[0], ctx);
+            (function(it) {
+              it = it.flat(Infinity);
+              it = it.filter((function(item) {
+                return (item !== "ignore");
+              }));
+              it = (resolved = it);
+              return it;
+            })(await Promise.all(resolved.map((function(r) {
+              return p.exec.call(ctx, r, pargs[0], ctx);
+            }))));
           } catch (e) {
             var err;
             err = new TuneError(e.message, (p.fullname || p.name), undefined, undefined, [], e);
@@ -1629,7 +1639,7 @@ async function text2ast(text, ctx, resolve) {
           }
         }
       }
-      _ref0 = (Array.isArray(resolved) ? resolved : [resolved]);
+      _ref0 = resolved.concat();
       for (_i0 = 0, _len = _ref0.length; _i0 < _len; ++_i0) {
         resolved = _ref0[_i0];
         if (!resolved) throw new TuneError(("'" + name + "' not found"), filename, row, col);
@@ -2290,7 +2300,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, iterg8EYRCS, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergXF7bT2, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2382,7 +2392,7 @@ async function file2run(args, params, ctx) {
       hookTurnEnd: save
     });
     chunk = {};
-    iterg8EYRCS = new AsyncIter();
+    itergXF7bT2 = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2390,20 +2400,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          iterg8EYRCS.result = {
+          itergXF7bT2.result = {
             value: $lastRes
           }
         }
-        _ref = iterg8EYRCS.result = {
+        _ref = itergXF7bT2.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (iterg8EYRCS.err = e);
+        _ref = (itergXF7bT2.err = e);
       }
       return _ref;
     })();
-    _ref = iterg8EYRCS;
+    _ref = itergXF7bT2;
   }
   return _ref;
 }
