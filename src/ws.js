@@ -22,7 +22,7 @@ function getPublicIPv4() {
   return 'localhost';
 }
 
-function makeServer({ port, static, root, ctx }) {
+function makeServer({ port, static, root, ctx }, middleware) {
   root = path.join(root || process.cwd());
 
   function sendFile(filePath, res){ 
@@ -49,6 +49,12 @@ function makeServer({ port, static, root, ctx }) {
     if (!static) {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       return res.end("ok");
+    }
+
+    // If middleware is provided and handles the request, stop here.
+    if (middleware) {
+      var handled = middleware(req, res, root, sendFile);
+      if (handled) return;
     }
 
     let filePath = req.url === '/' ? '/index.html' : req.url;

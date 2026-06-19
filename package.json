@@ -22,6 +22,9 @@
     "./contextws": {
       "require": "./src/contextws.js"
     },
+    "./ws": {
+      "require": "./src/ws.js"
+    },
     "./man": {
       "require": "./src/man.js"
     }
