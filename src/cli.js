@@ -21,6 +21,33 @@ function getHomedir(home) {
     .replace("~", os.homedir())));
 }
 
+
+function readStdin() {
+  return new Promise((resolve, reject) => {
+    if (process.stdin.isTTY) return resolve("");
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", chunk => data += chunk);
+    process.stdin.on("end", () => resolve(data));
+    process.stdin.on("error", reject);
+  });
+}
+
+function parseToolArgs(argv) {
+  return argv.reduce((memo, item) => {
+    if (!item.startsWith("--")) return memo;
+    const arg = item.slice(2);
+    const eq = arg.indexOf("=");
+    if (eq === -1) {
+      memo[arg] = true;
+      return memo;
+    }
+    const key = arg.slice(0, eq);
+    const value = arg.slice(eq + 1);
+    memo[key] = value;
+    return memo;
+  }, {});
+}
 async function initConfig({ home, force }) {
   let stdout, stderr, _i;
   const homedir = getHomedir(home);
@@ -179,6 +206,29 @@ async function run({ home, stop, params, silent, user, system, save, text , resp
   }
 }
 
+async function toolCall({ home, path: addPaths, toolName, args, silent }) {
+  const ctx = await initContext({ home, path: addPaths });
+  const node = await ctx.resolve(toolName);
+
+  if (!node) {
+    throw Error(`tool not found: ${toolName}`);
+  }
+
+  if (node.type !== "tool") {
+    throw Error(`resolved node is not a tool: ${toolName} (${node.type})`);
+  }
+
+  const stdinText = await readStdin();
+  if (stdinText && typeof args.text === "undefined") {
+    args.text = stdinText;
+  }
+
+  const res = await node.exec(args, ctx);
+  if (!silent && typeof res !== "undefined") {
+    console.log(res);
+  }
+}
+
 function flatten(array) {
   return array.reduce((memo, item) => {
     if (Array.isArray(item)) {
@@ -325,6 +375,29 @@ async function main() {
 
       const ctx = await initContext({ home, path });
       ws({ port, static, root, ctx})
+    })
+
+
+  program
+    .command("tc")
+    .alias("tool-call")
+    .description("Resolve a tool from context and execute it with --key=value args, reading text from stdin/pipe into text param")
+    .argument("<toolName>", "Tool name to resolve and execute")
+    .allowUnknownOption(true)
+    .allowExcessArguments(true)
+    .action(async (toolName, opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() };
+      const rawArgs = cmd.parent.rawArgs;
+      const tcIndex = rawArgs.findIndex(arg => arg === "tc" || arg === "tool-call");
+      const args = parseToolArgs(tcIndex === -1 ? [] : rawArgs.slice(tcIndex + 2));
+      await initConfig({ home: opts.home });
+      await toolCall({
+        home: opts.home,
+        path: opts.path,
+        toolName,
+        args,
+        silent: opts.silent
+      });
     })
 
   program

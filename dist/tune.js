@@ -1172,6 +1172,7 @@ async function resolve(ctx, name, args, middlewares) {
     i++;
   }
   result = result.flat(Infinity);
+  result.forEach(setLLMHooks);
   return ((result.length <= 1) ? result[0] : result);
 }
 resolve;
@@ -2065,25 +2066,94 @@ TunePromise.prototype.finally = (function(onFinally) {
   return this.promise.finally(onFinally);
 });
 
+function stream2result(result, chunk, ctx) {
+  var delta, choice, err, tc, tcIdx, func;
+  var delta;
+  delta = (((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.choices !== "undefined") && (chunk.choices !== null) && !Number.isNaN(chunk.choices) && (typeof chunk.choices[0] !== "undefined") && (chunk.choices[0] !== null) && !Number.isNaN(chunk.choices[0]) && (typeof chunk.choices[0].delta !== "undefined") && (chunk.choices[0].delta !== null) && !Number.isNaN(chunk.choices[0].delta)) ? chunk.choices[0].delta : (((typeof {} !== "undefined") && ({} !== null) && !Number.isNaN({})) ? {} : undefined));
+  if (chunk.usage) result.usage = chunk.usage;
+  result.choices = result.choices || Array({
+    message: {
+      role: "assistant"
+    }
+  });
+  var choice;
+  choice = (((typeof result !== "undefined") && (result !== null) && !Number.isNaN(result) && (typeof result.choices !== "undefined") && (result.choices !== null) && !Number.isNaN(result.choices) && (typeof result.choices[0] !== "undefined") && (result.choices[0] !== null) && !Number.isNaN(result.choices[0])) ? result.choices[0] : undefined);
+  if (delta.finish_reason) choice.finish_reason = delta.finish_reason;
+  if ((((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.error !== "undefined") && (chunk.error !== null) && !Number.isNaN(chunk.error)) ? chunk.error : undefined)) {
+    var err;
+    err = new TuneError(JSON.stringify((((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.error !== "undefined") && (chunk.error !== null) && !Number.isNaN(chunk.error)) ? chunk.error : undefined), null, "  "));
+    err._stack = TuneError.ctx2stack(ctx);
+    throw err;
+  }
+  if (delta.content) {
+    choice.message.content = choice.message.content || "";
+    choice.message.content += delta.content;
+  }
+  if (delta.reasoning) {
+    choice.message.reasoning = choice.message.reasoning || "";
+    choice.message.reasoning += delta.reasoning;
+  }
+  if (delta.tool_calls) {
+    choice.message.tool_calls = choice.message.tool_calls || [];
+    tc = delta.tool_calls[0];
+    tcIdx = tc.index || 0;
+    if (!choice.message.tool_calls[tcIdx]) {
+      choice.message.tool_calls[tcIdx] = tc;
+    } else {
+      func = choice.message.tool_calls[tcIdx].function;
+      func.arguments = (func.arguments || "") + (tc.function.arguments || "");
+    }
+  }
+  return result;
+}
+stream2result;
+async function defaultMsgs2msgs(msgs, newMsgs, ctx) {
+  return (Array.isArray(newMsgs) ? msgs.concat(newMsgs) : msgs);
+}
+defaultMsgs2msgs;
+
+function setLLMHooks(node) {
+  if ((node.type !== "llm")) return;
+  node.stream2result = node.stream2result || stream2result;
+  node.result2msg = node.result2msg || (function(res) {
+    return (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.message !== "undefined") && (res.message !== null) && !Number.isNaN(res.message)) ? res.message : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.choices !== "undefined") && (res.choices !== null) && !Number.isNaN(res.choices) && (typeof res.choices[0] !== "undefined") && (res.choices[0] !== null) && !Number.isNaN(res.choices[0]) && (typeof res.choices[0].message !== "undefined") && (res.choices[0].message !== null) && !Number.isNaN(res.choices[0].message)) ? res.choices[0].message : (((typeof {
+      role: "assistant",
+      content: ""
+    } !== "undefined") && ({
+      role: "assistant",
+      content: ""
+    } !== null) && !Number.isNaN({
+      role: "assistant",
+      content: ""
+    })) ? {
+      role: "assistant",
+      content: ""
+    } : undefined)));
+  });
+  node.msgs2msgs = node.msgs2msgs || defaultMsgs2msgs;
+  return node;
+}
+setLLMHooks;
+
 function text2run(text, ctx, opts) {
-  var msgs, stopVal, stream, hookMsg, errors, hookTurnEnd, resolve, reject, p, iter;
+  var msgs, stopVal, stream, errors, stream2result, result2msg, llm, resolve, reject, p, iter;
   if (!ctx) throw Error("context not set");
   var msgs;
   var stopVal;
   var stream;
-  var hookMsg;
   var errors;
-  var hookTurnEnd;
+  var stream2result;
+  var result2msg;
+  var llm;
   var resolve;
   var reject;
   msgs = [];
   stopVal = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.stop !== "undefined") && (opts.stop !== null) && !Number.isNaN(opts.stop)) ? opts.stop : (((typeof "step" !== "undefined") && ("step" !== null) && !Number.isNaN("step")) ? "step" : undefined));
   stream = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.stream !== "undefined") && (opts.stream !== null) && !Number.isNaN(opts.stream)) ? opts.stream : (((typeof false !== "undefined") && (false !== null) && !Number.isNaN(false)) ? false : undefined));
-  hookMsg = (function(msg) {
-    return msg;
-  });
   errors = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.errors !== "undefined") && (opts.errors !== null) && !Number.isNaN(opts.errors)) ? opts.errors : (((typeof "throw" !== "undefined") && ("throw" !== null) && !Number.isNaN("throw")) ? "throw" : undefined));
-  hookTurnEnd = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.hookTurnEnd !== "undefined") && (opts.hookTurnEnd !== null) && !Number.isNaN(opts.hookTurnEnd)) ? opts.hookTurnEnd : (((typeof(function() {}) !== "undefined") && ((function() {}) !== null) && !Number.isNaN((function() {}))) ? (function() {}) : undefined));
+  stream2result = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.stream2result !== "undefined") && (opts.stream2result !== null) && !Number.isNaN(opts.stream2result)) ? opts.stream2result : undefined);
+  result2msg = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.result2msg !== "undefined") && (opts.result2msg !== null) && !Number.isNaN(opts.result2msg)) ? opts.result2msg : undefined);
+  llm = undefined;
   resolve = undefined;
   reject = undefined;
   var p;
@@ -2111,8 +2181,20 @@ function text2run(text, ctx, opts) {
     return _ref;
   }
   stop;
+  async function msgs2msgs(msgs, newMsgs, ctx) {
+    var cb, result;
+    var cb;
+    cb = (((typeof opts !== "undefined") && (opts !== null) && !Number.isNaN(opts) && (typeof opts.msgs2msgs !== "undefined") && (opts.msgs2msgs !== null) && !Number.isNaN(opts.msgs2msgs)) ? opts.msgs2msgs : (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.msgs2msgs !== "undefined") && (llm.msgs2msgs !== null) && !Number.isNaN(llm.msgs2msgs)) ? llm.msgs2msgs : undefined));
+    var result;
+    result = await cb.call(llm || {
+      msgs2msgs: defaultMsgs2msgs
+    }, msgs, newMsgs, ctx);
+    if (!Array.isArray(result)) throw Error, tpl("msgs2msgs hook returned non array '{}'", result);
+    return result;
+  }
+  msgs2msgs;
   async function doit() {
-    var ast, payload, provider, model, res, ctype, err, reader, data, done, reData, reComment, usage, _ref;
+    var ast, payload, provider, model, rfetch, res, ctype, err, reader, data, done, reData, reComment, lastMsg;
     while (!stop(msgs)) {
       var ast;
       ast = await text2ast(text + "\n" + msg2text(msgs), ctx);
@@ -2120,47 +2202,42 @@ function text2run(text, ctx, opts) {
       payload = await ast2payload(ast, ctx);
       var provider;
       var model;
-      provider = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.source !== "undefined") && (payload.llm.source !== null) && !Number.isNaN(payload.llm.source)) ? payload.llm.source : undefined);
-      model = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.name !== "undefined") && (payload.llm.name !== null) && !Number.isNaN(payload.llm.name)) ? payload.llm.name : undefined);
-      hookMsg = (((typeof payload !== "undefined") && (payload !== null) && !Number.isNaN(payload) && (typeof payload.llm !== "undefined") && (payload.llm !== null) && !Number.isNaN(payload.llm) && (typeof payload.llm.hookMsg !== "undefined") && (payload.llm.hookMsg !== null) && !Number.isNaN(payload.llm.hookMsg)) ? payload.llm.hookMsg : (((typeof(function(msg) {
-        return msg;
-      }) !== "undefined") && ((function(msg) {
-        return msg;
-      }) !== null) && !Number.isNaN((function(msg) {
-        return msg;
-      }))) ? (function(msg) {
-        return msg;
-      }) : undefined));
+      var rfetch;
+      provider = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.source !== "undefined") && (llm.source !== null) && !Number.isNaN(llm.source)) ? llm.source : undefined);
+      model = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.name !== "undefined") && (llm.name !== null) && !Number.isNaN(llm.name)) ? llm.name : undefined);
+      rfetch = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.fetch !== "undefined") && (llm.fetch !== null) && !Number.isNaN(llm.fetch)) ? llm.fetch : (((typeof fetch !== "undefined") && (fetch !== null) && !Number.isNaN(fetch)) ? fetch : undefined));
+      llm = payload.llm;
+      stream2result = (stream2result || llm.stream2result)
+        .bind(llm);
+      result2msg = (result2msg || llm.result2msg)
+        .bind(llm);
       if (stream) payload.stream = stream;
       var res;
       res = await toolCall(payload, ctx);
       if (res.length) {
-        msgs = msgs.concat(res.map(hookMsg));
+        msgs = await msgs2msgs(msgs, res, ctx);
         iter.result = {
           value: msgs
         };
-        hookTurnEnd(msgs);
         continue;
       }
       payload = await payload2http(payload, ctx);
-      res = await fetch(payload.url, payload);
+      res = await rfetch(payload.url, payload);
       var ctype;
       ctype = res.headers.get("content-type");
       if ((!stream || ctype.includes("application/json"))) {
         res = await res.json();
-        if (res.usage) await ctx.usage(provider, model, res.usage);
         if (((((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res[0] !== "undefined") && (res[0] !== null) && !Number.isNaN(res[0]) && (typeof res[0].error !== "undefined") && (res[0].error !== null) && !Number.isNaN(res[0].error)) ? res[0].error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.error !== "undefined") && (res.error !== null) && !Number.isNaN(res.error)) ? res.error : undefined)) || (res.object === "error"))) {
           var err;
           err = new TuneError(tpl("{type: }{message}", (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res[0] !== "undefined") && (res[0] !== null) && !Number.isNaN(res[0]) && (typeof res[0].error !== "undefined") && (res[0].error !== null) && !Number.isNaN(res[0].error)) ? res[0].error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.error !== "undefined") && (res.error !== null) && !Number.isNaN(res.error)) ? res.error : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res)) ? res : undefined)))));
           err._stack = TuneError.ctx2stack(ctx);
           throw err;
         }
-        msgs.push(hookMsg((((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.message !== "undefined") && (res.message !== null) && !Number.isNaN(res.message)) ? res.message : (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.choices !== "undefined") && (res.choices !== null) && !Number.isNaN(res.choices) && (typeof res.choices[0] !== "undefined") && (res.choices[0] !== null) && !Number.isNaN(res.choices[0]) && (typeof res.choices[0].message !== "undefined") && (res.choices[0].message !== null) && !Number.isNaN(res.choices[0].message)) ? res.choices[0].message : undefined))));
+        msgs = await msgs2msgs(msgs, Array(llm.result2msg(res)), ctx);
         iter.result = {
           value: msgs,
           done: true
         };
-        hookTurnEnd(msgs);
         continue;
       }
       var reader;
@@ -2168,7 +2245,7 @@ function text2run(text, ctx, opts) {
       var done;
       var reData;
       var reComment;
-      var usage;
+      var lastMsg;
       reader = res.body
         .pipeThrough(new TextDecoderStream("utf8"))
         .getReader();
@@ -2176,7 +2253,7 @@ function text2run(text, ctx, opts) {
       done = false;
       reData = new RegExp("^data: (.*)");
       reComment = new RegExp("^:.*");
-      usage = undefined;
+      lastMsg = undefined;
       if (ctype.includes("text/event-stream")) {
         while (!done) {
           res = await reader.read();
@@ -2206,68 +2283,30 @@ function text2run(text, ctx, opts) {
             it = it.map((function(item) {
               return JSON.parse(item);
             }));
-            it = it.reduce((function(msg, chunk) {
-              var delta, tc, tcIdx, func;
-              if (chunk.usage) usage = chunk.usage;
-              var delta;
-              delta = (((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.choices !== "undefined") && (chunk.choices !== null) && !Number.isNaN(chunk.choices) && (typeof chunk.choices[0] !== "undefined") && (chunk.choices[0] !== null) && !Number.isNaN(chunk.choices[0]) && (typeof chunk.choices[0].delta !== "undefined") && (chunk.choices[0].delta !== null) && !Number.isNaN(chunk.choices[0].delta)) ? chunk.choices[0].delta : (((typeof {} !== "undefined") && ({} !== null) && !Number.isNaN({})) ? {} : undefined));
-              if ((((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.error !== "undefined") && (chunk.error !== null) && !Number.isNaN(chunk.error)) ? chunk.error : undefined)) {
-                var err;
-                err = new TuneError(JSON.stringify((((typeof chunk !== "undefined") && (chunk !== null) && !Number.isNaN(chunk) && (typeof chunk.error !== "undefined") && (chunk.error !== null) && !Number.isNaN(chunk.error)) ? chunk.error : undefined), null, "  "));
-                err._stack = TuneError.ctx2stack(ctx);
-                throw err;
-              }
-              if (delta.content) {
-                msg.content = msg.content || "";
-                msg.content += delta.content;
-              }
-              if (delta.reasoning) {
-                msg.reasoning = msg.reasoning || "";
-                msg.reasoning += delta.reasoning;
-              }
-              if (delta.tool_calls) {
-                msg.tool_calls = msg.tool_calls || [];
-                tc = delta.tool_calls[0];
-                tcIdx = tc.index || 0;
-                if (!msg.tool_calls[tcIdx]) {
-                  msg.tool_calls[tcIdx] = tc;
-                } else {
-                  func = msg.tool_calls[tcIdx].function;
-                  func.arguments = (func.arguments || "") + (tc.function.arguments || "");
-                }
-              }
-              return msg;
-            }), {
-              role: "assistant",
-              content: ""
-            });
-            it = hookMsg(it);
+            it = it.reduce(stream2result, {});
+            it = (lastMsg = result2msg(it));
             it = (iter.result = {
               value: msgs.concat(Array(it))
             });
             return it;
           })(data += (((typeof res !== "undefined") && (res !== null) && !Number.isNaN(res) && (typeof res.value !== "undefined") && (res.value !== null) && !Number.isNaN(res.value)) ? res.value : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
         }
-        msgs = iter.result.value;
-        hookTurnEnd(msgs);
-        if (usage) await ctx.usage(provider, model, usage);
+        msgs = await msgs2msgs(msgs, Array(lastMsg), ctx);
+        iter.result = {
+          value: msgs
+        };
       }
     }
-    if (stream) {
-      iter.result = {
-        value: msgs,
-        done: true
-      };
-      _ref = hookTurnEnd(msgs);
-    } else {
-      _ref = resolve(msgs);
-    }
-    return _ref;
+    msgs = await msgs2msgs(msgs, [], ctx);
+    return (stream ? (iter.result = {
+      value: msgs,
+      done: true
+    }) : resolve(msgs));
   }
   doit;
   doit()
-    .catch((function(e) {
-      var err, _ref, _ref0;
+    .catch((async function(e) {
+      var err, _ref;
       var err;
       err = e;
       if ((e.name !== "TuneError")) {
@@ -2276,31 +2315,25 @@ function text2run(text, ctx, opts) {
         err.error = e;
       }
       if ((errors === "throw")) {
-        _ref0 = (stream ? (iter.err = err) : reject(err));
+        _ref = (stream ? (iter.err = err) : reject(err));
       } else {
-        msgs.push({
+        msgs = await msgs2msgs(msgs, Array({
           role: "error",
           content: err.stack
-        });
-        if (stream) {
-          iter.result = {
-            value: msgs,
-            done: true
-          };
-          _ref = hookTurnEnd(msgs);
-        } else {
-          _ref = resolve(msgs);
-        }
-        _ref0 = _ref;
+        }), ctx);
+        _ref = (stream ? (iter.result = {
+          value: msgs,
+          done: true
+        }) : resolve(msgs));
       }
-      return _ref0;
+      return _ref;
     }));
   if (stream) resolve(iter);
   return p;
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergXF7bT2, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergce049O, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2318,16 +2351,14 @@ async function file2run(args, params, ctx) {
   var isLong;
   longFormatRegex = /^(system|user|tool_call|tool_result|assistant|error):/;
   isLong = false;
-  async function save(res) {
-    var _ref;
+  async function save(msgs, newMsgs, ctx) {
+    msgs = await this.msgs2msgs(msgs, newMsgs, ctx);
     if ((args.filename && (((typeof args !== "undefined") && (args !== null) && !Number.isNaN(args) && (typeof args.save !== "undefined") && (args.save !== null) && !Number.isNaN(args.save)) ? args.save : undefined))) {
-      if ((turnsSaved === res.length)) return;
-      turnsSaved = res.length;
-      _ref = await ctx.write(args.filename, text + "\n" + msg2text(res, isLong));
-    } else {
-      _ref = undefined;
+      if ((turnsSaved === msgs.length)) return msgs;
+      turnsSaved = msgs.length;
+      await ctx.write(args.filename, text + "\n" + msg2text(msgs, isLong));
     }
-    return _ref;
+    return msgs;
   }
   save;
   var initialText;
@@ -2381,7 +2412,7 @@ async function file2run(args, params, ctx) {
     res = await lctx.text2run(text, {
       stop: stop,
       errors: errors,
-      hookTurnEnd: save
+      msgs2msgs: save
     });
     _ref = transformOutput(res);
   } else {
@@ -2389,10 +2420,10 @@ async function file2run(args, params, ctx) {
       stop: stop,
       errors: errors,
       stream: true,
-      hookTurnEnd: save
+      msgs2msgs: save
     });
     chunk = {};
-    itergXF7bT2 = new AsyncIter();
+    itergce049O = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2400,20 +2431,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergXF7bT2.result = {
+          itergce049O.result = {
             value: $lastRes
           }
         }
-        _ref = itergXF7bT2.result = {
+        _ref = itergce049O.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergXF7bT2.err = e);
+        _ref = (itergce049O.err = e);
       }
       return _ref;
     })();
-    _ref = itergXF7bT2;
+    _ref = itergce049O;
   }
   return _ref;
 }

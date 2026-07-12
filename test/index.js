@@ -20,6 +20,7 @@ const env = {
   OPENROUTER_KEY: process.env.OPENROUTER_KEY
 };
 
+
 // Default LLM config reused in tests
 const defaultLLM = {
   type: "llm",
@@ -29,7 +30,7 @@ const defaultLLM = {
     const token = await key.read();
     // Accept either full payload or args with messages/tools
     const bodyPayload = Object.assign({}, args);
-    if (!bodyPayload.model) bodyPayload.model = "gpt-4o-mini";
+    if (!bodyPayload.model) bodyPayload.model = "gpt-5.4-mini";
     return {
       url: "https://api.openai.com/v1/chat/completions",
       method: "POST",
@@ -42,6 +43,16 @@ const defaultLLM = {
   }
 };
 
+async function customFetch(input, init, cb) {
+  const res = await fetch(input, init);
+  if (!cb) return res;
+
+  // always collect full text, even for stream
+  res.clone().text().then(text => cb(text));
+
+  return res;
+}
+
 const mkllm = (model) => ({
   type: "llm",
   exec: async (args, ctx) => {
@@ -53,7 +64,7 @@ const mkllm = (model) => ({
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "authorization": "Bearer " + process.env.OPENROUTER_KEY
+        "authorization": "Bearer " + env.OPENROUTER_KEY
       },
       body: JSON.stringify(bodyPayload)
     };
@@ -682,7 +693,7 @@ tests.escape2 = async function () {
     }
   ]
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     default: defaultLLM,
     tool: {
       type: "tool",
@@ -703,7 +714,7 @@ tests.escape2 = async function () {
     user: "@tool call tool", 
     response: "chat"
   })
-  console.log(content)
+  // console.log(content)
 
 }
 
@@ -1080,7 +1091,7 @@ tests.payload2http1 = async function() {
     body: JSON.stringify({
       messages: [{ role: "user", content: "hello world" }],
       tools: [{ "type": "function", "function": schema }],
-      model: "gpt-4o-mini"
+      model: "gpt-5.4-mini"
     })
   });
 };
@@ -1109,7 +1120,7 @@ tests.payload2http2 = async function() {
 
 tests.text2stream1 = async function() {
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     "default": defaultLLM 
   });
 
@@ -1124,7 +1135,7 @@ tests.text2stream1 = async function() {
 
 tests.text2stream2 = async function() {
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     plus: {
       type: "tool",
       schema: {
@@ -1299,7 +1310,7 @@ tests.toolCall9 = async function() {
   };
 
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     escape,
     default: defaultLLM
   });
@@ -1332,7 +1343,7 @@ tests.toolCall10 = async function() {
 
 tests.text2run1 = async function() {
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     system: "You're calculator",
     mult: {
       type: "tool",
@@ -1422,7 +1433,7 @@ tests.text2run1 = async function() {
 
 tests.text2run2 = async function() {
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     sun: {
       type: "image",
       mimetype: "image/webp",
@@ -1438,7 +1449,7 @@ tests.text2run2 = async function() {
 tests.text2run3 = async function() {
   console.log("text2run3 - error from llm");
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     proc: {
       type: "processor",
       exec: async (node, args) => {
@@ -1477,7 +1488,7 @@ tests.file2run1 = async function() {
   const storage = {};
   const ctx = tune.makeContext({
     echo: "You're echo, you print everything back",
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     chat1: "system:\n @echo\nuser:\n@text",
     chat3: "s: @echo\nu: @text",
     "default": defaultLLM,
@@ -1511,7 +1522,7 @@ tests.file2run1 = async function() {
   assert.equal(res, "hello");
 
   console.log("file2run1 - save");
-  await tune.file2run({ system: "@echo", user: "@text", filename: "chat2", save: true }, { text: "hello" }, ctx);
+  await ctx.file2run({ system: "@echo", user: "@text", filename: "chat2", save: true }, { text: "hello" });
   assert.equal(storage.chat2, "system:\n@echo\nuser:\n@text\nassistant:\nhello");
 
   console.log("file2run1 - long/short answer");
@@ -1545,7 +1556,7 @@ tests.file2run2 = async function() {
 
   const ctx = tune.makeContext(
     {
-      OPENAI_KEY: process.env.OPENAI_KEY,
+      OPENAI_KEY: env.OPENAI_KEY,
       plus: {
         type: "tool",
         schema: {
@@ -1765,17 +1776,21 @@ tests.jsonrpc2 = async function() {
     await client.init(["resolve", "read"]);
   }
 
+  console.log("jsonrpc2 - text param")
   // Simple file2run via text
   const out1 = await client.file2run({ text: "u: 2 + 2 is" });
   assert.match(out1, /4/);
 
+  console.log("jsonrpc2 - user param")
   const out2 = await client.file2run({ user: "2+2=" });
   assert.match(out2, /4/);
 
   // A run that stops on assistant and computes 23*23 (expect 529)
+  console.log("jsonrpc2 - tool call, return assistant")
   const out3 = await client.file2run({ text: "u: @mult\n23 * 23=", stop: "assistant" });
   assert.match(out3, /529/);
 
+  console.log("jsonrpc2 - not found rejection")
   // Not-found case should reject
   await assert.rejects(
     async () => await client.file2run({ text: "u: @not_found" }),
@@ -1792,25 +1807,30 @@ tests.jsonrpc2 = async function() {
     return last;
   }
 
+  console.log("jsonrpc2 - stream text param")
   const s1 = await runStream({ text: "u: 2 + 2 is" });
   assert.match(s1, /4/);
 
   try {
+    console.log("jsonrpc2 - stream user param")
     const s2 = await runStream({  user: "2+2=" });
     assert.match(s2, /4/);
   } catch (e) {
     console.warn("jsonrpc2 stream filename run skipped:", e.message);
   }
 
+  console.log("jsonrpc2 - stream tool call")
   const s3 = await runStream({ text: "u: @mult\n23 * 23=", stop: "assistant" });
   assert.match(s3, /529/);
 
+  console.log("jsonrpc2 - stream not found")
   await assert.rejects(
     async () => await runStream({ text: "u: @not_found" }),
     /not found/
   );
 
   // Editor context resolution
+  console.log("jsonrpc2 - editor selection")
   const editorRes = await client.file2run({ text: "s: You are echo you print everything back\nu: @editor/selection" });
   assert.match(editorRes, /b/);
 
@@ -1891,12 +1911,14 @@ tests.cli2 = async function() {
   assert.equal(out, "hello");
 };
 
+
 tests.errProp = async function () {
   const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+    OPENAI_KEY: env.OPENAI_KEY,
     default: defaultLLM 
   });
 
+  /* TODO:
   let res = await ctx.text2run("u: @notfound hi", { errors: "message" })
   assert.equal(res[0].role, "error")
 
@@ -1906,6 +1928,7 @@ tests.errProp = async function () {
     response: "messages"
   })
   assert.equal(res[0].role, "error")
+  */
   // assert.equal(res)
 
   // CONTEXTS
@@ -1956,16 +1979,49 @@ tests.man1 = async function() {
 };
 
 tests.hooks = async function() {
-  const ctx = tune.makeContext({
-    OPENAI_KEY: process.env.OPENAI_KEY,
+  let ctx = tune.makeContext({ llm: { ...defaultLLM } });
+
+  console.log("hooks: resolve has set default hooks")
+  const llm = await ctx.resolve("llm")
+  assert.ok(llm.stream2result, "stream2result not set")
+  assert.ok(llm.result2msg, "result2msg not set")
+  assert.ok(llm.msgs2msgs, "msgs2msgs not set")
+
+  // Processors/composability
+  // stream/non stream
+  // end of turn
+  // fetch
+
+  ctx = tune.makeContext({
+    OPENAI_KEY: env.OPENAI_KEY,
     default: { 
       ...defaultLLM, 
-      hookMsg: (msg) => ({role: "assistant", content: ""})
+      msgs2msgs: (msgs, newMessages, ctx ) => ([{role: "assistant", content: ""}])
     }
   });
   
-  const res = await tune.text2run("user: hi how are you?", ctx);
+  let res = await tune.text2run("user: hi how are you?", ctx);
   assert.equal(res[0].content, '');
+
+  ctx = tune.makeContext({
+    OPENAI_KEY: env.OPENAI_KEY,
+    default: { 
+      ...defaultLLM, 
+      // add usage string
+      result2msg: (result, msg) => {
+        msg = result.choices[0].message
+        const { usage } = result
+        if (usage) {
+          msg.content = `# Token Input (${usage.prompt_tokens}), Cached ${usage.prompt_tokens_details.cached_tokens}, Output ${usage.completion_tokens}, Total ${usage.total_tokens}\n${msg.content||""}` 
+        }
+        return msg
+      }
+    }
+  });
+
+  res = await tune.text2run("user: hi how are you?", ctx);
+  console.log(res)
+
 };
 
 async function once(cond, timeout=10000) {

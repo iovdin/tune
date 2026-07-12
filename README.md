@@ -192,6 +192,8 @@ async function main() {
       return {
         type: "llm",
         name: "gpt-5",
+        // required
+        // returns fetch's payload to be sent (input to chat completion api)
         exec: async (payload) => ({
           url: "https://api.openai.com/v1/chat/completions",
           method: "POST",
@@ -203,7 +205,23 @@ async function main() {
             model: "gpt-5",
             ...payload
           })
-        })
+        }),
+        // optional
+        // this works when it is in stream mode
+        // like reduce, i.e. starts as result = {} and then called multiple times for every incoming chunk
+        // result is what chat completion returns without streaming
+        stream2result: (result, chunk) => { 
+        },
+        // optional
+        // transform json result from chat completion endpoint to chat completion message
+        result2msg: (result) => ({
+
+        }),
+        // optional
+        // transform multiple messages in loop (newMsgs) into few, or the other way around 
+        msgs2msgs: (historyMsgs, newMsgs) => {
+
+        }
       }
     }
 
@@ -239,6 +257,8 @@ async function main() {
 
 main()
 ```
+
+
 
 [read more](https://iovdin.github.io/tune/api) about javascript sdk
 
