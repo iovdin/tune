@@ -317,7 +317,7 @@ async function main() {
     .helpOption(true)
     .option("--home <dir>", "Tune config directory (default: ~/.tune)")
     .option("--path <paths>", "Additional search paths (colon-separated)")
-    .addHelpText("after", "\nEXAMPLES:\n  tune --system \"You are Groot\" --user \"Hi how are you?\"\n  tune --user \"continue the conversation\" --filename chat.chat --save\n  tune --set test=hello --user \"@test\" --system \"Echo assistant\"\n  tune rpc\n  tune init --force\n");
+    .addHelpText("after", "\nEXAMPLES:\n  tune --system \"You are Groot\" --user \"Hi how are you?\"\n  tune --user \"continue the conversation\" --filename chat.chat --save\n  tune --set test=hello --user \"@test\" --system \"Echo assistant\"\n  echo \"hi how are you\" | tune\n  ls | tune --user \"is there any directory that reminds about ml? @text\"\n  tune rpc\n  tune init --force\n");
 
   program
     .command("gen", { isDefault: true })
@@ -340,6 +340,16 @@ async function main() {
         memo[key] = value
         return memo
       }, {})
+
+      const stdinText = (await readStdin()).trim();
+      if (stdinText) {
+        if (opts.user) {
+          opts.params.text ||= stdinText;
+        } else {
+          opts.user ||= stdinText;
+        }
+      }
+
       // console.log("gen ", opts)
       if (!opts.user && !opts.text && !opts.filename && !opts.system) {
         return cmd.help();
