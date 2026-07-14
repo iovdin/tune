@@ -1912,6 +1912,131 @@ tests.cli2 = async function() {
 };
 
 
+tests.cliRead = async function() {
+  const cp = require("child_process");
+
+  function execCmd(cmd) {
+    return cp.execSync(`node ../bin/cli.js ${cmd}`, {
+      encoding: "utf8",
+      env: process.env,
+      cwd: __dirname
+    }).trim();
+  }
+
+  console.log("cliRead - read text variable");
+  let out = execCmd("read echo --path .");
+  assert.equal(out, "You are echo you print everything back");
+
+  console.log("cliRead - read with --filename");
+  const tmpFile = path.resolve(__dirname, `read_${Date.now()}.txt`);
+  out = execCmd(`read echo --path . --filename ${tmpFile}`);
+  assert.match(out, /written to/);
+  const content = fs.readFileSync(tmpFile, "utf8").trim();
+  assert.equal(content, "You are echo you print everything back");
+  fs.unlinkSync(tmpFile);
+
+  console.log("cliRead - read not found");
+  assert.throws(
+    () => execCmd("read nonexistent --path ."),
+    /variable not found/
+  );
+};
+
+tests.cliExec = async function() {
+  const cp = require("child_process");
+
+  function execCmd(cmd, input) {
+    return cp.execSync(`node ../bin/cli.js ${cmd}`, {
+      encoding: "utf8",
+      env: process.env,
+      cwd: __dirname,
+      input: input || ""
+    }).trim();
+  }
+
+  console.log("cliExec - exec tool with params");
+  let out = execCmd("exec mult --path . --a=6 --b=7");
+  assert.equal(out, "42");
+
+  console.log("cliExec - exec tool with JSON from stdin");
+  out = execCmd("exec mult --path .", JSON.stringify({ a: 3, b: 5 }));
+  assert.equal(out, "15");
+
+  console.log("cliExec - exec tool with text from stdin fallback");
+  // If stdin is not valid JSON, it goes into args.text
+  // mult.tool.js uses { a, b }, so text won't be used — but it should not crash
+  out = execCmd("exec mult --path . --a=2 --b=3", "not json");
+  assert.equal(out, "6");
+
+  console.log("cliExec - exec not found");
+  assert.throws(
+    () => execCmd("exec nonexistent --path ."),
+    /variable not found/
+  );
+};
+
+tests.cliWrite = async function() {
+  const cp = require("child_process");
+
+  function execCmd(cmd, input) {
+    return cp.execSync(`node ../bin/cli.js ${cmd}`, {
+      encoding: "utf8",
+      env: process.env,
+      cwd: __dirname,
+      input: input || ""
+    }).trim();
+  }
+
+  const tmpFile = path.resolve(__dirname, `write_${Date.now()}.txt`);
+
+  console.log("cliWrite - write with --text");
+  let out = execCmd(`write ${tmpFile} --text "hello from write"`);
+  assert.match(out, /written to/);
+  assert.equal(fs.readFileSync(tmpFile, "utf8").trim(), "hello from write");
+
+  console.log("cliWrite - write from stdin");
+  out = execCmd(`write ${tmpFile}`, "piped content");
+  assert.match(out, /written to/);
+  assert.equal(fs.readFileSync(tmpFile, "utf8").trim(), "piped content");
+
+  console.log("cliWrite - write no content");
+  assert.throws(
+    () => execCmd(`write ${tmpFile}`),
+    /no content provided/
+  );
+
+  // cleanup
+  if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+};
+
+tests.cliResolve = async function() {
+  const cp = require("child_process");
+
+  function execCmd(cmd) {
+    return cp.execSync(`node ../bin/cli.js ${cmd}`, {
+      encoding: "utf8",
+      env: process.env,
+      cwd: __dirname
+    }).trim();
+  }
+
+  console.log("cliResolve - resolve text node");
+  let out = execCmd("resolve echo --path .");
+  assert.match(out, /type:\s*'text'/);
+  assert.match(out, /name:\s*'echo'/);
+
+  console.log("cliResolve - resolve tool node");
+  out = execCmd("resolve mult --path .");
+  assert.match(out, /type:\s*'tool'/);
+  assert.match(out, /name:\s*'mult'/);
+
+  console.log("cliResolve - resolve not found");
+  assert.throws(
+    () => execCmd("resolve nonexistent --path ."),
+    /variable not found/
+  );
+};
+
 tests.errProp = async function () {
   const ctx = tune.makeContext({
     OPENAI_KEY: env.OPENAI_KEY,

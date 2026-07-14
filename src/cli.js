@@ -7,6 +7,7 @@ const fs = require("fs");
 const os = require("os");
 const cp = require("child_process");
 const stream = require("stream");
+const util = require("util");
 
 // tune app - run web server from current directory serving index.html and making it availble to call ctx via websocket
 // tune ps - list of executing agents or the ones finished
@@ -206,26 +207,73 @@ async function run({ home, stop, params, silent, user, system, save, text , resp
   }
 }
 
-async function toolCall({ home, path: addPaths, toolName, args, silent }) {
+async function readNode({ home, path: addPaths, name, filename, silent }) {
   const ctx = await initContext({ home, path: addPaths });
-  const node = await ctx.resolve(toolName);
-
+  const node = await ctx.resolve(name);
   if (!node) {
-    throw Error(`tool not found: ${toolName}`);
+    throw Error(`variable not found: ${name}`);
   }
-
-  if (node.type !== "tool") {
-    throw Error(`resolved node is not a tool: ${toolName} (${node.type})`);
+  if (typeof node.read !== "function") {
+    throw Error(`node "${name}" (${node.type}) has no read method`);
   }
+  const content = await node.read();
+  if (!silent) {
+    if (filename) {
+      fs.writeFileSync(filename, content);
+      console.log(`written to ${filename}`);
+    } else {
+      console.log(content);
+    }
+  }
+}
 
+async function execNode({ home, path: addPaths, name, args, silent }) {
+  const ctx = await initContext({ home, path: addPaths });
+  const node = await ctx.resolve(name);
+  if (!node) {
+    throw Error(`variable not found: ${name}`);
+  }
+  if (typeof node.exec !== "function") {
+    throw Error(`node "${name}" (${node.type}) has no exec method`);
+  }
   const stdinText = await readStdin();
-  if (stdinText && typeof args.text === "undefined") {
-    args.text = stdinText;
+  if (stdinText) {
+    try {
+      const parsed = JSON.parse(stdinText);
+      args = { ...parsed, ...args };
+    } catch {
+      if (typeof args.text === "undefined") {
+        args.text = stdinText;
+      }
+    }
   }
-
   const res = await node.exec(args, ctx);
   if (!silent && typeof res !== "undefined") {
     console.log(res);
+  }
+}
+
+async function writeNode({ home, path: addPaths, name, text, silent }) {
+  const ctx = await initContext({ home, path: addPaths });
+  const stdinText = await readStdin();
+  const content = text !== undefined ? text : stdinText;
+  if (content === undefined || content === "") {
+    throw Error(`no content provided: use --text or pipe via stdin`);
+  }
+  await ctx.write(name, content);
+  if (!silent) {
+    console.log(`written to ${name}`);
+  }
+}
+
+async function resolveNode({ home, path: addPaths, name, silent }) {
+  const ctx = await initContext({ home, path: addPaths });
+  const node = await ctx.resolve(name);
+  if (!node) {
+    throw Error(`variable not found: ${name}`);
+  }
+  if (!silent) {
+    console.log(util.inspect(node, { depth: null, colors: process.stdout.isTTY }));
   }
 }
 
@@ -389,23 +437,71 @@ async function main() {
 
 
   program
-    .command("tc")
-    .alias("tool-call")
-    .description("Resolve a tool from context and execute it with --key=value args, reading text from stdin/pipe into text param")
-    .argument("<toolName>", "Tool name to resolve and execute")
-    .allowUnknownOption(true)
-    .allowExcessArguments(true)
-    .action(async (toolName, opts, cmd) => {
+    .command("read")
+    .description("Resolve a variable and call its read method, print output or write to --filename")
+    .argument("<name>", "Variable name to resolve and read")
+    .option("-f, --filename <file>", "Write output to file instead of printing")
+    .action(async (name, opts, cmd) => {
       opts = { ...opts, ...cmd.parent.opts() };
-      const rawArgs = cmd.parent.rawArgs;
-      const tcIndex = rawArgs.findIndex(arg => arg === "tc" || arg === "tool-call");
-      const args = parseToolArgs(tcIndex === -1 ? [] : rawArgs.slice(tcIndex + 2));
       await initConfig({ home: opts.home });
-      await toolCall({
+      await readNode({
         home: opts.home,
         path: opts.path,
-        toolName,
+        name,
+        filename: opts.filename,
+        silent: opts.silent
+      });
+    })
+
+  program
+    .command("exec")
+    .description("Resolve a variable and call its exec method with --key=value args, or JSON from stdin")
+    .argument("<name>", "Variable name to resolve and execute")
+    .allowUnknownOption(true)
+    .allowExcessArguments(true)
+    .action(async (name, opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() };
+      const rawArgs = cmd.parent.rawArgs;
+      const execIndex = rawArgs.findIndex(arg => arg === "exec");
+      const args = parseToolArgs(execIndex === -1 ? [] : rawArgs.slice(execIndex + 2));
+      await initConfig({ home: opts.home });
+      await execNode({
+        home: opts.home,
+        path: opts.path,
+        name,
         args,
+        silent: opts.silent
+      });
+    })
+
+  program
+    .command("write")
+    .description("Write content from --text or stdin to a variable")
+    .argument("<name>", "Variable name to write to")
+    .option("-t, --text <content>", "Content to write (default: reads from stdin)")
+    .action(async (name, opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() };
+      await initConfig({ home: opts.home });
+      await writeNode({
+        home: opts.home,
+        path: opts.path,
+        name,
+        text: opts.text,
+        silent: opts.silent
+      });
+    })
+
+  program
+    .command("resolve")
+    .description("Resolve a variable and print the node using util.inspect")
+    .argument("<name>", "Variable name to resolve")
+    .action(async (name, opts, cmd) => {
+      opts = { ...opts, ...cmd.parent.opts() };
+      await initConfig({ home: opts.home });
+      await resolveNode({
+        home: opts.home,
+        path: opts.path,
+        name,
         silent: opts.silent
       });
     })
