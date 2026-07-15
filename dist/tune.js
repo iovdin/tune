@@ -2200,17 +2200,17 @@ function text2run(text, ctx, opts) {
       ast = await text2ast(text + "\n" + msg2text(msgs), ctx);
       var payload;
       payload = await ast2payload(ast, ctx);
+      llm = payload.llm;
+      stream2result = (stream2result || llm.stream2result)
+        .bind(llm);
+      result2msg = (result2msg || llm.result2msg)
+        .bind(llm);
       var provider;
       var model;
       var rfetch;
       provider = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.source !== "undefined") && (llm.source !== null) && !Number.isNaN(llm.source)) ? llm.source : undefined);
       model = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.name !== "undefined") && (llm.name !== null) && !Number.isNaN(llm.name)) ? llm.name : undefined);
       rfetch = (((typeof llm !== "undefined") && (llm !== null) && !Number.isNaN(llm) && (typeof llm.fetch !== "undefined") && (llm.fetch !== null) && !Number.isNaN(llm.fetch)) ? llm.fetch : (((typeof fetch !== "undefined") && (fetch !== null) && !Number.isNaN(fetch)) ? fetch : undefined));
-      llm = payload.llm;
-      stream2result = (stream2result || llm.stream2result)
-        .bind(llm);
-      result2msg = (result2msg || llm.result2msg)
-        .bind(llm);
       if (stream) payload.stream = stream;
       var res;
       res = await toolCall(payload, ctx);
@@ -2333,7 +2333,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergce049O, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergkEoKEV, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2423,7 +2423,7 @@ async function file2run(args, params, ctx) {
       msgs2msgs: save
     });
     chunk = {};
-    itergce049O = new AsyncIter();
+    itergkEoKEV = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2431,20 +2431,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergce049O.result = {
+          itergkEoKEV.result = {
             value: $lastRes
           }
         }
-        _ref = itergce049O.result = {
+        _ref = itergkEoKEV.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergce049O.err = e);
+        _ref = (itergkEoKEV.err = e);
       }
       return _ref;
     })();
-    _ref = itergce049O;
+    _ref = itergkEoKEV;
   }
   return _ref;
 }
