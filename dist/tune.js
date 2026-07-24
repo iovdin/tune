@@ -1172,6 +1172,9 @@ async function resolve(ctx, name, args, middlewares) {
     i++;
   }
   result = result.flat(Infinity);
+  result.forEach((function(res) {
+    return (res.ref = name);
+  }));
   result.forEach(setLLMHooks);
   return ((result.length <= 1) ? result[0] : result);
 }
@@ -2333,7 +2336,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergkEoKEV, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, iterghmrcWz, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2423,7 +2426,7 @@ async function file2run(args, params, ctx) {
       msgs2msgs: save
     });
     chunk = {};
-    itergkEoKEV = new AsyncIter();
+    iterghmrcWz = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2431,20 +2434,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergkEoKEV.result = {
+          iterghmrcWz.result = {
             value: $lastRes
           }
         }
-        _ref = itergkEoKEV.result = {
+        _ref = iterghmrcWz.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergkEoKEV.err = e);
+        _ref = (iterghmrcWz.err = e);
       }
       return _ref;
     })();
-    _ref = itergkEoKEV;
+    _ref = iterghmrcWz;
   }
   return _ref;
 }
