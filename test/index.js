@@ -718,6 +718,43 @@ tests.escape2 = async function () {
 
 }
 
+tests.escape3 = async function () {
+  console.log("escape3 - unescape tool_result based on $escape_output")
+  const tool = {
+    type: "tool",
+    name: "tool",
+    schema: {
+      "description": "test tool",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        },
+      }
+    },
+    exec: async () => "executed"
+  }
+
+  const ctx = tune.makeContext({
+    OPENAI_KEY: env.OPENAI_KEY,
+    default: defaultLLM,
+    tool,
+    var: {
+      name: "var",
+      type: "text",
+      read: async () => "value"
+    }
+  })
+  tool.schema.$escape_output = false;
+
+  let payload = await tune.text2payload("user: @tool\ntool_call: tool\ntool_result: \\@var", ctx);
+  assert.equal(payload.messages[2].content, "\\@var", "should not unescape with escapeOutput = false")
+
+  tool.schema.$escape_output = true;
+
+  payload = await tune.text2payload("user: @tool\ntool_call: tool\ntool_result: \\@var", ctx);
+  assert.equal(payload.messages[2].content, "@var", "should unescape with escapeOutput = true")
+}
+
 tests.text2call1 = async function() {
   console.log("text2call1 - 1");
   assert.deepEqual(tune.text2call("name"), {

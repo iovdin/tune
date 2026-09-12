@@ -1744,16 +1744,7 @@ async function ast2payload(ast, ctx) {
   roles.push(lastRole);
 
   function transformRoles(memo, item, index, arr) {
-    var escapeOptions, tcItem, lines, toolIndex, tc;
-    var escapeOptions;
-    escapeOptions = {
-      vars: item.role === "user" || item.role === "system" || item.role === "tool_call",
-      roles: true
-    };
-    item.content = (Array.isArray(item.content) ? item.content.map((function(item) {
-      if (item.text) item.text = unescape(item.text, escapeOptions);
-      return item;
-    })) : unescape(item.content, escapeOptions));
+    var tcItem, lines, toolIndex, tc, toolNode;
 
     function findToolCalls() {
       var item1, _i, _ref, _len;
@@ -1785,7 +1776,10 @@ async function ast2payload(ast, ctx) {
       tcItem.tool_calls.push({
         id: String(toolId++),
         type: "function",
-        "function": text2call(item.content)
+        "function": text2call(unescape(item.content, {
+          vars: true,
+          roles: true
+        }))
       });
     } else if (item.role === "audio") {
       var lines;
@@ -1816,8 +1810,19 @@ async function ast2payload(ast, ctx) {
       tc = tcItem.tool_calls[toolIndex];
       item.tool_call_id = tc.id;
       item.name = tc.function.name;
+      toolNode = tools.find((function(t) {
+        return (t.name === (((typeof tc !== "undefined") && (tc !== null) && !Number.isNaN(tc) && (typeof tc.function !== "undefined") && (tc.function !== null) && !Number.isNaN(tc.function) && (typeof tc.function.name !== "undefined") && (tc.function.name !== null) && !Number.isNaN(tc.function.name)) ? tc.function.name : undefined));
+      }));
+      item.content = unescape(item.content, {
+        vars: (((typeof toolNode !== "undefined") && (toolNode !== null) && !Number.isNaN(toolNode) && (typeof toolNode.escapeOutput !== "undefined") && (toolNode.escapeOutput !== null) && !Number.isNaN(toolNode.escapeOutput)) ? toolNode.escapeOutput : (((typeof true !== "undefined") && (true !== null) && !Number.isNaN(true)) ? true : undefined)),
+        roles: true
+      });
       memo.push(item);
     } else {
+      item.content = unescape(item.content, {
+        vars: item.role === "user" || item.role === "system",
+        roles: true
+      });
       memo.push(item);
     }
     return memo;
@@ -2336,7 +2341,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, iterghmrcWz, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergq8sZoO, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2426,7 +2431,7 @@ async function file2run(args, params, ctx) {
       msgs2msgs: save
     });
     chunk = {};
-    iterghmrcWz = new AsyncIter();
+    itergq8sZoO = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2434,20 +2439,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          iterghmrcWz.result = {
+          itergq8sZoO.result = {
             value: $lastRes
           }
         }
-        _ref = iterghmrcWz.result = {
+        _ref = itergq8sZoO.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (iterghmrcWz.err = e);
+        _ref = (itergq8sZoO.err = e);
       }
       return _ref;
     })();
-    _ref = iterghmrcWz;
+    _ref = itergq8sZoO;
   }
   return _ref;
 }
@@ -2622,11 +2627,15 @@ escape;
 function unescape(text, opts) {
   var result;
   var opts;
-  var result;
   opts = opts || {
     vars: true,
     roles: true
   }
+  if (Array.isArray(text)) return text.map((function(item) {
+    if (item.text) item.text = unescape(item.text, opts);
+    return item;
+  }));
+  var result;
   result = String((((typeof text !== "undefined") && (text !== null) && !Number.isNaN(text)) ? text : (((typeof "" !== "undefined") && ("" !== null) && !Number.isNaN("")) ? "" : undefined)));
   if (opts.vars) result = result
     .replace(/\\(?<item>@{1,2}\{\s*[~\.\-\w/]+\s*)(?<proc>(?:\s*\|\s*\w+(?:\s+\w+)*)*\})/g, "$<item>$<proc>")
