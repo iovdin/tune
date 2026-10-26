@@ -1,9 +1,9 @@
 {
   "name": "tune-sdk",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "chat with llm in a text file. core package",
   "main": "dist/tune.js",
-  "module": "dist/tune.mjs",
+  "module": "src/tune.mjs",
   "bin": {
     "tune": "bin/cli.js",
     "tune-sdk": "bin/cli.js"
@@ -11,7 +11,7 @@
   "exports": {
     ".": {
       "require": "./dist/tune.js",
-      "import": "./dist/tune.mjs"
+      "import": "./src/tune.mjs"
     },
     "./cli": {
       "require": "./src/cli.js"

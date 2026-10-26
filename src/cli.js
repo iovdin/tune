@@ -1,5 +1,6 @@
 const { Command, Option } = require("commander");
 const tune = require("../dist/tune.js");
+const envmd = tune.envmd;
 const ws = require("./ws.js");
 const rpc = require("./rpc.js");
 const path = require("path");
@@ -48,6 +49,14 @@ function parseToolArgs(argv) {
     memo[key] = value;
     return memo;
   }, {});
+}
+
+function parseSet(set) {
+  return (set || []).reduce((memo, item) => {
+    const [key, value] = item.split("=");
+    memo[key] = value
+    return memo
+  }, {})
 }
 async function initConfig({ home, force }) {
   let stdout, stderr, _i;
@@ -166,7 +175,6 @@ async function runRpc({ debug, home, path }) {
         // todo binary
         return node.read()
       },
-
       write: async function write(name, content) {
         return cleanCtx.write(name, content)
       },
@@ -207,8 +215,8 @@ async function run({ home, stop, params, silent, user, system, save, text , resp
   }
 }
 
-async function readNode({ home, path: addPaths, name, filename, silent }) {
-  const ctx = await initContext({ home, path: addPaths });
+async function readNode({ home, path: addPaths, name, filename, silent, params }) {
+  const ctx = await initContext({ home, path: addPaths, params });
   const node = await ctx.resolve(name);
   if (!node) {
     throw Error(`variable not found: ${name}`);
@@ -227,8 +235,8 @@ async function readNode({ home, path: addPaths, name, filename, silent }) {
   }
 }
 
-async function execNode({ home, path: addPaths, name, args, silent }) {
-  const ctx = await initContext({ home, path: addPaths });
+async function execNode({ home, path: addPaths, name, args, silent, params }) {
+  const ctx = await initContext({ home, path: addPaths, params });
   const node = await ctx.resolve(name);
   if (!node) {
     throw Error(`variable not found: ${name}`);
@@ -253,8 +261,8 @@ async function execNode({ home, path: addPaths, name, args, silent }) {
   }
 }
 
-async function writeNode({ home, path: addPaths, name, text, silent }) {
-  const ctx = await initContext({ home, path: addPaths });
+async function writeNode({ home, path: addPaths, name, text, silent, params }) {
+  const ctx = await initContext({ home, path: addPaths, params });
   const stdinText = await readStdin();
   const content = text !== undefined ? text : stdinText;
   if (content === undefined || content === "") {
@@ -266,8 +274,8 @@ async function writeNode({ home, path: addPaths, name, text, silent }) {
   }
 }
 
-async function resolveNode({ home, path: addPaths, name, silent }) {
-  const ctx = await initContext({ home, path: addPaths });
+async function resolveNode({ home, path: addPaths, name, silent, params }) {
+  const ctx = await initContext({ home, path: addPaths, params });
   const node = await ctx.resolve(name);
   if (!node) {
     throw Error(`variable not found: ${name}`);
@@ -287,7 +295,7 @@ function flatten(array) {
   }, [])
 }
 
-async function initContext({ home, path: addPaths }) {
+async function initContext({ home, path: addPaths, params }) {
   var dirs, pwd, ctx, dir, ctxName, ext, module, m, _i, _ref, _len, _i0, _ref0, _len0;
   var dirs;
   var pwd;
@@ -345,6 +353,7 @@ async function initContext({ home, path: addPaths }) {
       throw Error(`err: Context file export is not an array of functions or function ${ctxName}: ${m}`);
     }
   }
+  if (params) ctx.ms.unshift(envmd(params));
   return ctx;
 }
 async function main() {
@@ -441,6 +450,7 @@ async function main() {
     .description("Resolve a variable and call its read method, print output or write to --filename")
     .argument("<name>", "Variable name to resolve and read")
     .option("-f, --filename <file>", "Write output to file instead of printing")
+    .option("--set [params...]", "set a template variables, --set a=b --set c=d")
     .action(async (name, opts, cmd) => {
       opts = { ...opts, ...cmd.parent.opts() };
       await initConfig({ home: opts.home });
@@ -449,7 +459,8 @@ async function main() {
         path: opts.path,
         name,
         filename: opts.filename,
-        silent: opts.silent
+        silent: opts.silent,
+        params: parseSet(opts.set)
       });
     })
 
@@ -459,6 +470,7 @@ async function main() {
     .argument("<name>", "Variable name to resolve and execute")
     .allowUnknownOption(true)
     .allowExcessArguments(true)
+    .option("--set [params...]", "set a template variables, --set a=b --set c=d")
     .action(async (name, opts, cmd) => {
       opts = { ...opts, ...cmd.parent.opts() };
       const rawArgs = cmd.parent.rawArgs;
@@ -470,7 +482,8 @@ async function main() {
         path: opts.path,
         name,
         args,
-        silent: opts.silent
+        silent: opts.silent,
+        params: parseSet(opts.set)
       });
     })
 
@@ -479,6 +492,7 @@ async function main() {
     .description("Write content from --text or stdin to a variable")
     .argument("<name>", "Variable name to write to")
     .option("-t, --text <content>", "Content to write (default: reads from stdin)")
+    .option("--set [params...]", "set a template variables, --set a=b --set c=d")
     .action(async (name, opts, cmd) => {
       opts = { ...opts, ...cmd.parent.opts() };
       await initConfig({ home: opts.home });
@@ -487,7 +501,8 @@ async function main() {
         path: opts.path,
         name,
         text: opts.text,
-        silent: opts.silent
+        silent: opts.silent,
+        params: parseSet(opts.set)
       });
     })
 
@@ -495,6 +510,7 @@ async function main() {
     .command("resolve")
     .description("Resolve a variable and print the node using util.inspect")
     .argument("<name>", "Variable name to resolve")
+    .option("--set [params...]", "set a template variables, --set a=b --set c=d")
     .action(async (name, opts, cmd) => {
       opts = { ...opts, ...cmd.parent.opts() };
       await initConfig({ home: opts.home });
@@ -502,7 +518,8 @@ async function main() {
         home: opts.home,
         path: opts.path,
         name,
-        silent: opts.silent
+        silent: opts.silent,
+        params: parseSet(opts.set)
       });
     })
 

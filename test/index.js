@@ -327,16 +327,6 @@ tests.envmd1 = async function() {
   // var1 = await ctx2.resolve(".*", { match: "regex", type: "tool" });
 };
 
-tests.usage1 = async function() {
-  async function usage(provider, model, usageData) {
-    return `0-${provider}-${model}-${usageData}`;
-  }
-  
-  const ctx = tune.makeContext(usage);
-  const res = await ctx.usage("provider", "model", "usage");
-  assert.equal(res[0], "0-provider-model-usage");
-};
-
 tests.contextErrors = async function() {
   const ctx = tune.makeContext();
   await assert.rejects(
@@ -1039,6 +1029,38 @@ tests.text2process1 = async function() {
   res = await tune.text2payload("u: @{name | value \\\| parameter }", ctxFs);
   assert.equal(res.messages[0].content, "| parameter");
 };
+
+tests.text2process2 = async function() {
+  const ctx = tune.makeContext({
+    OPENAI_KEY: env.OPENAI_KEY,
+    "default": defaultLLM,
+    read: {
+
+    },
+    mock: {
+      name: "mock",
+      type: "processor",
+      exec: async (node, args, ctx) => ({
+        ...ctx,
+        resolve: async (name, args) => {
+          if (name === "hello") {
+            return  {
+              name: "hello",
+              type: "text",
+              read: async () => "world"
+            }
+          }
+          return ctx.resolve(name, args)
+        }
+      })
+    },
+  })
+
+  const { messages } = await ctx.text2payload("u: @{| mock } @hello")
+  assert.equal(messages[0].content, "world") 
+
+}
+
 
 tests.text2audio1 = async function() {
   const ctx = tune.makeContext({
