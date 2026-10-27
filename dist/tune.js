@@ -1215,18 +1215,19 @@ Context.prototype.exec = (async function(name, args) {
   return _ref;
 });
 Context.prototype.write = (async function(name, content, props) {
-  var ws, cur, res, _res, _ref;
+  var ws, res, cur;
   ws = (this.ws || [])
     .slice();
   if (!ws.length) return;
+  var res;
+  res;
   cur = ws.shift();
-  _res = [];
   while (cur) {
     res = await cur.call(this, name, content, props);
     if (res) break;
-    if (typeof(_ref = (cur = ws.shift())) !== 'undefined') _res.push(_ref);
+    cur = ws.shift();
   }
-  return _res;
+  return res;
 });
 
 function envmd(md) {
@@ -2328,7 +2329,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, iterg7e3RDZ, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergKXeEVQ, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2418,7 +2419,7 @@ async function file2run(args, params, ctx) {
       msgs2msgs: save
     });
     chunk = {};
-    iterg7e3RDZ = new AsyncIter();
+    itergKXeEVQ = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2426,20 +2427,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          iterg7e3RDZ.result = {
+          itergKXeEVQ.result = {
             value: $lastRes
           }
         }
-        _ref = iterg7e3RDZ.result = {
+        _ref = itergKXeEVQ.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (iterg7e3RDZ.err = e);
+        _ref = (itergKXeEVQ.err = e);
       }
       return _ref;
     })();
-    _ref = iterg7e3RDZ;
+    _ref = itergKXeEVQ;
   }
   return _ref;
 }
