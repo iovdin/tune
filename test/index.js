@@ -1054,13 +1054,33 @@ tests.text2process2 = async function() {
         }
       })
     },
+    mock1: {
+      name: "mock1",
+      type: "processor",
+      exec: async (node, args, ctx) => ({
+        ...ctx,
+        resolve: async (name, args) => {
+          if (name === "world") {
+            return  {
+              name: "world",
+              type: "text",
+              read: async () => "!"
+            }
+          }
+          return ctx.resolve(name, args)
+        }
+      })
+    },
   })
 
-  const { messages } = await ctx.text2payload("u: @{| mock } @hello")
-  assert.equal(messages[0].content, "world") 
+  console.log("text2process2 mock")
+  let payload = await ctx.text2payload("u: @{| mock } @hello")
+  assert.equal(payload.messages[0].content, "world") 
 
+  console.log("text2process2 double mock")
+  payload = await ctx.text2payload("u: @{| mock | mock1 } @hello @world")
+  assert.equal(payload.messages[0].content, "world !") 
 }
-
 
 tests.text2audio1 = async function() {
   const ctx = tune.makeContext({

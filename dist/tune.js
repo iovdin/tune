@@ -1604,7 +1604,9 @@ async function text2ast(text, ctx, resolve) {
               it = it.filter((function(item) {
                 return (item !== "ignore");
               }));
-              it = (resolved = it);
+              it = (resolved = it.map((function(item) {
+                return (((((typeof item !== "undefined") && (item !== null) && !Number.isNaN(item) && (typeof item.type !== "undefined") && (item.type !== null) && !Number.isNaN(item.type)) ? item.type : undefined) === "context") ? (ctx = Object.assign(ctx.clone(), item)) : item);
+              })));
               return it;
             })(await Promise.all(resolved.map((function(r) {
               return p.exec.call(ctx, r, pargs[0], ctx);
@@ -1650,10 +1652,6 @@ async function text2ast(text, ctx, resolve) {
             delete schema.$escape_output;
           }
           resolved.schema = schema;
-        }
-        if ((resolved.type === "context")) {
-          Object.setPrototypeOf(resolved, Object.getPrototypeOf(ctx));
-          ctx = resolved;
         }
         index = m.index + match.length;
         if ((recursive && (resolved.prefix.length === 2) && (resolved.type === "text"))) {
@@ -2307,7 +2305,7 @@ function text2run(text, ctx, opts) {
       err = e;
       if ((e.name !== "TuneError")) {
         err = new TuneError(e.message);
-        err._stack = TuneError.ctx2stack(lctx);
+        err._stack = TuneError.ctx2stack(ctx);
         err.error = e;
       }
       if ((errors === "throw")) {
@@ -2329,7 +2327,7 @@ function text2run(text, ctx, opts) {
 }
 text2run;
 async function file2run(args, params, ctx) {
-  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergKXeEVQ, _ref;
+  var lctx, text, stop, errors, turnsSaved, node, longFormatRegex, isLong, initialText, response, res, r, chunk, itergJ0cxKj, _ref;
   var lctx;
   lctx = ctx.clone();
   if (params) lctx.ms.unshift(envmd(params));
@@ -2419,7 +2417,7 @@ async function file2run(args, params, ctx) {
       msgs2msgs: save
     });
     chunk = {};
-    itergKXeEVQ = new AsyncIter();
+    itergJ0cxKj = new AsyncIter();
     (async function($lastRes) {
       var _ref;
       try {
@@ -2427,20 +2425,20 @@ async function file2run(args, params, ctx) {
           chunk = await r.next();
           res = (chunk.value || "");
           $lastRes = transformOutput(res) || $lastRes;
-          itergKXeEVQ.result = {
+          itergJ0cxKj.result = {
             value: $lastRes
           }
         }
-        _ref = itergKXeEVQ.result = {
+        _ref = itergJ0cxKj.result = {
           value: $lastRes,
           done: true
         }
       } catch (e) {
-        _ref = (itergKXeEVQ.err = e);
+        _ref = (itergJ0cxKj.err = e);
       }
       return _ref;
     })();
-    _ref = itergKXeEVQ;
+    _ref = itergJ0cxKj;
   }
   return _ref;
 }
